@@ -67,7 +67,7 @@ longitudinal window. Every workbook contains:
 
 > Data is a combination of real and synthetic records, intended only for academic
 > prototyping/testing. Real patient data must never be committed to this repo —
-> see `data/README.md`.
+> see `data/sample/README.md`.
 
 ## Deliverables
 
@@ -105,15 +105,12 @@ At each checkpoint: show what works, what doesn't yet work, what was learned, an
 ├── docs/                    # Architecture notes, checkpoint write-ups, decisions
 ├── data/
 │   └── sample/              # Small anonymized/synthetic samples only (never real patient data)
-├── notebooks/                # Exploratory analysis notebooks
-├── src/
-│   ├── data_ingestion/       # Reading and structuring patient workbooks
-│   ├── feature_engineering/  # Deriving longitudinal features from raw sheets
-│   ├── insight_engine/       # Pattern/anomaly detection, connecting context to trends
-│   └── explainability/       # Evidence surfacing, uncertainty communication
-├── app/                      # Dashboard / UI for viewing insights
-└── tests/                    # Unit and integration tests
+├── requirements.txt         # Planned Python dependencies
+└── CONTRIBUTING.md          # Team git setup and workflow
 ```
+
+Code folders (`src/`, `app/`, `tests/`, etc.) will be added once the data model and approach are
+settled at the Discovery checkpoint, rather than committed empty ahead of time.
 
 ## Team — Group 11
 
@@ -124,6 +121,6 @@ At each checkpoint: show what works, what doesn't yet work, what was learned, an
 
 ## Links
 
-- Project Management: _TBD_
+- Project Management: [GitHub Project board](https://github.com/users/Vraj2003v/projects/3/views/1)
 - Course: COMP8967-1-R-2026F, Business 2
 - Instructor/Coordinator: Sheetal (sheetal@uwindsor.ca)
