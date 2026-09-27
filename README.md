@@ -105,8 +105,7 @@ At each checkpoint: show what works, what doesn't yet work, what was learned, an
 ├── docs/                    # Architecture notes, checkpoint write-ups, decisions
 ├── data/
 │   └── sample/              # Small anonymized/synthetic samples only (never real patient data)
-├── requirements.txt         # Planned Python dependencies
-└── CONTRIBUTING.md          # Team git setup and workflow
+└── requirements.txt         # Planned Python dependencies
 ```
 
 Code folders (`src/`, `app/`, `tests/`, etc.) will be added once the data model and approach are
