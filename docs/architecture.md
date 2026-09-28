@@ -107,9 +107,3 @@ evidence cited) rather than deciding case-by-case at build time.
 
 Not yet designed. Needs: a way to see a patient's timeline, the flagged insight(s), and the
 supporting evidence without reading raw model output. Revisit after Prototype checkpoint.
-
-## Open Questions (carried from the brief, unresolved)
-
-- How will very different data types (labs, vitals, wearables, notes) be normalized consistently?
-- How will unsupported/spurious correlations be avoided when scanning many signals at once?
-- What happens when a patient is missing an entire sheet (e.g. no Women's Health data)?
