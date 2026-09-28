@@ -113,8 +113,8 @@ settled at the Discovery checkpoint, rather than committed empty ahead of time.
 
 ## Team — Group 11
 
+- Harsh Jayeshkumar Patel (Team Leader)
 - Vrajkumar Yaminkumar Patel
-- Harsh Jayeshkumar Patel
 - Bhavya Ketan Patel
 - Krishkumar Maheshbhai Patel
 
