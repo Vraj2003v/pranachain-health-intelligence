@@ -75,12 +75,33 @@ framing ("this pattern may be worth discussing with a provider," not a diagnosis
 
 ## 6. Responsible AI / Uncertainty
 
-- Missing/sparse data: don't silently drop it — surface "insufficient data" rather than a
-  false-confidence insight.
-- Confidence should be communicated qualitatively (e.g. "based on 3 of 4 expected signals") not
-  as a bare unexplained probability.
-- No diagnostic claims, ever — framing stays at "pattern worth attention," per the brief's
-  "we are not building a diagnostic tool" scope boundary.
+**Confidence tiers.** Every insight carries one of three qualitative confidence levels, derived
+from how much of the expected signal set was actually available and how far it deviates from the
+patient's own baseline — never a bare unexplained probability:
+
+| Tier | When it applies | How it's surfaced |
+|---|---|---|
+| High | All expected signals present, deviation clearly outside the patient's historical range | Shown as a normal insight |
+| Moderate | Some signals missing/sparse, or deviation is borderline | Shown with a visible "limited signal" badge and which signals were unavailable |
+| Insufficient | Too little data to support a pattern claim | Not surfaced as an insight at all — logged internally, not shown to the clinician/patient as a finding |
+
+Missing or sparse data is never silently dropped or backfilled to force a confident-looking
+result — it either downgrades the tier or suppresses the insight entirely.
+
+**Language guardrails — the "no diagnosis" boundary.** Every insight's copy goes through the
+same filter before it can be shown:
+
+- Allowed framing: "this pattern may be worth discussing with a provider," "N of the last M
+  {signal} readings were outside your usual range," "worth a check-in based on recent trends."
+- Disallowed: naming or implying a specific condition/diagnosis, prescriptive medical
+  instructions ("stop taking X," "you have Y"), and unqualified certainty language ("this means,"
+  "you are experiencing") in place of "this pattern," "may indicate."
+- Every insight must cite the specific `source_sheet` rows/signals behind it (Section 2/5) —
+  no insight ships without a traceable evidence trail a clinician could audit.
+
+**Review checkpoint.** Before the Prototype demo, run every example insight copy the team has
+drafted against this checklist (confidence tier assigned correctly, no disallowed language,
+evidence cited) rather than deciding case-by-case at build time.
 
 ## 7. UX / Interface
 
