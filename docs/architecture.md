@@ -7,7 +7,9 @@ the brief describes what each sheet *should* contain, not confirmed column names
 
 ## 1. Source Data Shape
 
-Each patient workbook (`PC####.xlsx`) has 9 sheets, per the brief:
+Each patient workbook (`PC####.xlsx`) was described as 9 sheets in the brief; the real files have 11
+(adds Habits Weekly and Symptoms Timeline; Clinical Notes became Encounters & Notes). See `docs/data-schema.md`
+for the verified layout, date-format differences and missing-data patterns.
 
 | Sheet | Grain | Expected contents |
 |---|---|---|
@@ -21,8 +23,7 @@ Each patient workbook (`PC####.xlsx`) has 9 sheets, per the brief:
 | Clinical Notes | 1 row/note | Synthetic report text/summaries |
 | Medication Adherence | 1 row/day or dose | Adherence status over time |
 
-**(pending real data)** Confirm exact column names, date formats, units, and how missing values
-are represented (blank vs. `NaN` vs. sentinel) once a workbook is opened.
+Verified: missing values are blank cells; dates come in three formats (see `docs/data-schema.md`).
 
 ## 2. Data Model — Normalizing Into One Shape
 
@@ -75,18 +76,18 @@ framing ("this pattern may be worth discussing with a provider," not a diagnosis
 
 ## 6. Responsible AI / Uncertainty
 
-**Confidence tiers.** Every insight carries one of three qualitative confidence levels, derived
+**Data-sufficiency flags.** The business advised against a numeric confidence score, so every insight carries one of three qualitative data-sufficiency flags (what data was present, not how sure the model is), derived
 from how much of the expected signal set was actually available and how far it deviates from the
 patient's own baseline — never a bare unexplained probability:
 
-| Tier | When it applies | How it's surfaced |
+| Flag | When it applies | How it's surfaced |
 |---|---|---|
-| High | All expected signals present, deviation clearly outside the patient's historical range | Shown as a normal insight |
-| Moderate | Some signals missing/sparse, or deviation is borderline | Shown with a visible "limited signal" badge and which signals were unavailable |
+| Sufficient | All expected signals present, deviation clearly outside the patient's historical range | Shown as a normal insight |
+| Limited | Some signals missing/sparse, or deviation is borderline | Shown with a visible "limited signal" badge and which signals were unavailable |
 | Insufficient | Too little data to support a pattern claim | Not surfaced as an insight at all — logged internally, not shown to the clinician/patient as a finding |
 
 Missing or sparse data is never silently dropped or backfilled to force a confident-looking
-result — it either downgrades the tier or suppresses the insight entirely.
+result — it either downgrades the flag or suppresses the insight entirely.
 
 **Language guardrails — the "no diagnosis" boundary.** Every insight's copy goes through the
 same filter before it can be shown:
@@ -100,7 +101,7 @@ same filter before it can be shown:
   no insight ships without a traceable evidence trail a clinician could audit.
 
 **Review checkpoint.** Before the Prototype demo, run every example insight copy the team has
-drafted against this checklist (confidence tier assigned correctly, no disallowed language,
+drafted against this checklist (data-sufficiency flag assigned correctly, no disallowed language,
 evidence cited) rather than deciding case-by-case at build time.
 
 ## 7. UX / Interface
