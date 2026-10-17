@@ -16,7 +16,8 @@ from pranapulse.signals import SIGNALS, WINDOW_DAYS
 
 st.set_page_config(page_title="PranaPulse", page_icon="🫀", layout="wide")
 
-BADGE = {"Sufficient": ":green[● Data sufficient]", "Limited": ":orange[● Limited data]"}
+BADGE = {"Sufficient": ":green-background[ ● Data sufficient ]", "Limited": ":orange-background[ ● Limited data ]"}
+ICON = {"pattern": "🔗", "single": "📈", "cycle": "🗓️"}
 COLORS = {"line": "#1f4e79", "dots": "rgba(31,78,121,0.22)", "proj": "#c55a11", "band": "rgba(197,90,17,0.16)"}
 
 
@@ -32,7 +33,7 @@ def demo_files():
 
 
 # ------------------------------------------------------------------ sidebar
-st.sidebar.title("PranaPulse")
+st.sidebar.title("🫀 PranaPulse")
 st.sidebar.caption("Beyond the Record · Group 11 · COMP8967")
 uploads = st.sidebar.file_uploader("Upload patient workbooks (.xlsx)", type=["xlsx"], accept_multiple_files=True)
 use_demo = st.sidebar.toggle("Use fabricated demo patients", value=not uploads,
@@ -42,44 +43,74 @@ if use_demo:
     files.update(demo_files())
 for u in uploads or []:
     files[u.name] = u.getvalue()
+
 if not files:
-    st.title("PranaPulse")
-    st.info("Upload one or more patient workbooks in the sidebar, or switch on the fabricated demo patients.")
+    st.title("🫀 PranaPulse")
+    st.markdown("#### Explainable changes in a patient's health, connected to their history")
+    st.write("Upload one or more patient workbooks in the sidebar, or switch on the fabricated demo patients to try it.")
     st.stop()
 
-choice = st.sidebar.selectbox("Patient", list(files))
-try:
-    patient, insights, held, results = parse(files[choice])
-except Exception as exc:  # a workbook that does not match the layout
-    st.error(f"Could not read this workbook: {exc}")
+parsed, failed = {}, {}
+for name, data in files.items():
+    try:
+        parsed[name] = parse(data)
+    except Exception as exc:  # a workbook that does not match the layout
+        failed[name] = str(exc)
+for name, why in failed.items():
+    st.sidebar.error(f"Could not read {name}: {why}")
+if not parsed:
     st.stop()
+
+choice = st.sidebar.selectbox("Patient", list(parsed))
+patient, insights, held, results = parsed[choice]
 
 st.sidebar.divider()
 st.sidebar.caption("Prototype for academic use on synthetic/anonymised data. It highlights patterns that may be worth "
                    "discussing with a healthcare provider. It does not diagnose or give medical advice.")
 
 # ------------------------------------------------------------------ header
-st.title(f"Patient {patient.patient_id}")
-a, b, c, d = st.columns(4)
-a.metric("Age", patient.profile.get("Age", "—"))
-b.metric("Sex", patient.profile.get("Sex", "—"))
 start, end = patient.window
-c.metric("Window starts", f"{start:%b %Y}")
-d.metric("Window ends", f"{end:%b %Y}")
+st.title(f"Patient {patient.patient_id}")
+st.caption(f"{patient.profile.get('Age', '—')} years · {patient.profile.get('Sex', '—')} · "
+           f"data from {start:%d %b %Y} to {end:%d %b %Y} ({len(patient.daily)} days)")
 
-tab_ins, tab_time, tab_cov = st.tabs(["Insights", "Timeline & projection", "Data coverage"])
+tab_over, tab_ins, tab_time, tab_cov = st.tabs(["Overview", "Insights", "Timeline & projection", "Data coverage"])
+
+# ------------------------------------------------------------------ overview
+with tab_over:
+    rows = []
+    for name, (p, ins, hd, res) in parsed.items():
+        top = ins[0] if ins else None
+        rows.append({"Patient": p.patient_id, "Age": p.profile.get("Age"), "Sex": p.profile.get("Sex"),
+                     "Status": "Flagged" if top else "Quiet",
+                     "What was found": top.title if top else "Nothing beyond usual variation",
+                     "Data flag": ("Limited data" if top and top.flag == "Limited" else ("Sufficient" if top else "—")),
+                     "Held back": len(hd)})
+    df = pd.DataFrame(rows)
+    a, b, c = st.columns(3)
+    a.metric("Patients loaded", len(df))
+    b.metric("With an insight", int((df.Status == "Flagged").sum()))
+    c.metric("Quiet", int((df.Status == "Quiet").sum()))
+    st.dataframe(df, hide_index=True, width="stretch")
+    st.caption("Pick a patient in the sidebar to see the insight, evidence and projection. "
+               "Quiet is intended: ordinary day-to-day variation is not reported.")
 
 # ------------------------------------------------------------------ insights
 with tab_ins:
     if not insights:
-        st.success("No meaningful multi-signal change found against this patient's own baseline.")
-        st.caption("Being quiet is intended: small day-to-day variation is not reported as an insight.")
+        st.success("Nothing flagged. No meaningful change was found against this patient's own baseline.")
+        st.caption("Staying quiet is intended: small day-to-day variation is not reported as an insight.")
     for ins in insights:
         with st.container(border=True):
-            st.subheader(ins.title)
-            st.markdown(BADGE[ins.flag] + ("  — shown with a limited-signal badge because some expected data was missing"
-                                          if ins.flag == "Limited" else ""))
-            st.write(ins.narrative)
+            st.markdown(f"### {ICON[ins.kind]} {ins.title}")
+            st.markdown(BADGE[ins.flag] + ("   some expected data was missing" if ins.flag == "Limited" else ""))
+            st.markdown(f"**{ins.summary}**" if ins.summary else "")
+            for line in ins.bullets:
+                st.markdown(f"- {line}")
+            if ins.context:
+                st.caption("Connects to: " + " · ".join(x.split(" — ")[0] for x in ins.context[:3]))
+            if ins.closing:
+                st.info(ins.closing)
             with st.expander("Why was this flagged? Supporting evidence"):
                 st.dataframe(pd.DataFrame(ins.evidence).rename(columns={
                     "signal": "Signal", "source": "Source sheet", "first_window": "Earlier period", "last_window": "Recent period",
@@ -87,7 +118,7 @@ with tab_ins:
                     "overall_coverage": "Overall coverage", "size_vs_own_variation": "Change vs usual variation",
                     "trend_p": "Trend p-value"}), hide_index=True, width="stretch")
             if ins.context:
-                with st.expander("History this connects to"):
+                with st.expander("History this connects to (with source)"):
                     for line in ins.context:
                         st.markdown(f"- {line}")
             if ins.asks:
@@ -106,8 +137,9 @@ with tab_ins:
 
 # ------------------------------------------------------------------ timeline
 with tab_time:
-    key = st.selectbox("Signal", list(SIGNALS), format_func=lambda k: f"{SIGNALS[k].label} ({SIGNALS[k].unit})",
-                       index=list(SIGNALS).index(insights[0].forecast_key) if insights and insights[0].forecast_key in SIGNALS else 0)
+    keys = list(SIGNALS)
+    default = keys.index(insights[0].forecast_key) if insights and insights[0].forecast_key in SIGNALS else 0
+    key = st.selectbox("Signal", keys, format_func=lambda k: f"{SIGNALS[k].label} ({SIGNALS[k].unit})", index=default)
     sig = SIGNALS[key]
     s = patient.daily[sig.column]
     fig = go.Figure()
@@ -116,23 +148,30 @@ with tab_time:
     fig.add_trace(go.Scatter(x=wk.index, y=wk, mode="lines", name="Weekly average", line=dict(color=COLORS["line"], width=3)))
     r = results.get(key)
     if r is not None:
-        for (x0, x1), label in [(r.window_first, "Earlier period"), (r.window_last, "Recent period")]:
-            fig.add_vrect(x0=x0, x1=x1, fillcolor="rgba(120,120,120,0.08)", line_width=0, annotation_text=label,
+        for (x0, x1), label, mean in [(r.window_first, "Earlier", r.mean_first), (r.window_last, "Recent", r.mean_last)]:
+            fig.add_vrect(x0=x0, x1=x1, fillcolor="rgba(120,120,120,0.08)", line_width=0,
+                          annotation_text=f"{label} 90 days · avg {mean:,.{sig.decimals}f} {sig.unit}" if mean == mean else label,
                           annotation_position="top left")
     proj = forecast.project(s)
     if proj is not None:
         fig.add_trace(go.Scatter(x=list(proj.date) + list(proj.date[::-1]), y=list(proj.high) + list(proj.low[::-1]),
-                                 mode="lines", fill="toself", fillcolor=COLORS["band"], line=dict(width=0), name="95% range", hoverinfo="skip"))
+                                 mode="lines", fill="toself", fillcolor=COLORS["band"], line=dict(width=0),
+                                 name="95% range", hoverinfo="skip"))
         fig.add_trace(go.Scatter(x=proj.date, y=proj["mean"], mode="lines", name="Projection",
                                  line=dict(color=COLORS["proj"], width=3, dash="dash")))
-    marks = [(row.date, row.event) for row in patient.history.itertuples() if row.date >= start]
-    marks += [(row.start, f"{row.medication} started") for row in patient.meds.itertuples() if row.start == row.start and row.start >= start]
+    marks = [(row.date, row.event) for row in patient.history.itertuples()]
+    marks += [(row.start, f"{row.medication} started") for row in patient.meds.itertuples() if row.start == row.start]
     for when, text in marks:
-        fig.add_shape(type="line", x0=when, x1=when, y0=0, y1=1, yref="paper", line=dict(color="#7f7f7f", width=1, dash="dot"))
-        fig.add_annotation(x=when, y=1, yref="paper", text=text, showarrow=False, textangle=-90, xanchor="left", yanchor="top",
-                           font=dict(size=10, color="#555"))
-    fig.update_layout(height=470, margin=dict(l=10, r=10, t=30, b=10), yaxis_title=f"{sig.label} ({sig.unit})",
-                      legend=dict(orientation="h", y=-0.15), hovermode="x unified")
+        if when >= start:
+            fig.add_shape(type="line", x0=when, x1=when, y0=0, y1=1, yref="paper", line=dict(color="#7f7f7f", width=1, dash="dot"))
+            fig.add_annotation(x=when, y=1, yref="paper", text=text, showarrow=False, textangle=-90, xanchor="left",
+                               yanchor="top", font=dict(size=10, color="#555"))
+    before = [f"{text} ({when:%b %Y})" for when, text in marks if when < start]
+    if before:
+        fig.add_annotation(x=0, y=-0.2, xref="paper", yref="paper", showarrow=False, xanchor="left", align="left",
+                           text="◀ Before this window: " + "; ".join(before), font=dict(size=11, color="#555"))
+    fig.update_layout(height=480, margin=dict(l=10, r=10, t=30, b=60), yaxis_title=f"{sig.label} ({sig.unit})",
+                      legend=dict(orientation="h", y=1.08), hovermode="x unified")
     st.plotly_chart(fig, width="stretch")
     if proj is None:
         st.caption("Not enough weekly data to draw a projection for this signal.")
@@ -142,15 +181,15 @@ with tab_time:
 
     tests = sorted(patient.labs.test.unique())
     if tests:
-        default = tests.index("HbA1c") if "HbA1c" in tests else 0
-        t = st.selectbox("Lab result", tests, index=default)
+        t = st.selectbox("Lab result", tests, index=tests.index("HbA1c") if "HbA1c" in tests else 0)
         rows = patient.labs[patient.labs.test == t]
-        lf = go.Figure(go.Scatter(x=rows.date, y=rows.result, mode="lines+markers", line=dict(color=COLORS["line"]), name=t))
+        lf = go.Figure(go.Scatter(x=rows.date, y=rows.result, mode="lines+markers+text", text=[f"{v:g}" for v in rows.result],
+                                  textposition="top center", line=dict(color=COLORS["line"]), name=t))
         lo, hi = rows.ref_low.iloc[0], rows.ref_high.iloc[0]
         if lo == lo and hi == hi:
             lf.add_hrect(y0=lo, y1=hi, fillcolor="rgba(46,160,67,0.12)", line_width=0, annotation_text="Reference range",
                          annotation_position="top left")
-        lf.update_layout(height=280, margin=dict(l=10, r=10, t=30, b=10), yaxis_title=f"{t} ({rows.unit.iloc[0]})")
+        lf.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), yaxis_title=f"{t} ({rows.unit.iloc[0]})")
         st.plotly_chart(lf, width="stretch")
 
 # ------------------------------------------------------------------ coverage
