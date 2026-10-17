@@ -1,6 +1,6 @@
 # PranaChain — Beyond the Record: AI Health Intelligence Challenge
 
-**COMP8967 Internship Project | Business 2 | Group 11 | Fall 2026**
+**COMP8967 Internship Project | Business 2 | Group 11 — PranaPulse | Fall 2026**
 **University of Windsor × PranaChain**
 
 ## The Challenge
@@ -111,7 +111,7 @@ At each checkpoint: show what works, what doesn't yet work, what was learned, an
 Code folders (`src/`, `app/`, `tests/`, etc.) will be added once the data model and approach are
 settled at the Discovery checkpoint, rather than committed empty ahead of time.
 
-## Team — Group 11
+## Team — Group 11 (PranaPulse)
 
 - Harsh Jayeshkumar Patel (Team Leader)
 - Vrajkumar Yaminkumar Patel
