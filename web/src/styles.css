@@ -91,3 +91,17 @@ details { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 8px; 
   .kpis { grid-template-columns: repeat(2, 1fr); } .scen, .steps { grid-template-columns: 1fr; }
   .hero h1 { font-size: 1.45rem; } .hero.big h1 { font-size: 1.8rem; }
 }
+
+.authwrap { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
+.authside { background: linear-gradient(140deg, var(--brand) 0%, var(--brand2) 100%); color: #fff; padding: clamp(28px, 6vw, 70px); display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.authside h1 { font-size: 2.4rem; } .authside ul { padding-left: 20px; line-height: 1.8; opacity: .95; } .authside .meta { opacity: .8; font-size: .9rem; }
+.authcard { align-self: center; justify-self: center; width: min(420px, 92%); display: flex; flex-direction: column; gap: 12px; padding: 24px 0; }
+.authcard label { display: flex; flex-direction: column; gap: 4px; font-size: .88rem; font-weight: 600; }
+.authcard label.check { flex-direction: row; font-weight: 400; align-items: flex-start; }
+.authcard input:not([type=checkbox]) { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-weight: 400; }
+.authcard p { margin: 0; } .center { text-align: center; } a { color: var(--brand); }
+.userbox { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; } .uname { display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.actionscell { display: flex; gap: 6px; } .actionscell a.btn { text-decoration: none; }
+.mobile-pick { gap: 8px; } 
+@media (max-width: 820px) { .authwrap { grid-template-columns: 1fr; } .authside { padding: 28px 22px; } .authside h1 { font-size: 1.8rem; } .mobile-pick { display: flex; } .mobile-pick select { flex: 1; } }
+.actionscell { flex-wrap: wrap; min-width: 270px; white-space: normal; }
