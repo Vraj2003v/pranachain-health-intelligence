@@ -123,3 +123,15 @@ settled at the Discovery checkpoint, rather than committed empty ahead of time.
 - Project Management: [GitHub Project board](https://github.com/users/Vraj2003v/projects/3/views/1)
 - Course: COMP8967-1-R-2026F, Business 2
 - Instructor/Coordinator: Sheetal (sheetal@uwindsor.ca)
+
+## Prototype demo (run locally, all free tools)
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Upload patient workbooks (.xlsx) in the sidebar, or switch on the five fabricated demo patients. The app converts the
+three date formats, compares each patient's first and last 90 days against their own variation, links changes to history
+and labs, shows the evidence, flags limited data, and draws an 8-week straight-line projection. Run `python -m pytest tests`
+for the checks. Thresholds in `pranapulse/signals.py` are placeholders pending calibration on real patients.
