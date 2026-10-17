@@ -52,3 +52,17 @@ def test_every_narrative_passes_guardrails():
 def test_guardrail_catches_bad_wording():
     assert check_language("You have diabetes and should go to the emergency room.")
     assert check_language("This pattern may be worth discussing with a provider.") == []
+
+
+def test_llm_fallback_and_guardrail():
+    from pranapulse import llm
+    ins = run("A")[0][0]
+    good = "These readings may have shifted, and it may be worth discussing with a healthcare provider."
+    assert llm.explain(ins, generate=lambda *a: good) == (good, "local model")
+    bad = "This is dangerous and you have a disease."
+    assert llm.explain(ins, generate=lambda *a: bad)[1] == "template"
+
+    def boom(*a):
+        raise OSError("no server")
+    assert llm.explain(ins, generate=boom)[1] == "template"
+    assert llm.available(url="http://localhost:9") is False
