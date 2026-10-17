@@ -16,7 +16,26 @@ from pranapulse.signals import SIGNALS, WINDOW_DAYS
 
 st.set_page_config(page_title="PranaPulse", page_icon="🫀", layout="wide")
 
-BADGE = {"Sufficient": ":green-background[ ● Data sufficient ]", "Limited": ":orange-background[ ● Limited data ]"}
+BADGE = {"Sufficient": '<span class="chip ok">● Data sufficient</span>',
+         "Limited": '<span class="chip warn">● Limited data</span>'}
+st.markdown("""
+<style>
+.block-container {padding-top: 4rem; max-width: 1200px;}
+.hero {background: linear-gradient(120deg,#1f4e79 0%,#2d7a9a 100%); color:#fff; border-radius:16px; padding:22px 26px; margin-bottom:14px;}
+.hero h1 {color:#fff; margin:0; font-size:2rem; padding:0;}
+.hero p {margin:4px 0 0 0; opacity:.92; font-size:1rem;}
+.hero .meta {margin-top:10px; font-size:.9rem; opacity:.85;}
+.chip {display:inline-block; padding:2px 10px; border-radius:999px; font-size:.78rem; font-weight:600; margin-right:6px;}
+.chip.ok {background:#e3f4ea; color:#1d6b3a;} .chip.warn {background:#fff1dc; color:#9a5b00;}
+.chip.kind {background:#e8eef6; color:#1f4e79;}
+.kpi {border:1px solid rgba(128,128,128,.25); border-radius:14px; padding:14px 18px;}
+.kpi .n {font-size:2rem; font-weight:700; line-height:1.1;} .kpi .l {opacity:.7; font-size:.85rem;}
+.step {border:1px solid rgba(128,128,128,.25); border-radius:14px; padding:16px 18px; height:100%;}
+.step b {color:#1f4e79;}
+.note {border-left:4px solid #c55a11; padding:6px 12px; background:rgba(197,90,17,.07); border-radius:0 8px 8px 0; font-size:.9rem;}
+@media (max-width: 640px) {.hero h1 {font-size:1.5rem;} .kpi .n {font-size:1.5rem;}}
+</style>
+""", unsafe_allow_html=True)
 ICON = {"pattern": "🔗", "single": "📈", "cycle": "🗓️"}
 COLORS = {"line": "#1f4e79", "dots": "rgba(31,78,121,0.22)", "proj": "#c55a11", "band": "rgba(197,90,17,0.16)"}
 
@@ -45,23 +64,36 @@ for u in uploads or []:
     files[u.name] = u.getvalue()
 
 if not files:
-    st.title("🫀 PranaPulse")
-    st.markdown("#### Explainable changes in a patient's health, connected to their history")
-    st.write("Upload one or more patient workbooks in the sidebar, or switch on the fabricated demo patients to try it.")
+    st.markdown('<div class="hero"><h1>🫀 PranaPulse</h1><p>Explainable changes in a patient\'s health, connected to their history.</p></div>',
+                unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    c1.markdown('<div class="step"><b>1 · Load</b><br>Upload patient workbooks (.xlsx) in the sidebar, or switch on the fabricated demo patients.</div>', unsafe_allow_html=True)
+    c2.markdown('<div class="step"><b>2 · Compare</b><br>Each patient is compared with their own earlier self, never with a population average.</div>', unsafe_allow_html=True)
+    c3.markdown('<div class="step"><b>3 · Explain</b><br>You see what changed, the evidence, the history it connects to, and a projection.</div>', unsafe_allow_html=True)
     st.stop()
 
 parsed, failed = {}, {}
-for name, data in files.items():
+bar = st.progress(0.0, text="Reading workbooks…") if len(files) > 5 else None
+for i, (name, data) in enumerate(files.items(), 1):
     try:
         parsed[name] = parse(data)
     except Exception as exc:  # a workbook that does not match the layout
         failed[name] = str(exc)
+    if bar:
+        bar.progress(i / len(files), text=f"Reading workbooks… {i} of {len(files)}")
+if bar:
+    bar.empty()
 for name, why in failed.items():
     st.sidebar.error(f"Could not read {name}: {why}")
 if not parsed:
     st.stop()
 
-choice = st.sidebar.selectbox("Patient", list(parsed))
+flagged_only = st.sidebar.checkbox("Show only patients with an insight", value=False) if len(parsed) > 5 else False
+names = [n for n, v in parsed.items() if v[1]] if flagged_only else list(parsed)
+if not names:
+    st.sidebar.info("No patient has an insight.")
+    names = list(parsed)
+choice = st.sidebar.selectbox("Patient", names, format_func=lambda n: f"{parsed[n][0].patient_id}  ·  {'Flagged' if parsed[n][1] else 'Quiet'}")
 patient, insights, held, results = parsed[choice]
 
 st.sidebar.divider()
@@ -76,9 +108,10 @@ st.sidebar.caption("Prototype for academic use on synthetic/anonymised data. It 
 
 # ------------------------------------------------------------------ header
 start, end = patient.window
-st.title(f"Patient {patient.patient_id}")
-st.caption(f"{patient.profile.get('Age', '—')} years · {patient.profile.get('Sex', '—')} · "
-           f"data from {start:%d %b %Y} to {end:%d %b %Y} ({len(patient.daily)} days)")
+st.markdown(f'<div class="hero"><h1>🫀 Patient {patient.patient_id}</h1>'
+            f'<p>Changes against this patient\'s own baseline, connected to their history.</p>'
+            f'<div class="meta">{patient.profile.get("Age", "—")} years · {patient.profile.get("Sex", "—")} · '
+            f'data {start:%d %b %Y} – {end:%d %b %Y} ({len(patient.daily)} days)</div></div>', unsafe_allow_html=True)
 
 tab_over, tab_ins, tab_time, tab_cov = st.tabs(["Overview", "Insights", "Timeline & projection", "Data coverage"])
 
@@ -93,13 +126,35 @@ with tab_over:
                      "Data flag": ("Limited data" if top and top.flag == "Limited" else ("Sufficient" if top else "—")),
                      "Held back": len(hd)})
     df = pd.DataFrame(rows)
-    a, b, c = st.columns(3)
-    a.metric("Patients loaded", len(df))
-    b.metric("With an insight", int((df.Status == "Flagged").sum()))
-    c.metric("Quiet", int((df.Status == "Quiet").sum()))
-    st.dataframe(df, hide_index=True, width="stretch")
-    st.caption("Pick a patient in the sidebar to see the insight, evidence and projection. "
-               "Quiet is intended: ordinary day-to-day variation is not reported.")
+    n_flag = int((df.Status == "Flagged").sum())
+    n_lim = int((df["Data flag"] == "Limited data").sum())
+    k = st.columns(4)
+    for col, num, lab in zip(k, [len(df), n_flag, len(df) - n_flag, n_lim],
+                             ["Patients loaded", "With an insight", "Quiet (intended)", "Limited-data insights"]):
+        col.markdown(f'<div class="kpi"><div class="n">{num}</div><div class="l">{lab}</div></div>', unsafe_allow_html=True)
+    st.write("")
+    f1, f2, f3 = st.columns([2, 2, 3])
+    show = f1.selectbox("Show", ["All patients", "With an insight", "Quiet"])
+    kinds = f2.selectbox("Data flag", ["Any", "Sufficient", "Limited data"])
+    q = f3.text_input("Search patient ID", placeholder="e.g. PC0103")
+    view = df
+    if show == "With an insight":
+        view = view[view.Status == "Flagged"]
+    elif show == "Quiet":
+        view = view[view.Status == "Quiet"]
+    if kinds != "Any":
+        view = view[view["Data flag"] == kinds]
+    if q:
+        view = view[view.Patient.astype(str).str.contains(q, case=False)]
+    view = view.assign(Status=view.Status.map({"Flagged": "🟠 Flagged", "Quiet": "⚪ Quiet"}))
+    st.dataframe(view, hide_index=True, width="stretch", height=min(560, 60 + 35 * len(view)),
+                 column_config={"Patient": st.column_config.TextColumn(width="small"),
+                                "What was found": st.column_config.TextColumn(width="large"),
+                                "Held back": st.column_config.NumberColumn(help="Changes noticed but not shown because the data was too thin")})
+    left, right = st.columns([4, 1])
+    left.caption(f"Showing {len(view)} of {len(df)}. Pick a patient in the sidebar to see the insight, evidence and projection. "
+                 "Quiet is intended: ordinary day-to-day variation is not reported.")
+    right.download_button("Download table (CSV)", df.to_csv(index=False).encode(), "pranapulse_overview.csv", "text/csv")
 
 # ------------------------------------------------------------------ insights
 with tab_ins:
@@ -109,19 +164,28 @@ with tab_ins:
     for ins in insights:
         with st.container(border=True):
             st.markdown(f"### {ICON[ins.kind]} {ins.title}")
-            st.markdown(BADGE[ins.flag] + ("   some expected data was missing" if ins.flag == "Limited" else ""))
+            kind_label = {"pattern": "Pattern across measures", "single": "Single measure", "cycle": "Cycle timing"}[ins.kind]
+            st.markdown(f'<span class="chip kind">{kind_label}</span>' + BADGE[ins.flag]
+                        + ('<span style="opacity:.7;font-size:.85rem"> some expected data was missing</span>' if ins.flag == "Limited" else ""),
+                        unsafe_allow_html=True)
             if use_llm:
                 text, source = llm.explain(ins)
                 st.markdown(f"**{text}**")
                 st.caption(f"Wording by: {source}")
             else:
                 st.markdown(f"**{ins.summary}**" if ins.summary else "")
+            tiles = [results[k] for k in ins.signals if k in results]
+            if tiles:
+                cols = st.columns(min(len(tiles), 4))
+                for col, r in zip(cols, tiles):
+                    col.metric(r.label, f"{r.mean_last:,.{r.decimals}f} {r.unit}",
+                               f"{r.diff:+,.{r.decimals}f} vs earlier 90 days", delta_color="off")
             for line in ins.bullets:
                 st.markdown(f"- {line}")
             if ins.context:
                 st.caption("Connects to: " + " · ".join(x.split(" — ")[0] for x in ins.context[:3]))
             if ins.closing:
-                st.info(ins.closing)
+                st.markdown(f'<div class="note">{ins.closing}</div>', unsafe_allow_html=True)
             with st.expander("Why was this flagged? Supporting evidence"):
                 st.dataframe(pd.DataFrame(ins.evidence).rename(columns={
                     "signal": "Signal", "source": "Source sheet", "first_window": "Earlier period", "last_window": "Recent period",
