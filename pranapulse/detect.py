@@ -48,6 +48,7 @@ class Insight:
     summary: str = ""
     bullets: list = field(default_factory=list)
     closing: str = ""
+    scenario: str = ""         # which validation scenario this belongs to
 
 
 def _fmt(v, d):
@@ -168,6 +169,14 @@ def _asks(p: Patient, results, tests, lab_hits=()):
     return asks
 
 
+SCENARIO = {"metabolic": "Metabolic health", "cardio": "Cardiovascular / hypertension", "cycle": "Women's health (PCOS)"}
+
+
+def _join(items):
+    items = list(items)
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
 def detect(p: Patient):
     """Return (insights to show, list of notes about what was held back and why)."""
     results = {k: analyse_signal(p, k) for k in SIGNALS}
@@ -197,6 +206,7 @@ def detect(p: Patient):
                            f"across {l['n']} results ({l['diff']:+g})")
         ctx = _context(p, c["context"], list(c["labs"]))
         names = ", ".join([r.label.lower() for r in usable] + [l["test"] for l in lab_hits])
+        names_list = [r.label for r in usable] + [l["test"] for l in lab_hits]
         text = (f"{len(bullets)} related measures moved in the same direction over this patient's year. "
                 + "; ".join(bullets) + ". "
                 + ("This sits alongside history in the record: " + "; ".join(x.split(" — ")[0] for x in ctx[:3]) + ". " if ctx else "")
@@ -204,7 +214,7 @@ def detect(p: Patient):
                 + (_projection_sentence(p, usable[0]) if usable else ""))
         assert not check_language(text), check_language(text)
         closing = "This pattern may be worth discussing with a healthcare provider." + (_projection_sentence(p, usable[0]) if usable else "")
-        insights.append(Insight("pattern", f"{c['label']} are shifting together", flag, [r.key for r in usable],
+        insights.append(Insight("pattern", f"{_join(names_list)} {'is' if len(names_list) == 1 else 'are'} shifting together", flag, [r.key for r in usable],
                                 [_evidence(r) for r in usable] + [
                                     {"signal": l["test"], "source": "Lab Results",
                                      "first_window": f"{l['first'].date:%d %b %Y}", "last_window": f"{l['last'].date:%d %b %Y}",
@@ -212,7 +222,8 @@ def detect(p: Patient):
                                      "days_with_data": f"{l['n']} results", "overall_coverage": "—",
                                      "size_vs_own_variation": "—", "trend_p": "—"} for l in lab_hits],
                                 ctx, text, _asks(p, usable, list(c["labs"]), lab_hits), usable[0].key if usable else "",
-                                f"{len(bullets)} related measures moved in the same direction over this patient's year.", bullets, closing))
+                                f"{len(bullets)} related measures moved in the same direction over this patient's year.", bullets, closing,
+                                SCENARIO[cname]))
         used.update(r.key for r in usable)
 
     for r in results.values():
@@ -253,4 +264,10 @@ def detect(p: Patient):
 
     order = {"pattern": 0, "cycle": 1, "single": 2}
     insights.sort(key=lambda i: (order[i.kind], -RANK[i.flag]))
+    for ins in insights:
+        if not ins.scenario:
+            if ins.kind == "cycle":
+                ins.scenario = SCENARIO["cycle"]
+            else:
+                ins.scenario = SCENARIO["cardio"] if ins.signals and ins.signals[0] in ("sbp", "dbp", "rhr", "hrv") else SCENARIO["metabolic"]
     return insights, held, results
