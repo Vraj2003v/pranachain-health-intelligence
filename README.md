@@ -138,3 +138,10 @@ for the checks. Thresholds in `pranapulse/signals.py` are placeholders pending c
 
 ### Optional: local model for the wording
 Install [Ollama](https://ollama.com), run `ollama pull llama3.1:8b`, keep Ollama running, then switch on **Explain with local model** in the app sidebar. Only computed facts are sent, nothing leaves the computer, every reply must pass the wording check, and the app falls back to the standard text on any failure.
+
+## Run in GitHub Codespaces
+1. On the repo page click **Code → Codespaces → Create codespace on main**.
+2. Wait for setup to finish (it installs the requirements and runs the tests). The app starts by itself and opens on port 8501; if it does not, run `streamlit run app.py`.
+3. In the app, switch on **Use fabricated demo patients**, or upload a patient workbook (.xlsx).
+4. Real workbooks are not stored in the repo. Upload them in the app from your own computer.
+5. Optional local model: in the terminal install Ollama (`curl -fsSL https://ollama.com/install.sh | sh`), start it with `ollama serve &`, then `ollama pull llama3.2:3b` (the 8B model needs a 16 GB machine; change `DEFAULT_MODEL` in `pranapulse/llm.py` to match). Without it, the app uses the standard text.
