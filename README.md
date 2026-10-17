@@ -135,3 +135,6 @@ Upload patient workbooks (.xlsx) in the sidebar, or switch on the five fabricate
 three date formats, compares each patient's first and last 90 days against their own variation, links changes to history
 and labs, shows the evidence, flags limited data, and draws an 8-week straight-line projection. Run `python -m pytest tests`
 for the checks. Thresholds in `pranapulse/signals.py` are placeholders pending calibration on real patients.
+
+### Optional: local model for the wording
+Install [Ollama](https://ollama.com), run `ollama pull llama3.1:8b`, keep Ollama running, then switch on **Explain with local model** in the app sidebar. Only computed facts are sent, nothing leaves the computer, every reply must pass the wording check, and the app falls back to the standard text on any failure.
