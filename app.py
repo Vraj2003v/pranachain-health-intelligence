@@ -8,7 +8,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from pranapulse import forecast
+from pranapulse import forecast, llm
 from pranapulse.demo_data import all_demo_workbooks
 from pranapulse.detect import detect
 from pranapulse.loader import load_patient
@@ -65,6 +65,12 @@ choice = st.sidebar.selectbox("Patient", list(parsed))
 patient, insights, held, results = parsed[choice]
 
 st.sidebar.divider()
+use_llm = st.sidebar.toggle("Explain with local model", value=False,
+                            help="Rewrites the summary with a local Ollama model (llama3.1:8b). Nothing leaves this computer. "
+                                 "Falls back to the standard text if the model is off or its reply fails the wording check.")
+if use_llm and not llm.available():
+    st.sidebar.warning("Local model not found. Run: ollama pull llama3.1:8b (and keep Ollama running).")
+    use_llm = False
 st.sidebar.caption("Prototype for academic use on synthetic/anonymised data. It highlights patterns that may be worth "
                    "discussing with a healthcare provider. It does not diagnose or give medical advice.")
 
@@ -104,7 +110,12 @@ with tab_ins:
         with st.container(border=True):
             st.markdown(f"### {ICON[ins.kind]} {ins.title}")
             st.markdown(BADGE[ins.flag] + ("   some expected data was missing" if ins.flag == "Limited" else ""))
-            st.markdown(f"**{ins.summary}**" if ins.summary else "")
+            if use_llm:
+                text, source = llm.explain(ins)
+                st.markdown(f"**{text}**")
+                st.caption(f"Wording by: {source}")
+            else:
+                st.markdown(f"**{ins.summary}**" if ins.summary else "")
             for line in ins.bullets:
                 st.markdown(f"- {line}")
             if ins.context:
