@@ -146,7 +146,7 @@ The interface is a React app (`web/`) served by a FastAPI backend (`api/`) that 
 pip install -r requirements.txt
 python -m uvicorn api.main:app --port 8000
 ```
-Open http://localhost:8000. The built interface is committed in `web/dist`, so Node is only needed to change it:
+Open http://localhost:8000 and create an account (the first account becomes the administrator). The built interface is committed in `web/dist`, so Node is only needed to change it:
 ```
 cd web && npm ci && npm run dev      # dev server on :5173, proxies /api to :8000
 cd web && npm run build              # rebuild web/dist
@@ -159,3 +159,12 @@ The earlier Streamlit prototype (`streamlit run app.py`) is kept for reference.
 3. In the app press **Try demo patients**, or **Upload workbooks** and pick .xlsx files (many at once is fine).
 4. Real workbooks are not stored in the repo. Upload them from your own computer.
 5. Optional local model: install Ollama (`curl -fsSL https://ollama.com/install.sh | sh`), run `ollama serve &` then `ollama pull llama3.2:3b` (the 8B model needs a 16 GB machine; change `DEFAULT_MODEL` in `pranapulse/llm.py` to match). The **Explain with local model** button then rewrites an insight's summary; without it the standard wording is used.
+
+## Accounts and database
+- Sign-in uses email and password. Passwords are stored as salted scrypt hashes; the login cookie is httpOnly and only a hash of its token is stored. Five wrong passwords lock that email for 15 minutes.
+- Registration asks the user to confirm they will only upload synthetic or anonymised data.
+- Uploaded workbooks and their analysis summaries are stored in SQLite (`data/pranapulse.db`, not committed; set `PRANAPULSE_DB` to move it). Each user sees only their own documents.
+- Users can download or delete each document, delete everything, or delete their account and all of their data.
+- Every sign-in, upload, patient view, download and delete is written to an audit log. The administrator sees it in the **Audit log** tab.
+- In a Codespace the database lives inside the codespace and is lost if the codespace is deleted.
+- Prototype limits: no email verification or password reset, one process, and no HTTPS of its own (Codespaces and a reverse proxy provide it). Do not use it for real patient data.

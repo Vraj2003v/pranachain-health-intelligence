@@ -1,16 +1,20 @@
-"""PranaPulse API: upload patient workbooks, get explainable insights as JSON. Serves the React app from web/dist.
+"""PranaPulse API: sign in, store patient workbooks in a database, get explainable insights as JSON.
+Serves the React app from web/dist.
 
 Run with:  uvicorn api.main:app --port 8000
 """
+import hashlib
 import io
+import json
 import math
-import uuid
+from functools import lru_cache
 from pathlib import Path
 
 import pandas as pd
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 from pranapulse import forecast, llm
 from pranapulse.demo_data import all_demo_workbooks
@@ -18,9 +22,13 @@ from pranapulse.detect import detect
 from pranapulse.loader import load_patient
 from pranapulse.signals import SIGNALS, WINDOW_DAYS
 
+from . import auth
+from .db import db, init
+
 app = FastAPI(title="PranaPulse API")
-SESSIONS: dict[str, dict] = {}   # session id -> {patient key -> (patient, insights, held, results)}
 DIST = Path(__file__).resolve().parent.parent / "web" / "dist"
+MAX_FILE = 5 * 1024 * 1024
+init()
 
 
 def num(x):
@@ -35,26 +43,92 @@ def day(ts):
     return None if ts is None or pd.isna(ts) else pd.Timestamp(ts).strftime("%Y-%m-%d")
 
 
-def session(sid):
-    if sid not in SESSIONS:
-        raise HTTPException(404, "Unknown session; reload the page.")
-    return SESSIONS[sid]
+# ------------------------------------------------------------------ accounts
+class Register(BaseModel):
+    name: str
+    email: str
+    password: str
+    confirm: bool = False
 
 
-def add(sess, name, data):
-    p = load_patient(io.BytesIO(data))
-    key = p.patient_id if p.patient_id not in sess else f"{p.patient_id} ({name})"
-    sess[key] = (p, *detect(p))
-    return key
+class Login(BaseModel):
+    email: str
+    password: str
 
 
-def summary(key, entry):
-    p, ins, held, _ = entry
-    top = ins[0] if ins else None
-    return {"key": key, "id": p.patient_id, "age": num(p.profile.get("Age")), "sex": p.profile.get("Sex"),
-            "status": "Flagged" if top else "Quiet", "found": top.title if top else "Nothing beyond usual variation",
-            "flag": top.flag if top else None, "scenario": top.scenario if top else None,
-            "kinds": [i.kind for i in ins], "held": len(held), "insights": len(ins)}
+def public(u):
+    return {"id": u["id"], "name": u["name"], "email": u["email"], "role": u["role"]}
+
+
+@app.post("/api/auth/register")
+def register(body: Register, request: Request, response: Response):
+    email = body.email.strip().lower()
+    if not auth.EMAIL.match(email):
+        raise HTTPException(400, "Enter a valid email address.")
+    if len(body.password) < 8:
+        raise HTTPException(400, "Use a password of at least 8 characters.")
+    if not body.name.strip():
+        raise HTTPException(400, "Enter your name.")
+    if not body.confirm:
+        raise HTTPException(400, "Please confirm that you will only use synthetic or anonymised data.")
+    pw_hash, salt = auth.hash_password(body.password)
+    with db() as con:
+        if con.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
+            raise HTTPException(409, "An account with this email already exists.")
+        first = con.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
+        cur = con.execute("INSERT INTO users(email, name, role, pw_hash, salt, consent_at) VALUES (?,?,?,?,?,datetime('now'))",
+                          (email, body.name.strip(), "admin" if first else "clinician", pw_hash, salt))
+        user = {"id": cur.lastrowid, "name": body.name.strip(), "email": email, "role": "admin" if first else "clinician"}
+    auth.start_session(response, request, user["id"])
+    auth.log(user, "register", f"role={user['role']}")
+    return public(user)
+
+
+@app.post("/api/auth/login")
+def login(body: Login, request: Request, response: Response):
+    email = body.email.strip().lower()
+    if auth.throttled(email):
+        raise HTTPException(429, "Too many failed attempts. Try again in 15 minutes.")
+    with db() as con:
+        row = con.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    if not row or not auth.verify_password(body.password, row["pw_hash"], row["salt"]):
+        auth.note_failure(email)
+        auth.log(None, "login_failed", email)
+        raise HTTPException(401, "Email or password is incorrect.")
+    auth.clear_failures(email)
+    auth.start_session(response, request, row["id"])
+    user = {"id": row["id"], "name": row["name"], "email": row["email"], "role": row["role"]}
+    auth.log(user, "login")
+    return public(user)
+
+
+@app.post("/api/auth/logout")
+def logout(request: Request, response: Response):
+    auth.end_session(response, request)
+    return {"ok": True}
+
+
+@app.get("/api/auth/me")
+def me(user=Depends(auth.current_user)):
+    return public(user)
+
+
+@app.delete("/api/auth/account")
+def delete_account(request: Request, response: Response, user=Depends(auth.current_user)):
+    auth.log(user, "account_deleted")
+    with db() as con:
+        con.execute("DELETE FROM users WHERE id = ?", (user["id"],))
+    auth.end_session(response, request)
+    return {"ok": True}
+
+
+@app.get("/api/audit")
+def audit(user=Depends(auth.current_user)):
+    if user["role"] != "admin":
+        raise HTTPException(403, "Only an administrator can view the audit log.")
+    with db() as con:
+        rows = con.execute("SELECT at, email, action, detail FROM audit ORDER BY id DESC LIMIT 200").fetchall()
+    return [dict(r) for r in rows]
 
 
 @app.get("/api/health")
@@ -62,42 +136,107 @@ def health():
     return {"ok": True, "llm": llm.available()}
 
 
-@app.post("/api/session")
-def new_session():
-    sid = uuid.uuid4().hex[:12]
-    SESSIONS[sid] = {}
-    return {"session": sid}
+# ------------------------------------------------------------------ documents (stored workbooks)
+@lru_cache(maxsize=64)
+def analysed(doc_id: int, sha: str):
+    with db() as con:
+        blob = con.execute("SELECT blob FROM documents WHERE id = ?", (doc_id,)).fetchone()["blob"]
+    p = load_patient(io.BytesIO(blob))
+    return (p, *detect(p))
 
 
-@app.post("/api/session/{sid}/demo")
-def load_demo(sid: str):
-    sess = session(sid)
-    for name, data in all_demo_workbooks().items():
-        add(sess, name, data)
-    return {"patients": len(sess)}
+def store(user, filename, data, is_demo=0):
+    """Validate, analyse and save one workbook. Returns (document id, None) or (None, reason)."""
+    if len(data) > MAX_FILE:
+        return None, "file is larger than 5 MB"
+    sha = hashlib.sha256(data).hexdigest()
+    with db() as con:
+        if con.execute("SELECT 1 FROM documents WHERE user_id = ? AND sha256 = ?", (user["id"], sha)).fetchone():
+            return None, "already uploaded"
+    try:
+        p = load_patient(io.BytesIO(data))
+        ins, held, _ = detect(p)
+    except Exception as exc:   # a workbook that does not match the layout
+        return None, str(exc)[:160]
+    top = ins[0] if ins else None
+    with db() as con:
+        cur = con.execute("INSERT INTO documents(user_id, filename, sha256, size, blob, is_demo) VALUES (?,?,?,?,?,?)",
+                          (user["id"], filename[:200], sha, len(data), data, is_demo))
+        con.execute("INSERT INTO results VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                    (cur.lastrowid, p.patient_id, num(p.profile.get("Age")), p.profile.get("Sex"),
+                     "Flagged" if top else "Quiet", top.title if top else "Nothing beyond usual variation",
+                     top.flag if top else None, top.scenario if top else None, json.dumps([i.kind for i in ins]),
+                     len(held), len(ins)))
+    return cur.lastrowid, None
 
 
-@app.post("/api/session/{sid}/upload")
-async def upload(sid: str, files: list[UploadFile] = File(...)):
-    sess = session(sid)
-    failed = {}
+@app.get("/api/documents")
+def documents(user=Depends(auth.current_user)):
+    with db() as con:
+        rows = con.execute(
+            "SELECT d.id, d.filename, d.size, d.uploaded_at, d.is_demo, r.* FROM documents d JOIN results r ON r.document_id = d.id "
+            "WHERE d.user_id = ? ORDER BY d.id", (user["id"],)).fetchall()
+    return [{"key": str(r["id"]), "id": r["patient_id"], "filename": r["filename"], "size": r["size"], "uploaded": r["uploaded_at"],
+             "demo": bool(r["is_demo"]), "age": r["age"], "sex": r["sex"], "status": r["status"], "found": r["found"],
+             "flag": r["flag"], "scenario": r["scenario"], "held": r["held"], "insights": r["insights"]} for r in rows]
+
+
+@app.post("/api/documents")
+async def upload(files: list[UploadFile] = File(...), user=Depends(auth.current_user)):
+    added, failed = 0, {}
     for f in files:
-        try:
-            add(sess, f.filename, await f.read())
-        except Exception as exc:   # a workbook that does not match the layout
-            failed[f.filename] = str(exc)[:160]
-    return {"patients": len(sess), "failed": failed}
+        _, why = store(user, f.filename or "workbook.xlsx", await f.read())
+        if why:
+            failed[f.filename] = why
+        else:
+            added += 1
+    auth.log(user, "upload", f"{added} added, {len(failed)} skipped")
+    return {"added": added, "failed": failed}
 
 
-@app.delete("/api/session/{sid}")
-def clear(sid: str):
-    SESSIONS[sid] = {}
-    return {"patients": 0}
+@app.post("/api/documents/demo")
+def load_demo(user=Depends(auth.current_user)):
+    with db() as con:
+        if con.execute("SELECT 1 FROM documents WHERE user_id = ? AND is_demo = 1", (user["id"],)).fetchone():
+            return {"added": 0}
+    added = sum(1 for name, data in all_demo_workbooks().items() if store(user, f"{name}.xlsx", data, 1)[0])
+    auth.log(user, "load_demo", f"{added} added")
+    return {"added": added}
 
 
-@app.get("/api/session/{sid}/patients")
-def patients(sid: str):
-    return [summary(k, v) for k, v in session(sid).items()]
+def owned(doc_id: int, user):
+    with db() as con:
+        row = con.execute("SELECT id, filename, sha256 FROM documents WHERE id = ? AND user_id = ?", (doc_id, user["id"])).fetchone()
+    if not row:
+        raise HTTPException(404, "Document not found")
+    return row
+
+
+@app.delete("/api/documents/{doc_id}")
+def delete_document(doc_id: int, user=Depends(auth.current_user)):
+    row = owned(doc_id, user)
+    with db() as con:
+        con.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
+    auth.log(user, "delete_document", row["filename"])
+    return {"ok": True}
+
+
+@app.delete("/api/documents")
+def delete_all(user=Depends(auth.current_user)):
+    with db() as con:
+        n = con.execute("DELETE FROM documents WHERE user_id = ?", (user["id"],)).rowcount
+    auth.log(user, "delete_all_documents", f"{n} removed")
+    return {"removed": n}
+
+
+@app.get("/api/documents/{doc_id}/file")
+def download(doc_id: int, user=Depends(auth.current_user)):
+    row = owned(doc_id, user)
+    with db() as con:
+        blob = con.execute("SELECT blob FROM documents WHERE id = ?", (doc_id,)).fetchone()["blob"]
+    auth.log(user, "download_document", row["filename"])
+    return Response(blob, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f'attachment; filename="{row["filename"]}"'})
 
 
 def series_block(p, results, key):
@@ -124,12 +263,11 @@ def series_block(p, results, key):
     return out
 
 
-@app.get("/api/session/{sid}/patients/{key:path}")
-def patient_detail(sid: str, key: str):
-    sess = session(sid)
-    if key not in sess:
-        raise HTTPException(404, "Unknown patient")
-    p, ins, held, results = sess[key]
+@app.get("/api/documents/{doc_id}/detail")
+def patient_detail(doc_id: int, user=Depends(auth.current_user)):
+    row = owned(doc_id, user)
+    p, ins, held, results = analysed(doc_id, row["sha256"])
+    auth.log(user, "view_patient", p.patient_id)
     start, end = p.window
     marks = [{"date": day(r.date), "text": str(r.event)} for r in p.history.itertuples()]
     marks += [{"date": day(r.start), "text": f"{r.medication} started"} for r in p.meds.itertuples() if pd.notna(r.start)]
@@ -160,14 +298,16 @@ def patient_detail(sid: str, key: str):
     }
 
 
-@app.post("/api/session/{sid}/explain/{index}/{key:path}")
-def explain(sid: str, index: int, key: str):
-    sess = session(sid)
-    if key not in sess or index >= len(sess[key][1]):
+@app.post("/api/documents/{doc_id}/explain/{index}")
+def explain(doc_id: int, index: int, user=Depends(auth.current_user)):
+    row = owned(doc_id, user)
+    ins = analysed(doc_id, row["sha256"])[1]
+    if index >= len(ins):
         raise HTTPException(404, "Unknown insight")
     if not llm.available():
-        return {"text": sess[key][1][index].summary, "source": "template", "note": "Local model not running."}
-    text, source = llm.explain(sess[key][1][index])
+        return {"text": ins[index].summary, "source": "template", "note": "Local model not running."}
+    text, source = llm.explain(ins[index])
+    auth.log(user, "explain_local_model", row["filename"])
     return {"text": text, "source": source}
 
 

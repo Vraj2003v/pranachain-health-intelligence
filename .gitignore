@@ -29,3 +29,7 @@ build/
 
 web/node_modules/
 !web/dist/
+
+# local database
+data/*.db
+data/*.db-*
