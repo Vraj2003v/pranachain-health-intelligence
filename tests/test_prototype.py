@@ -39,7 +39,7 @@ def test_missing_data_downgrades_flag():
 
 
 def test_cardio_and_cycle_patterns():
-    assert run("D")[0][0].title.startswith("Blood pressure")
+    assert run("D")[0][0].scenario.startswith("Cardiovascular")
     assert run("E")[0][0].kind == "cycle"
 
 

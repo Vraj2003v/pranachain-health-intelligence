@@ -139,9 +139,23 @@ for the checks. Thresholds in `pranapulse/signals.py` are placeholders pending c
 ### Optional: local model for the wording
 Install [Ollama](https://ollama.com), run `ollama pull llama3.1:8b`, keep Ollama running, then switch on **Explain with local model** in the app sidebar. Only computed facts are sent, nothing leaves the computer, every reply must pass the wording check, and the app falls back to the standard text on any failure.
 
+## Run the app (React interface + Python API)
+The interface is a React app (`web/`) served by a FastAPI backend (`api/`) that wraps the detection code in `pranapulse/`.
+
+```
+pip install -r requirements.txt
+python -m uvicorn api.main:app --port 8000
+```
+Open http://localhost:8000. The built interface is committed in `web/dist`, so Node is only needed to change it:
+```
+cd web && npm ci && npm run dev      # dev server on :5173, proxies /api to :8000
+cd web && npm run build              # rebuild web/dist
+```
+The earlier Streamlit prototype (`streamlit run app.py`) is kept for reference.
+
 ## Run in GitHub Codespaces
-1. On the repo page click **Code → Codespaces → Create codespace on main**.
-2. Wait for setup to finish (it installs the requirements and runs the tests). The app starts by itself and opens on port 8501; if it does not, run `streamlit run app.py`.
-3. In the app, switch on **Use fabricated demo patients**, or upload a patient workbook (.xlsx).
-4. Real workbooks are not stored in the repo. Upload them in the app from your own computer.
-5. Optional local model: in the terminal install Ollama (`curl -fsSL https://ollama.com/install.sh | sh`), start it with `ollama serve &`, then `ollama pull llama3.2:3b` (the 8B model needs a 16 GB machine; change `DEFAULT_MODEL` in `pranapulse/llm.py` to match). Without it, the app uses the standard text.
+1. On the repo page click **Code -> Codespaces -> Create codespace on main**.
+2. Wait for setup to finish (installs Python and Node packages, builds the interface, runs the tests). The app starts by itself on port 8000; if it does not, run `python -m uvicorn api.main:app --host 0.0.0.0 --port 8000` and open the Ports tab.
+3. In the app press **Try demo patients**, or **Upload workbooks** and pick .xlsx files (many at once is fine).
+4. Real workbooks are not stored in the repo. Upload them from your own computer.
+5. Optional local model: install Ollama (`curl -fsSL https://ollama.com/install.sh | sh`), run `ollama serve &` then `ollama pull llama3.2:3b` (the 8B model needs a 16 GB machine; change `DEFAULT_MODEL` in `pranapulse/llm.py` to match). The **Explain with local model** button then rewrites an insight's summary; without it the standard wording is used.
