@@ -45,6 +45,9 @@ class Insight:
     narrative: str
     asks: list = field(default_factory=list)
     forecast_key: str = ""
+    summary: str = ""
+    bullets: list = field(default_factory=list)
+    closing: str = ""
 
 
 def _fmt(v, d):
@@ -200,6 +203,7 @@ def detect(p: Patient):
                 + "This pattern may be worth discussing with a healthcare provider."
                 + (_projection_sentence(p, usable[0]) if usable else ""))
         assert not check_language(text), check_language(text)
+        closing = "This pattern may be worth discussing with a healthcare provider." + (_projection_sentence(p, usable[0]) if usable else "")
         insights.append(Insight("pattern", f"{c['label']} are shifting together", flag, [r.key for r in usable],
                                 [_evidence(r) for r in usable] + [
                                     {"signal": l["test"], "source": "Lab Results",
@@ -207,7 +211,8 @@ def detect(p: Patient):
                                      "first_mean": f"{l['first'].result:g} {l['first'].unit}", "last_mean": f"{l['last'].result:g} {l['last'].unit}",
                                      "days_with_data": f"{l['n']} results", "overall_coverage": "—",
                                      "size_vs_own_variation": "—", "trend_p": "—"} for l in lab_hits],
-                                ctx, text, _asks(p, usable, list(c["labs"]), lab_hits), usable[0].key if usable else ""))
+                                ctx, text, _asks(p, usable, list(c["labs"]), lab_hits), usable[0].key if usable else "",
+                                f"{len(bullets)} related measures moved in the same direction over this patient's year.", bullets, closing))
         used.update(r.key for r in usable)
 
     for r in results.values():
@@ -221,7 +226,8 @@ def detect(p: Patient):
                     + _projection_sentence(p, r))
             assert not check_language(text), check_language(text)
             insights.append(Insight("single", f"{r.label} has changed", r.flag, [r.key], [_evidence(r)], [], text,
-                                    _asks(p, [r], []), r.key))
+                                    _asks(p, [r], []), r.key, "One measure moved well outside this patient's usual variation.",
+                                    [_bullet(r)], "This change may be worth mentioning to a healthcare provider." + _projection_sentence(p, r)))
 
     # cycle pattern (women's health scenario)
     cy = p.cycles
@@ -239,7 +245,11 @@ def detect(p: Patient):
                 "signal": "Cycle length", "source": "Women Health", "first_window": f"{cy.start.min():%d %b %Y}",
                 "last_window": f"{cy.start.max():%d %b %Y}", "first_mean": f"{mean_len:.0f} days (mean)",
                 "last_mean": f"{sd_len:.1f} days (variation)", "days_with_data": f"{len(cy)} cycles",
-                "overall_coverage": "—", "size_vs_own_variation": "—", "trend_p": "—"}], ctx, text, []))
+                "overall_coverage": "—", "size_vs_own_variation": "—", "trend_p": "—"}], ctx, text, [], "",
+                                "Cycle timing varies more than usual.",
+                                [f"Cycle length averaged {mean_len:.0f} days across {len(cy)} cycles and varied by about {sd_len:.0f} days between cycles "
+                                 "(usual range is roughly 21–35 days with small variation)"],
+                                "This pattern may be worth discussing with a healthcare provider."))
 
     order = {"pattern": 0, "cycle": 1, "single": 2}
     insights.sort(key=lambda i: (order[i.kind], -RANK[i.flag]))
