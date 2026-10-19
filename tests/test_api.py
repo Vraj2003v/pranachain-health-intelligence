@@ -92,3 +92,11 @@ def test_ask_answers_pass_the_wording_check_and_are_private():
     assert c.post(f"/api/documents/{key}/ask", json={"question": "  "}).status_code == 400
     other, _ = user("other@example.com")
     assert other.post(f"/api/documents/{key}/ask", json={"question": "Why?"}).status_code == 404
+
+
+def test_signup_role_choice_never_grants_admin():
+    def reg(email, role):
+        return TestClient(app).post("/api/auth/register", json={"name": "N", "email": email, "password": PW, "confirm": True, "role": role}).json()["role"]
+    assert reg("rolep@example.com", "patient") == "patient"
+    assert reg("roler@example.com", "researcher") == "researcher"
+    assert reg("roleh@example.com", "admin") == "clinician"
