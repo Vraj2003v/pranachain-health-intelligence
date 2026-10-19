@@ -112,3 +112,6 @@ details { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 8px; 
 .dsec .dhead h2 { font-size: 1.3rem; margin: 0; }
 .dsec .impact { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 8px 0 14px; }
 .dsec .card { background: var(--panel); }
+
+.hint { color: var(--muted); font-size: .95rem; margin: 2px 0 16px; }
+.hero .areas { display: flex; flex-wrap: wrap; gap: 6px 0; margin: 10px 0 4px; }

@@ -81,8 +81,17 @@ export default function App() {
     return <Landing user={user} onDemo={loadDemo} onUpload={upload} onSignOut={signOut} busy={busy} error={error} failed={failed} />;
   }
 
-  const TABS = [["cohort", "Cohort"], ["documents", "Documents"], ["insights", "Insights"], ["timeline", "Timeline & projection"], ["coverage", "Data coverage"],
-    ...(user.role === "admin" ? [["audit", "Audit log"]] : [])];
+  const TABS = [["cohort", "All patients"], ["documents", "Files"], ["insights", "Findings"], ["timeline", "Trends & projection"], ["coverage", "Data quality"],
+    ...(user.role === "admin" ? [["audit", "Activity log"]] : [])];
+  const HINT = {
+    cohort: "Everyone you have loaded, at a glance. Click a patient to see their findings.",
+    documents: "Upload patient workbooks (.xlsx). Files stay private to your account.",
+    insights: "What changed for this patient, grouped by the three areas we focus on, with the evidence behind each finding.",
+    timeline: "The measure over time, with the two periods we compare and a simple 8-week projection.",
+    coverage: "How much data stands behind each finding. Thin data is flagged, never hidden.",
+    audit: "Who did what, newest first. Only administrators can see this.",
+  };
+  const AREAS = [["Cardiovascular / hypertension", "🫀 Cardiovascular"], ["Metabolic health", "⚖️ Metabolic"], ["Women's health (PCOS)", "🌸 Women's health"]];
   const needsPatient = ["insights", "timeline", "coverage"].includes(tab);
 
   return (
@@ -124,13 +133,18 @@ export default function App() {
         {detail && needsPatient && (
           <header className="hero">
             <h1>Patient {detail.patient.id}</h1>
-            <p>Changes against this patient's own baseline, connected to their history.</p>
+            <p>What changed against this patient's own baseline, connected to their history.</p>
+            <div className="areas">{AREAS.map(([sc, label]) => {
+              const n = detail.insights.filter((i) => i.scenario === sc).length;
+              return <span key={sc} className={"chip " + (n ? "warn" : "ok")}>{label}: {n ? `${n} finding${n > 1 ? "s" : ""}` : "no clear change"}</span>;
+            })}</div>
             <div className="meta">{detail.patient.age ?? "—"} years · {detail.patient.sex ?? "—"} · data {detail.patient.start} to {detail.patient.end} ({detail.patient.days} days)</div>
           </header>
         )}
         <nav className="tabs" role="tablist">
           {TABS.map(([k, label]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{label}</button>)}
         </nav>
+        <p className="hint">{HINT[tab]}</p>
 
         {tab === "cohort" && <Cohort patients={docs} onOpen={open} />}
         {tab === "documents" && <Documents docs={docs} onUpload={upload} onDemo={loadDemo} onOpen={open} onRemove={remove} onRemoveAll={removeAll} busy={busy} />}

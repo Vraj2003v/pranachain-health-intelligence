@@ -71,7 +71,6 @@ export default function Insights({ pkey, d, onTimeline }) {
   const other = indexed.filter(({ ins }) => !SECTIONS.some((s) => s.scenario === ins.scenario));
   return (
     <section>
-      <p className="muted small">Results are grouped under the three areas we focus on. Each section shows what moved, the evidence, and why it may matter.</p>
       {SECTIONS.map((sec) => {
         const items = indexed.filter(({ ins }) => ins.scenario === sec.scenario);
         return (
