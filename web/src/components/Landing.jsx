@@ -10,11 +10,12 @@ export default function Landing({ user, onDemo, onUpload, onSignOut, busy, error
         <p>Add patient workbooks to see what changed, the evidence, and the history it connects to.</p>
         <div className="meta">Signed in as {user.email} · {user.role} · <a href="#" style={{ color: "#fff" }} onClick={(e) => { e.preventDefault(); onSignOut(); }}>Sign out</a></div>
       </header>
-      <div className="steps">
-        <div className="step"><b>1 · Load</b><br />Drop in patient workbooks, or add the fabricated demo patients. They are saved to your account.</div>
-        <div className="step"><b>2 · Compare</b><br />Each patient is compared with their own earlier self, never a population average.</div>
-        <div className="step"><b>3 · Explain</b><br />See what changed, the evidence, the history it connects to, and a trend projection.</div>
-      </div>
+      <ol className="journey" aria-label="How it works">
+        {[["Add your readings", "Drop in workbooks, or try the demo patients. Everything stays in your account."],
+          ["We compare you with you", "Each person is compared with their own earlier self, never a population average."],
+          ["See it, then ask", "Open a health area, explore the chart, and ask questions in plain words."]].map(([t, b], n) => (
+          <li key={t} className={n === 0 ? "now" : ""}><span className="num">{n + 1}</span><div><b>{t}</b><p className="muted small">{b}</p></div></li>))}
+      </ol>
       <div className={"drop" + (over ? " over" : "")}
         onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); onUpload(e.dataTransfer.files); }}>
