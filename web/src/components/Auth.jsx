@@ -34,18 +34,8 @@ export default function Auth({ onDone }) {
 
   return (
     <div className="authwrap">
-      <div className="authside">
-        <h1>🫀 PranaPulse</h1>
-        <p>Explainable changes in a patient's health, connected to their history.</p>
-        <ul>
-          <li>Each patient is compared with their own earlier self</li>
-          <li>Every insight shows its evidence and the history it connects to</li>
-          <li>Missing data is flagged openly, never hidden</li>
-          <li>It never diagnoses and never gives a risk score</li>
-        </ul>
-        <div className="meta">Beyond the Record · Group 11 · COMP8967</div>
-      </div>
       <form className="authcard" onSubmit={submit} noValidate>
+        <div className="authbrand">🫀 PranaPulse</div>
         <div className="seg" role="tablist">
           <button type="button" role="tab" aria-selected={!reg} className={!reg ? "on" : ""} onClick={() => switchMode("login")}>Sign in</button>
           <button type="button" role="tab" aria-selected={reg} className={reg ? "on" : ""} onClick={() => switchMode("register")}>Create account</button>
