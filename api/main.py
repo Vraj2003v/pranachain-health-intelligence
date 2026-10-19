@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from pranapulse import forecast, llm
+from pranapulse import ask as ask_mod, forecast, llm
 from pranapulse.demo_data import all_demo_workbooks
 from pranapulse.detect import detect
 from pranapulse.loader import load_patient
@@ -308,6 +308,27 @@ def explain(doc_id: int, index: int, user=Depends(auth.current_user)):
         return {"text": ins[index].summary, "source": "template", "note": "Local model not running."}
     text, source = llm.explain(ins[index])
     auth.log(user, "explain_local_model", row["filename"])
+    return {"text": text, "source": source}
+
+
+class Ask(BaseModel):
+    question: str
+    area: str | None = None
+
+
+@app.get("/api/ask/suggestions")
+def suggestions(user=Depends(auth.current_user)):
+    return {"questions": ask_mod.SUGGESTED}
+
+
+@app.post("/api/documents/{doc_id}/ask")
+def ask(doc_id: int, body: Ask, user=Depends(auth.current_user)):
+    row = owned(doc_id, user)
+    q = body.question.strip()[:300]
+    if not q:
+        raise HTTPException(400, "Type a question first.")
+    text, source = ask_mod.answer(q, analysed(doc_id, row["sha256"])[1], body.area)
+    auth.log(user, "ask_question", row["filename"])
     return {"text": text, "source": source}
 
 

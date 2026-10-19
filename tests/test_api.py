@@ -79,3 +79,16 @@ def test_audit_log_admin_only_and_account_deletion():
     assert c.get("/api/audit").status_code == 403
     assert c.delete("/api/auth/account").status_code == 200
     assert c.get("/api/auth/me").status_code == 401
+
+
+def test_ask_answers_pass_the_wording_check_and_are_private():
+    from pranapulse.explain import check_language
+    c, _ = user("asker@example.com")
+    c.post("/api/documents/demo")
+    key = c.get("/api/documents").json()[0]["key"]
+    for q in ["Why was this flagged?", "Does this mean I have a condition?", "What does the baseline mean?", "random words"]:
+        r = c.post(f"/api/documents/{key}/ask", json={"question": q})
+        assert r.status_code == 200 and not check_language(r.json()["text"])
+    assert c.post(f"/api/documents/{key}/ask", json={"question": "  "}).status_code == 400
+    other, _ = user("other@example.com")
+    assert other.post(f"/api/documents/{key}/ask", json={"question": "Why?"}).status_code == 404
