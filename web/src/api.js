@@ -25,6 +25,7 @@ export const api = {
   removeAll: () => fetch("/api/documents", { method: "DELETE" }).then(j),
   detail: (id) => fetch(`/api/documents/${id}/detail`).then(j),
   explain: (i, id) => fetch(`/api/documents/${id}/explain/${i}`, { method: "POST" }).then(j),
+  ask: (id, question, area) => post(`/api/documents/${id}/ask`, { question, area }),
   audit: () => fetch("/api/audit").then(j),
   health: () => fetch("/api/health").then(j),
 };
