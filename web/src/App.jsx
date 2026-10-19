@@ -10,6 +10,7 @@ import Insights from "./components/Insights.jsx";
 import Timeline from "./components/Timeline.jsx";
 import Coverage from "./components/Coverage.jsx";
 import Audit from "./components/Audit.jsx";
+import { viewFor } from "./roles.js";
 
 export default function App() {
   const [user, setUser] = useState(undefined);   // undefined = checking, null = signed out
@@ -25,7 +26,7 @@ export default function App() {
 
   const fail = (e) => { if (e.status === 401) { setUser(null); setDocs([]); } else setError(e.message); };
 
-  useEffect(() => { api.me().then(setUser).catch(() => setUser(null)); }, []);
+  useEffect(() => { api.me().then((u) => { setUser(u); setTab(viewFor(u.role).home); }).catch(() => setUser(null)); }, []);
 
   const refresh = useCallback(async () => {
     const rows = await api.documents();
@@ -65,7 +66,7 @@ export default function App() {
     return () => { live = false; };
   }, [selected, user]);
 
-  const signOut = async () => { await api.logout(); setUser(null); setDocs([]); setDetail(null); setSelected(null); setTab("summary"); };
+  const signOut = async () => { await api.logout(); setUser(null); setDocs([]); setDetail(null); setSelected(null); };
   const deleteAccount = async () => {
     if (!confirm("Permanently delete your account and every document you uploaded?")) return;
     await api.deleteAccount().catch(() => {}); setUser(null); setDocs([]); setDetail(null); setSelected(null);
@@ -75,36 +76,40 @@ export default function App() {
     () => docs.filter((p) => (!flaggedOnly || p.status === "Flagged") && (!q || p.id.toLowerCase().includes(q.toLowerCase()))),
     [docs, flaggedOnly, q]);
 
-  const open = (key, to = "summary") => { setSelected(key); setTab(to); window.scrollTo({ top: 0 }); };
+  const home = viewFor(user?.role);
+  const landing = home.tabs.includes("summary") ? "summary" : "insights";
+  const open = (key, to = landing) => { setSelected(key); setTab(to); window.scrollTo({ top: 0 }); };
 
   if (user === undefined) return <div className="muted pad">Loading…</div>;
-  if (user === null) return <Auth onDone={(u) => { setUser(u); setError(null); }} />;
+  if (user === null) return <Auth onDone={(u) => { setUser(u); setTab(viewFor(u.role).home); setError(null); }} />;
   if (!docs.length) {
     return <Landing user={user} onDemo={loadDemo} onUpload={upload} onSignOut={signOut} busy={busy} error={error} failed={failed} />;
   }
 
-  const TABS = [["summary", "My summary"], ["ask", "Ask a question"], ["timeline", "Trends"], ["insights", "Full findings"], ["coverage", "Data quality"],
-    ["cohort", "All patients"], ["documents", "Files"],
-    ...(user.role === "admin" ? [["audit", "Activity log"]] : [])];
-  const needsPatient = ["summary", "ask", "insights", "timeline", "coverage"].includes(tab);
+  const view = viewFor(user.role);
+  const TABS = view.tabList;
+  const shown = view.tabs.includes(tab) ? tab : view.home;
+  const needsPatient = ["summary", "ask", "insights", "timeline", "coverage"].includes(shown);
 
   return (
     <div className="shell">
       <aside className="rail">
         <div className="brand">🫀 <b>PranaPulse</b></div>
+        {view.rail && <>
         <input className="search" placeholder="Search patient ID" value={q} onChange={(e) => setQ(e.target.value)} />
         <label className="check"><input type="checkbox" checked={flaggedOnly} onChange={(e) => setFlaggedOnly(e.target.checked)} /> Only patients with an insight</label>
         <div className="plist" role="listbox" aria-label="Patients">
           {visible.slice(0, 400).map((p) => (
-            <button key={p.key} className={"pitem" + (p.key === selected ? " on" : "")} onClick={() => open(p.key, needsPatient ? tab : "summary")}>
+            <button key={p.key} className={"pitem" + (p.key === selected ? " on" : "")} onClick={() => open(p.key, needsPatient ? shown : landing)}>
               <span className={"dot " + (p.status === "Flagged" ? "flag" : "quiet")} /> {p.id}
               <span className="sub">{p.status === "Flagged" ? p.scenario : "Quiet"}</span>
             </button>
           ))}
           {visible.length > 400 && <div className="muted small pad">Showing first 400 of {visible.length}. Use search.</div>}
         </div>
+        </>}
         <div className="userbox">
-          <div className="uname"><b>{user.name}</b><span className="muted small">{user.email} · {user.role}</span></div>
+          <div className="uname"><b>{user.name}</b><span className="muted small">{user.email} · {{ patient: "Patient", clinician: "Healthcare provider", researcher: "Researcher", admin: "Administrator" }[user.role] || user.role}</span></div>
           <div className="railfoot">
             <button className="btn ghost small" onClick={signOut}>Sign out</button>
             <button className="btn ghost small" onClick={deleteAccount} title="Delete my account and data">Delete account</button>
@@ -114,9 +119,9 @@ export default function App() {
 
       <main className="main">
         <div className="mobile-pick">
-          <select value={selected || ""} onChange={(e) => open(e.target.value, needsPatient ? tab : "summary")}>
+          {view.rail && <select value={selected || ""} onChange={(e) => open(e.target.value, needsPatient ? shown : landing)}>
             {docs.map((p) => <option key={p.key} value={p.key}>{p.id} · {p.status}</option>)}
-          </select>
+          </select>}
           <button className="btn ghost small" onClick={signOut}>Sign out</button>
         </div>
         {busy && <div className="banner">{busy}</div>}
@@ -124,7 +129,7 @@ export default function App() {
         {Object.keys(failed).length > 0 && (
           <div className="banner err" onClick={() => setFailed({})}>Skipped: {Object.entries(failed).map(([f, w]) => `${f} (${w})`).join("; ")}</div>)}
 
-        {detail && needsPatient && tab !== "summary" && (
+        {detail && needsPatient && shown !== "summary" && (
           <header className="hero">
             <h1>Patient {detail.patient.id}</h1>
             <p>Changes against this patient's own baseline, connected to their history.</p>
@@ -132,18 +137,18 @@ export default function App() {
           </header>
         )}
         <nav className="tabs" role="tablist">
-          {TABS.map(([k, label]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{label}</button>)}
+          {TABS.map(([k, label]) => <button key={k} role="tab" aria-selected={shown === k} className={shown === k ? "on" : ""} onClick={() => setTab(k)}>{label}</button>)}
         </nav>
 
-        {tab === "cohort" && <Cohort patients={docs} onOpen={open} />}
-        {tab === "documents" && <Documents docs={docs} onUpload={upload} onDemo={loadDemo} onOpen={open} onRemove={remove} onRemoveAll={removeAll} busy={busy} />}
-        {tab === "audit" && <Audit />}
+        {shown === "cohort" && <Cohort patients={docs} onOpen={open} />}
+        {shown === "documents" && <Documents docs={docs} onUpload={upload} onDemo={loadDemo} onOpen={open} onRemove={remove} onRemoveAll={removeAll} busy={busy} />}
+        {shown === "audit" && <Audit />}
         {needsPatient && !detail && <div className="muted pad">Loading patient…</div>}
-        {tab === "summary" && <Home user={user} docs={docs} selected={selected} detail={detail} onPick={(k) => open(k, "summary")} onFull={() => setTab("insights")} onTrends={() => setTab("timeline")} />}
-        {tab === "ask" && selected && <div className="askpage"><Ask pkey={selected} area={null} title="Ask about your results" /></div>}
-        {tab === "insights" && detail && <Insights pkey={selected} d={detail} onTimeline={() => setTab("timeline")} />}
-        {tab === "timeline" && detail && <Timeline d={detail} />}
-        {tab === "coverage" && detail && <Coverage d={detail} />}
+        {shown === "summary" && <Home user={user} canFull={view.tabs.includes("insights")} docs={docs} selected={selected} detail={detail} onPick={(k) => open(k, landing)} onFull={() => setTab("insights")} onTrends={() => setTab("timeline")} />}
+        {shown === "ask" && selected && <div className="askpage"><Ask pkey={selected} area={null} title="Ask about your results" /></div>}
+        {shown === "insights" && detail && <Insights pkey={selected} d={detail} onTimeline={() => setTab("timeline")} />}
+        {shown === "timeline" && detail && <Timeline d={detail} />}
+        {shown === "coverage" && detail && <Coverage d={detail} />}
 
         <footer className="foot">Prototype for academic use on synthetic / anonymised data. It highlights patterns that may be worth discussing with a healthcare provider. It does not diagnose or give medical advice.</footer>
       </main>
