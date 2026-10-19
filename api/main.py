@@ -49,6 +49,10 @@ class Register(BaseModel):
     email: str
     password: str
     confirm: bool = False
+    role: str = "clinician"      # chosen on sign-up; "admin" can never be chosen
+
+
+ROLES = {"patient", "clinician", "researcher"}
 
 
 class Login(BaseModel):
@@ -76,9 +80,10 @@ def register(body: Register, request: Request, response: Response):
         if con.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
             raise HTTPException(409, "An account with this email already exists.")
         first = con.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
+        chosen = body.role if body.role in ROLES else "clinician"
         cur = con.execute("INSERT INTO users(email, name, role, pw_hash, salt, consent_at) VALUES (?,?,?,?,?,datetime('now'))",
-                          (email, body.name.strip(), "admin" if first else "clinician", pw_hash, salt))
-        user = {"id": cur.lastrowid, "name": body.name.strip(), "email": email, "role": "admin" if first else "clinician"}
+                          (email, body.name.strip(), "admin" if first else chosen, pw_hash, salt))
+        user = {"id": cur.lastrowid, "name": body.name.strip(), "email": email, "role": "admin" if first else chosen}
     auth.start_session(response, request, user["id"])
     auth.log(user, "register", f"role={user['role']}")
     return public(user)
