@@ -166,3 +166,8 @@ details { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 8px; 
 .qchip { background: transparent; color: var(--brand); border: 1px solid var(--brand); border-radius: 999px; padding: 5px 12px; cursor: pointer; font: inherit; font-size: .85rem; } .qchip:hover:not(:disabled) { background: var(--kind-bg); } .qchip:disabled { opacity: .5; }
 .askrow { display: flex; gap: 8px; } .askrow input { flex: 1; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font: inherit; }
 .coach .btn{white-space:nowrap}
+
+.roles { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; } .roles legend { font-size: .88rem; font-weight: 600; padding: 0; margin-bottom: 6px; }
+.authcard label.role { flex-direction: row; align-items: center; gap: 10px; font-weight: 400; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; background: var(--panel); }
+.authcard label.role.on { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand) inset; }
+.authcard label.role span { display: flex; flex-direction: column; } .authcard label.role input { accent-color: var(--brand); }

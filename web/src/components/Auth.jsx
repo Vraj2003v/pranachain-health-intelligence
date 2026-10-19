@@ -5,9 +5,13 @@ const LAST = "pranapulse.lastEmail";
 const lastEmail = () => { try { return localStorage.getItem(LAST) || ""; } catch { return ""; } };
 const saveEmail = (v) => { try { localStorage.setItem(LAST, v); } catch { /* storage may be blocked */ } };
 
+const ROLES = [["patient", "Patient", "See my own readings and ask questions"],
+  ["clinician", "Healthcare provider", "Review patients and the evidence"],
+  ["researcher", "Researcher or student", "Explore the method on demo data"]];
+
 export default function Auth({ onDone }) {
   const [mode, setMode] = useState("login");
-  const [f, setF] = useState({ name: "", email: lastEmail(), password: "", again: "", confirm: false });
+  const [f, setF] = useState({ name: "", email: lastEmail(), password: "", again: "", confirm: false, role: "patient" });
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
   const [show, setShow] = useState(false);
@@ -25,7 +29,7 @@ export default function Auth({ onDone }) {
     if (reg && !matches) { setErr("The two passwords do not match."); return; }
     setBusy(true);
     try {
-      const u = reg ? await api.register({ name: f.name, email: f.email, password: f.password, confirm: f.confirm })
+      const u = reg ? await api.register({ name: f.name, email: f.email, password: f.password, confirm: f.confirm, role: f.role })
                     : await api.login({ email: f.email, password: f.password });
       saveEmail(f.email); onDone(u);
     } catch (x) { setErr(x.message); } finally { setBusy(false); }
@@ -43,6 +47,14 @@ export default function Auth({ onDone }) {
         <h2>{reg ? "Create your account" : "Welcome back"}</h2>
         <p className="muted small">{reg ? "The first account created becomes the administrator." : "Sign in to see your patients and findings."}</p>
         {reg && <label>Full name<input value={f.name} onChange={set("name")} autoComplete="name" autoFocus required /></label>}
+        {reg && (
+          <fieldset className="roles"><legend>I am a</legend>
+            {ROLES.map(([k, t, d]) => (
+              <label key={k} className={"role" + (f.role === k ? " on" : "")}>
+                <input type="radio" name="role" value={k} checked={f.role === k} onChange={set("role")} />
+                <span><b>{t}</b><span className="muted small">{d}</span></span>
+              </label>))}
+          </fieldset>)}
         <label>Email<input type="email" value={f.email} onChange={set("email")} autoComplete="email" autoFocus={!reg && !f.email} required /></label>
         <label>Password
           <span className="pwrow">
