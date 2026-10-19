@@ -66,3 +66,20 @@ def test_llm_fallback_and_guardrail():
         raise OSError("no server")
     assert llm.explain(ins, generate=boom)[1] == "template"
     assert llm.available(url="http://localhost:9") is False
+
+
+def test_recent_check_flags_latest_weeks_against_90_day_baseline():
+    from types import SimpleNamespace
+    import numpy as np
+    from pranapulse.detect import recent_check
+    days = pd.date_range("2026-03-01", periods=150, freq="D")
+    rng = np.random.default_rng(1)
+    steady = pd.Series(8000 + rng.normal(0, 300, 150), index=days)
+    dropped = steady.copy()
+    dropped.iloc[-14:] -= 1500                       # latest two weeks fall well below the baseline
+    window = (days[0], days[-1])
+    quiet = SimpleNamespace(daily=pd.DataFrame({"Steps": steady}), window=window)
+    drop = SimpleNamespace(daily=pd.DataFrame({"Steps": dropped}), window=window)
+    assert recent_check(quiet, "steps") is None
+    hit = recent_check(drop, "steps")
+    assert hit and hit["diff"] < -1000 and hit["flag"] == "Sufficient"
