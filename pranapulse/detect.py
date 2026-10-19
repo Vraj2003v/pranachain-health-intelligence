@@ -8,7 +8,7 @@ from scipy import stats
 from . import forecast
 from .explain import check_language
 from .loader import Patient
-from .signals import CLUSTERS, MAX_TREND_P, MIN_EFFECT, SIGNALS, WINDOW_DAYS
+from .signals import CLUSTERS, MAX_TREND_P, MIN_EFFECT, RECENT_DAYS, RECENT_MIN_EFFECT, SIGNALS, WINDOW_DAYS
 
 RANK = {"Sufficient": 2, "Limited": 1, "Insufficient": 0}
 
@@ -177,6 +177,33 @@ def _join(items):
     return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
 
 
+def recent_check(p: Patient, key: str):
+    """Latest RECENT_DAYS against the patient's own average over the WINDOW_DAYS before them (the baseline).
+    Returns a dict when the latest readings moved in the concerning direction, else None."""
+    sig = SIGNALS[key]
+    if sig.column not in p.daily:
+        return None
+    s = p.daily[sig.column]
+    end = p.window[1]
+    r_start = end - pd.Timedelta(days=RECENT_DAYS - 1)
+    b_end = r_start - pd.Timedelta(days=1)
+    b_start = b_end - pd.Timedelta(days=WINDOW_DAYS - 1)
+    rec, base = s[r_start:end].dropna(), s[b_start:b_end].dropna()
+    if len(rec) < 7 or len(base) < 45:
+        return None
+    sd = float(base.std())
+    if not sd or sd != sd:
+        return None
+    diff = float(rec.mean() - base.mean())
+    effect = diff / sd
+    if np.sign(diff) != sig.bad or abs(diff) < sig.min_abs or abs(effect) < RECENT_MIN_EFFECT:
+        return None
+    flag = "Sufficient" if len(base) >= 72 and len(rec) >= 11 else "Limited"
+    return {"sig": sig, "base": float(base.mean()), "rec": float(rec.mean()), "diff": diff, "effect": effect,
+            "n_base": len(base), "n_rec": len(rec), "flag": flag,
+            "base_win": (b_start, b_end), "rec_win": (r_start, end)}
+
+
 def detect(p: Patient):
     """Return (insights to show, list of notes about what was held back and why)."""
     results = {k: analyse_signal(p, k) for k in SIGNALS}
@@ -240,6 +267,29 @@ def detect(p: Patient):
                                     _asks(p, [r], []), r.key, "One measure moved well outside this patient's usual variation.",
                                     [_bullet(r)], "This change may be worth mentioning to a healthcare provider." + _projection_sentence(p, r)))
 
+    # latest readings against the patient's own 90-day baseline (recent deviation)
+    covered = set(used) | {i.signals[0] for i in insights if i.kind == "single" and i.signals}
+    for key in SIGNALS:
+        if key in covered:
+            continue
+        rc = recent_check(p, key)
+        if not rc:
+            continue
+        sig, d = rc["sig"], SIGNALS[key].decimals
+        bullet = (f"{sig.label} averaged {rc['rec']:,.{d}f} {sig.unit} over the latest {RECENT_DAYS} days, compared with "
+                  f"{rc['base']:,.{d}f} {sig.unit} over the {WINDOW_DAYS} days before ({rc['diff']:+,.{d}f} {sig.unit})")
+        closing = "This change may be worth mentioning to a healthcare provider."
+        text = bullet + ". " + closing
+        assert not check_language(text), check_language(text)
+        w = lambda t: f"{t[0]:%d %b %Y} to {t[1]:%d %b %Y}"
+        insights.append(Insight("recent", f"{sig.label} is different from the usual last {WINDOW_DAYS} days", rc["flag"], [],
+                                [{"signal": sig.label, "source": sig.sheet, "first_window": w(rc["base_win"]), "last_window": w(rc["rec_win"]),
+                                  "first_mean": f"{rc['base']:,.{d}f} {sig.unit}", "last_mean": f"{rc['rec']:,.{d}f} {sig.unit}",
+                                  "days_with_data": f"{rc['n_base']} baseline, {rc['n_rec']} recent", "overall_coverage": "—",
+                                  "size_vs_own_variation": f"{abs(rc['effect']):.1f}x", "trend_p": "—"}],
+                                [], text, [], key, "The latest readings differ from this patient's own recent baseline.", [bullet], closing,
+                                SCENARIO["cardio"] if key in ("sbp", "dbp", "rhr", "hrv") else SCENARIO["metabolic"]))
+
     # cycle pattern (women's health scenario)
     cy = p.cycles
     if len(cy) >= 4:
@@ -262,7 +312,7 @@ def detect(p: Patient):
                                  "(usual range is roughly 21–35 days with small variation)"],
                                 "This pattern may be worth discussing with a healthcare provider."))
 
-    order = {"pattern": 0, "cycle": 1, "single": 2}
+    order = {"pattern": 0, "cycle": 1, "recent": 2, "single": 3}
     insights.sort(key=lambda i: (order[i.kind], -RANK[i.flag]))
     for ins in insights:
         if not ins.scenario:

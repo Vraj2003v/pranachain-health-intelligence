@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { api, fmt } from "../api";
 
-const ICON = { pattern: "🔗", single: "📈", cycle: "🗓️" };
-const KIND = { pattern: "Pattern across measures", single: "Single measure", cycle: "Cycle timing" };
+const ICON = { pattern: "🔗", single: "📈", cycle: "🗓️", recent: "🕒" };
+const KIND = { pattern: "Pattern across measures", single: "Single measure", cycle: "Cycle timing", recent: "Latest vs 90-day baseline" };
 const EVID = [["signal", "Signal"], ["source", "Source sheet"], ["first_window", "Earlier period"], ["last_window", "Recent period"],
   ["first_mean", "Earlier value"], ["last_mean", "Recent value"], ["days_with_data", "Days with data"], ["size_vs_own_variation", "Change vs usual variation"], ["trend_p", "Trend p-value"]];
 
@@ -54,14 +54,39 @@ function Card({ pkey, i, ins, onTimeline }) {
   );
 }
 
+const SECTIONS = [
+  { scenario: "Cardiovascular / hypertension", icon: "🫀", title: "Cardiovascular",
+    watches: "Blood pressure, resting heart rate, HRV and LDL cholesterol",
+    why: "Changes in these measures can matter for heart and blood-vessel health, so they are worth discussing with a healthcare provider alongside the patient's history." },
+  { scenario: "Metabolic health", icon: "⚖️", title: "Metabolic",
+    watches: "Weight, activity, sleep, HbA1c and fasting glucose",
+    why: "Shifts in these measures can relate to how the body handles blood sugar and weight, so they are worth discussing with a healthcare provider alongside the patient's history." },
+  { scenario: "Women's health (PCOS)", icon: "🌸", title: "Women's health",
+    watches: "Cycle length and regularity, with related history",
+    why: "Irregular cycle timing can relate to hormonal conditions, so it is worth discussing with a healthcare provider alongside the patient's history." },
+];
+
 export default function Insights({ pkey, d, onTimeline }) {
+  const indexed = d.insights.map((ins, i) => ({ ins, i }));
+  const other = indexed.filter(({ ins }) => !SECTIONS.some((s) => s.scenario === ins.scenario));
   return (
     <section>
-      {d.insights.length === 0 && (
-        <div className="card ok-card"><h2>✅ Nothing flagged</h2>
-          <p>No meaningful change was found against this patient's own baseline.</p>
-          <p className="muted small">Staying quiet is intended: small day-to-day variation is not reported as an insight.</p></div>)}
-      {d.insights.map((ins, i) => <Card key={i} pkey={pkey} i={i} ins={ins} onTimeline={onTimeline} />)}
+      <p className="muted small">Results are grouped under the three areas we focus on. Each section shows what moved, the evidence, and why it may matter.</p>
+      {SECTIONS.map((sec) => {
+        const items = indexed.filter(({ ins }) => ins.scenario === sec.scenario);
+        return (
+          <div key={sec.scenario} className={"dsec" + (items.length ? " found" : "")}>
+            <div className="dhead">
+              <h2>{sec.icon} {sec.title}</h2>
+              <span className={"chip " + (items.length ? "warn" : "ok")}>{items.length ? `Changes found (${items.length})` : "No clear change"}</span>
+            </div>
+            <p className="muted small"><b>What we look at:</b> {sec.watches}</p>
+            {items.length > 0 && <p className="impact"><b>Why it may matter:</b> {sec.why}</p>}
+            {items.length === 0 && <p className="muted small">Nothing in this area moved beyond this patient's own usual range.</p>}
+            {items.map(({ ins, i }) => <Card key={i} pkey={pkey} i={i} ins={ins} onTimeline={onTimeline} />)}
+          </div>);
+      })}
+      {other.map(({ ins, i }) => <Card key={i} pkey={pkey} i={i} ins={ins} onTimeline={onTimeline} />)}
       {d.held.length > 0 && <details className="card"><summary>Held back (not shown as insights)</summary><ul>{d.held.map((h) => <li key={h}>{h}</li>)}</ul></details>}
       {d.positives.length > 0 && <details className="card"><summary>Positive changes</summary><ul>{d.positives.map((h) => <li key={h}>{h}</li>)}</ul></details>}
     </section>
