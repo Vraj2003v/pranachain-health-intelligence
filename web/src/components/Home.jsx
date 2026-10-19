@@ -28,7 +28,7 @@ function Spark({ d, area }) {
     </div>);
 }
 
-export default function Home({ user, docs, selected, detail, onPick, onFull, onTrends }) {
+export default function Home({ user, canFull = true, docs, selected, detail, onPick, onFull, onTrends }) {
   const [open, setOpen] = useState(null);
   const [coach, setCoach] = useState(!seen());
   const first = user.name.split(" ")[0];
@@ -42,9 +42,9 @@ export default function Home({ user, docs, selected, detail, onPick, onFull, onT
     <section className="home">
       <div className="greet">
         <div>
-          <h1>Hello, {first}</h1>
+          <h1>{user.role === "patient" ? `Hello, ${first}` : `Patient ${detail.patient.id}`}</h1>
           <p className="lede">
-            {found === 0 ? "Nothing in your latest readings moved beyond your own usual range."
+            {found === 0 ? "Nothing in the latest readings moved beyond the usual range."
               : `${found} of 3 health areas show changes that may be worth a closer look.`}
           </p>
         </div>
@@ -100,7 +100,7 @@ export default function Home({ user, docs, selected, detail, onPick, onFull, onT
           <AreaChart d={detail} area={area} />
           <Ask pkey={selected} area={area.scenario} title={`Ask about ${area.title.toLowerCase()}`} />
           <div className="row">
-            <button className="btn ghost small" onClick={onFull}>See the full evidence</button>
+            {canFull && <button className="btn ghost small" onClick={onFull}>See the full evidence</button>}
             <button className="btn ghost small" onClick={onTrends}>Open all trends</button>
           </div>
         </div>)}
