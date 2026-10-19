@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import Auth from "./components/Auth.jsx";
 import Landing from "./components/Landing.jsx";
+import Home from "./components/Home.jsx";
+import Ask from "./components/Ask.jsx";
 import Cohort from "./components/Cohort.jsx";
 import Documents from "./components/Documents.jsx";
 import Insights from "./components/Insights.jsx";
@@ -14,7 +16,7 @@ export default function App() {
   const [docs, setDocs] = useState([]);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
-  const [tab, setTab] = useState("cohort");
+  const [tab, setTab] = useState("summary");
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
   const [failed, setFailed] = useState({});
@@ -63,7 +65,7 @@ export default function App() {
     return () => { live = false; };
   }, [selected, user]);
 
-  const signOut = async () => { await api.logout(); setUser(null); setDocs([]); setDetail(null); setSelected(null); setTab("cohort"); };
+  const signOut = async () => { await api.logout(); setUser(null); setDocs([]); setDetail(null); setSelected(null); setTab("summary"); };
   const deleteAccount = async () => {
     if (!confirm("Permanently delete your account and every document you uploaded?")) return;
     await api.deleteAccount().catch(() => {}); setUser(null); setDocs([]); setDetail(null); setSelected(null);
@@ -73,7 +75,7 @@ export default function App() {
     () => docs.filter((p) => (!flaggedOnly || p.status === "Flagged") && (!q || p.id.toLowerCase().includes(q.toLowerCase()))),
     [docs, flaggedOnly, q]);
 
-  const open = (key, to = "insights") => { setSelected(key); setTab(to); window.scrollTo({ top: 0 }); };
+  const open = (key, to = "summary") => { setSelected(key); setTab(to); window.scrollTo({ top: 0 }); };
 
   if (user === undefined) return <div className="muted pad">Loading…</div>;
   if (user === null) return <Auth onDone={(u) => { setUser(u); setError(null); }} />;
@@ -81,9 +83,10 @@ export default function App() {
     return <Landing user={user} onDemo={loadDemo} onUpload={upload} onSignOut={signOut} busy={busy} error={error} failed={failed} />;
   }
 
-  const TABS = [["cohort", "Cohort"], ["documents", "Documents"], ["insights", "Insights"], ["timeline", "Timeline & projection"], ["coverage", "Data coverage"],
-    ...(user.role === "admin" ? [["audit", "Audit log"]] : [])];
-  const needsPatient = ["insights", "timeline", "coverage"].includes(tab);
+  const TABS = [["summary", "My summary"], ["ask", "Ask a question"], ["timeline", "Trends"], ["insights", "Full findings"], ["coverage", "Data quality"],
+    ["cohort", "All patients"], ["documents", "Files"],
+    ...(user.role === "admin" ? [["audit", "Activity log"]] : [])];
+  const needsPatient = ["summary", "ask", "insights", "timeline", "coverage"].includes(tab);
 
   return (
     <div className="shell">
@@ -93,7 +96,7 @@ export default function App() {
         <label className="check"><input type="checkbox" checked={flaggedOnly} onChange={(e) => setFlaggedOnly(e.target.checked)} /> Only patients with an insight</label>
         <div className="plist" role="listbox" aria-label="Patients">
           {visible.slice(0, 400).map((p) => (
-            <button key={p.key} className={"pitem" + (p.key === selected ? " on" : "")} onClick={() => open(p.key, needsPatient ? tab : "insights")}>
+            <button key={p.key} className={"pitem" + (p.key === selected ? " on" : "")} onClick={() => open(p.key, needsPatient ? tab : "summary")}>
               <span className={"dot " + (p.status === "Flagged" ? "flag" : "quiet")} /> {p.id}
               <span className="sub">{p.status === "Flagged" ? p.scenario : "Quiet"}</span>
             </button>
@@ -111,7 +114,7 @@ export default function App() {
 
       <main className="main">
         <div className="mobile-pick">
-          <select value={selected || ""} onChange={(e) => open(e.target.value, needsPatient ? tab : "insights")}>
+          <select value={selected || ""} onChange={(e) => open(e.target.value, needsPatient ? tab : "summary")}>
             {docs.map((p) => <option key={p.key} value={p.key}>{p.id} · {p.status}</option>)}
           </select>
           <button className="btn ghost small" onClick={signOut}>Sign out</button>
@@ -121,7 +124,7 @@ export default function App() {
         {Object.keys(failed).length > 0 && (
           <div className="banner err" onClick={() => setFailed({})}>Skipped: {Object.entries(failed).map(([f, w]) => `${f} (${w})`).join("; ")}</div>)}
 
-        {detail && needsPatient && (
+        {detail && needsPatient && tab !== "summary" && (
           <header className="hero">
             <h1>Patient {detail.patient.id}</h1>
             <p>Changes against this patient's own baseline, connected to their history.</p>
@@ -136,6 +139,8 @@ export default function App() {
         {tab === "documents" && <Documents docs={docs} onUpload={upload} onDemo={loadDemo} onOpen={open} onRemove={remove} onRemoveAll={removeAll} busy={busy} />}
         {tab === "audit" && <Audit />}
         {needsPatient && !detail && <div className="muted pad">Loading patient…</div>}
+        {tab === "summary" && <Home user={user} docs={docs} selected={selected} detail={detail} onPick={(k) => open(k, "summary")} onFull={() => setTab("insights")} onTrends={() => setTab("timeline")} />}
+        {tab === "ask" && selected && <div className="askpage"><Ask pkey={selected} area={null} title="Ask about your results" /></div>}
         {tab === "insights" && detail && <Insights pkey={selected} d={detail} onTimeline={() => setTab("timeline")} />}
         {tab === "timeline" && detail && <Timeline d={detail} />}
         {tab === "coverage" && detail && <Coverage d={detail} />}
