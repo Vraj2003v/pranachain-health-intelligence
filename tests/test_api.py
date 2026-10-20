@@ -98,7 +98,7 @@ def test_signup_role_choice_never_grants_admin():
     def reg(email, role):
         return TestClient(app).post("/api/auth/register", json={"name": "N", "email": email, "password": PW, "confirm": True, "role": role}).json()["role"]
     assert reg("rolep@example.com", "patient") == "patient"
-    assert reg("roler@example.com", "researcher") == "researcher"
+    assert reg("roler@example.com", "researcher") == "clinician"   # retired option falls back
     assert reg("roleh@example.com", "admin") == "clinician"
 
 
