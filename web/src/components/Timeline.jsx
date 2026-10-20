@@ -18,9 +18,9 @@ function Tip({ active, payload, label, unit, dec }) {
     </div>);
 }
 
-export default function Timeline({ d }) {
+export default function Timeline({ d, initialKey }) {
   const keys = Object.keys(d.series);
-  const first = d.insights.find((i) => i.forecastKey)?.forecastKey || keys[0];
+  const first = (keys.includes(initialKey) && initialKey) || d.insights.find((i) => i.forecastKey)?.forecastKey || keys[0];
   const [key, setKey] = useState(first);
   const s = d.series[key];
   const labNames = Object.keys(d.labs);

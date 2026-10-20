@@ -319,6 +319,7 @@ def explain(doc_id: int, index: int, user=Depends(auth.current_user)):
 class Ask(BaseModel):
     question: str
     area: str | None = None
+    history: list[dict] = []
 
 
 @app.get("/api/ask/suggestions")
@@ -332,9 +333,11 @@ def ask(doc_id: int, body: Ask, user=Depends(auth.current_user)):
     q = body.question.strip()[:300]
     if not q:
         raise HTTPException(400, "Type a question first.")
-    text, source = ask_mod.answer(q, analysed(doc_id, row["sha256"])[1], body.area)
+    hist = [{"who": str(h.get("who", ""))[:6], "text": str(h.get("text", ""))[:400], "key": h.get("key")} for h in body.history[-8:]]
+    _, ins, _, results = analysed(doc_id, row["sha256"])
+    text, source, action, follow, key = ask_mod.answer(q, ins, body.area, results=results, history=hist)
     auth.log(user, "ask_question", row["filename"])
-    return {"text": text, "source": source}
+    return {"text": text, "source": source, "action": action, "followups": follow, "key": key}
 
 
 if DIST.exists():
