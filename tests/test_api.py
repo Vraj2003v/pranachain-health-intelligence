@@ -100,3 +100,18 @@ def test_signup_role_choice_never_grants_admin():
     assert reg("rolep@example.com", "patient") == "patient"
     assert reg("roler@example.com", "researcher") == "researcher"
     assert reg("roleh@example.com", "admin") == "clinician"
+
+
+def test_chat_answers_from_readings_stay_inside_wording_rules():
+    from pranapulse.explain import check_language
+    c, _ = user("chat@example.com")
+    c.post("/api/documents/demo")
+    doc = c.get("/api/documents").json()[0]["key"]
+    hist = []
+    for q in ["How is my weight?", "and what about steps compared with weight", "what changed the most", "tell me more about it", "is my blood pressure ok",
+              "Do I have diabetes?", "hello"]:
+        r = c.post(f"/api/documents/{doc}/ask", json={"question": q, "history": hist}).json()
+        assert not check_language(r["text"]), (q, r["text"])
+        hist.append({"who": "me", "text": q, "key": None}); hist.append({"who": "bot", "text": r["text"], "key": r.get("key")})
+    r = c.post(f"/api/documents/{doc}/ask", json={"question": "weight vs steps"}).json()
+    assert r["action"]["tab"] == "explore" and set(r["action"]["keys"]) == {"weight", "steps"}
