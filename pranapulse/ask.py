@@ -63,13 +63,95 @@ def answer_template(question: str, insights, area: str | None = None) -> str:
             "and what the projection shows. Try one of the suggested questions." + CLOSE)
 
 
-def answer(question: str, insights, area: str | None = None, use_model: bool = True):
+MEASURES = {
+    "weight": r"weight|kilos?|\bkg\b",
+    "sbp": r"systolic|blood pressure|\bbp\b|pressure",
+    "dbp": r"diastolic",
+    "rhr": r"heart rate|resting hr|pulse|\brhr\b",
+    "steps": r"steps?|walking|activity",
+    "sleep": r"sleep",
+    "hrv": r"\bhrv\b|variability",
+}
+AREA_OF = {"weight": "Metabolic health", "steps": "Metabolic health", "sleep": "Metabolic health",
+           "sbp": "Cardiovascular / hypertension", "dbp": "Cardiovascular / hypertension",
+           "rhr": "Cardiovascular / hypertension", "hrv": "Cardiovascular / hypertension"}
+
+FOLLOW = {
+    "measure": ["Compare it with another measure", "How much data is behind this?", "What does the projection show?"],
+    "compare": ["What changed the most?", "What does the baseline mean?"],
+    "most": ["Why was this flagged?", "What does the projection show?"],
+    "default": SUGGESTED[:3],
+}
+
+
+def _mentioned(q):
+    return [k for k, pat in MEASURES.items() if re.search(pat, q)]
+
+
+def _move(r):
+    pct = (r.diff / r.mean_first * 100) if r.mean_first else 0
+    way = "up" if r.diff > 0 else "down"
+    return way, abs(r.diff), pct
+
+
+def _line(r):
+    way, amt, pct = _move(r)
+    d = r.decimals
+    return (f"{r.label} averaged {r.mean_first:,.{d}f} {r.unit} in your first {WINDOW_DAYS} days and {r.mean_last:,.{d}f} {r.unit} "
+            f"in your last {WINDOW_DAYS} days ({way} {amt:,.{d}f}, about {abs(pct):.1f}%)")
+
+
+def answer_data(question, insights, results, history=()):
+    """Answers tied to the actual readings. Returns (text, action, followups) or None if it is not a data question."""
+    q = question.lower()
+    keys = [k for k in _mentioned(q) if k in results]
+    last = next((h.get("key") for h in reversed(list(history)) if h.get("key")), None)
+    if not keys and last and last in results and re.search(r"\b(it|that|this|more|same)\b", q):
+        keys = [last]
+    if re.search(r"most|biggest|largest|top|main", q) and re.search(r"chang|move|differ|shift", q):
+        ranked = sorted((r for r in results.values() if r.flag != "Insufficient"), key=lambda r: abs(r.effect), reverse=True)[:3]
+        if not ranked:
+            return ("There was not enough data to rank changes." + CLOSE, None, FOLLOW["default"], None)
+        lines = "; ".join(f"{r.label} ({_move(r)[0]} {abs(_move(r)[2]):.1f}%, {abs(r.effect):.1f} times your usual day-to-day variation)" for r in ranked)
+        return (f"Measured against your own day-to-day variation, the largest shifts were: {lines}. A larger number means the change "
+                "stood out more from your normal ups and downs." + CLOSE,
+                {"tab": "timeline", "key": ranked[0].key, "label": f"Open {ranked[0].label} trend"}, FOLLOW["most"], ranked[0].key)
+    if len(keys) >= 2 and re.search(r"compar|vs|versus|against|and|with", q):
+        a, b = keys[:2]
+        return (f"{_line(results[a])}. {_line(results[b])}. Percentages put them on one scale so you can compare them." + CLOSE,
+                {"tab": "explore", "keys": [a, b], "label": f"Compare {results[a].label} and {results[b].label}"}, FOLLOW["compare"], a)
+    if keys:
+        k = keys[0]
+        r = results[k]
+        flagged = any(k in i.signals for i in insights)
+        extra = (" This measure is part of a flagged finding." if flagged else " It stayed within your usual range, so nothing was flagged for it.")
+        return (_line(r) + "." + extra + CLOSE,
+                {"tab": "timeline", "key": k, "label": f"Open {r.label} trend"}, FOLLOW["measure"], k)
+    if re.search(r"how many days|how long|how much data|readings", q) and re.search(r"how many days|how long", q):
+        return None
+    return None
+
+
+def answer(question: str, insights, area: str | None = None, use_model: bool = True, results=None, history=()):
+    """Returns (text, source, action, followups, key)."""
+    if results:
+        hit = answer_data(question, insights, results, history)
+        if hit:
+            text, action, follow, key = hit
+            assert not check_language(text), check_language(text)
+            return text, "template", action, follow, key
+    text, source = _answer_text(question, insights, area, use_model, history)
+    return text, source, None, FOLLOW["default"], None
+
+
+def _answer_text(question: str, insights, area: str | None = None, use_model: bool = True, history=()):
     base = answer_template(question, insights, area)
     assert not check_language(base), check_language(base)
     if not use_model or not llm.available():
         return base, "template"
     facts = [llm.facts(i) for i in _area(insights, area)[:3]]
-    prompt = f"Question from the patient: {question}\nFacts:\n{json.dumps(facts, indent=2)}\nDraft answer:\n{base}"
+    talk = "\n".join(f"{h.get('who')}: {h.get('text')}" for h in list(history)[-6:])
+    prompt = f"Conversation so far:\n{talk}\nQuestion from the patient: {question}\nFacts:\n{json.dumps(facts, indent=2)}\nDraft answer:\n{base}"
     try:
         text = llm._generate(prompt, llm.DEFAULT_MODEL, llm.OLLAMA_URL, 90)
     except Exception:
