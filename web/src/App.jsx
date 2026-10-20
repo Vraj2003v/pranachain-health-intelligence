@@ -9,6 +9,8 @@ import Documents from "./components/Documents.jsx";
 import Insights from "./components/Insights.jsx";
 import Timeline from "./components/Timeline.jsx";
 import Coverage from "./components/Coverage.jsx";
+import Explore from "./components/Explore.jsx";
+import ChatDock from "./components/ChatDock.jsx";
 import Audit from "./components/Audit.jsx";
 import { viewFor } from "./roles.js";
 
@@ -21,6 +23,7 @@ export default function App() {
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
   const [failed, setFailed] = useState({});
+  const [focus, setFocus] = useState(null);   // measure(s) chosen by the assistant
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [q, setQ] = useState("");
 
@@ -80,6 +83,8 @@ export default function App() {
   const landing = home.tabs.includes("summary") ? "summary" : "insights";
   const open = (key, to = landing) => { setSelected(key); setTab(to); window.scrollTo({ top: 0 }); };
 
+  const act = (a) => { setFocus({ key: a.key, keys: a.keys || (a.key ? [a.key] : null) }); setTab(a.tab); window.scrollTo({ top: 0 }); };
+
   if (user === undefined) return <div className="muted pad">Loading…</div>;
   if (user === null) return <Auth onDone={(u) => { setUser(u); setTab(viewFor(u.role).home); setError(null); }} />;
   if (!docs.length) {
@@ -89,7 +94,7 @@ export default function App() {
   const view = viewFor(user.role);
   const TABS = view.tabList;
   const shown = view.tabs.includes(tab) ? tab : view.home;
-  const needsPatient = ["summary", "ask", "insights", "timeline", "coverage"].includes(shown);
+  const needsPatient = ["summary", "ask", "insights", "timeline", "explore", "coverage"].includes(shown);
 
   return (
     <div className="shell">
@@ -145,11 +150,13 @@ export default function App() {
         {shown === "audit" && <Audit />}
         {needsPatient && !detail && <div className="muted pad">Loading patient…</div>}
         {shown === "summary" && <Home user={user} canFull={view.tabs.includes("insights")} docs={docs} selected={selected} detail={detail} onPick={(k) => open(k, landing)} onFull={() => setTab("insights")} onTrends={() => setTab("timeline")} />}
-        {shown === "ask" && selected && <div className="askpage"><Ask pkey={selected} area={null} title="Ask about your results" /></div>}
+        {shown === "ask" && selected && <div className="askpage"><Ask pkey={selected} area={null} title="Ask about your results" onAction={act} /></div>}
         {shown === "insights" && detail && <Insights pkey={selected} d={detail} onTimeline={() => setTab("timeline")} />}
-        {shown === "timeline" && detail && <Timeline d={detail} />}
+        {shown === "timeline" && detail && <Timeline key={focus?.key || "t"} d={detail} initialKey={focus?.key} />}
+        {shown === "explore" && detail && <Explore key={(focus?.keys || []).join()} d={detail} initial={focus?.keys} />}
         {shown === "coverage" && detail && <Coverage d={detail} />}
 
+        <ChatDock pkey={selected} onAction={act} />
         <footer className="foot">Prototype for academic use on synthetic / anonymised data. It highlights patterns that may be worth discussing with a healthcare provider. It does not diagnose or give medical advice.</footer>
       </main>
     </div>
