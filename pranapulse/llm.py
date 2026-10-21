@@ -37,8 +37,8 @@ def available(model: str = DEFAULT_MODEL, url: str = OLLAMA_URL) -> bool:
 
 
 def _generate(prompt: str, model: str, url: str, timeout: int, system: str = SYSTEM) -> str:
-    body = json.dumps({"model": model, "system": system, "prompt": prompt, "stream": False,
-                       "options": {"temperature": 0.2}}).encode()
+    body = json.dumps({"model": model, "system": system, "prompt": prompt, "stream": False, "keep_alive": "30m",
+                       "options": {"temperature": 0.2, "num_predict": 200, "num_ctx": 2048}}).encode()
     req = urllib.request.Request(f"{url}/api/generate", body, {"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.load(r)["response"].strip()
