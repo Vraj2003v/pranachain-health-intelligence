@@ -6,8 +6,7 @@ const lastEmail = () => { try { return localStorage.getItem(LAST) || ""; } catch
 const saveEmail = (v) => { try { localStorage.setItem(LAST, v); } catch { /* storage may be blocked */ } };
 
 const ROLES = [["patient", "Patient", "See my own readings and ask questions"],
-  ["clinician", "Healthcare provider", "Review patients and the evidence"],
-  ["researcher", "Researcher or student", "Explore the method on demo data"]];
+  ["clinician", "Doctor / healthcare provider", "Review patients and the evidence"]];
 
 export default function Auth({ onDone }) {
   const [mode, setMode] = useState("login");

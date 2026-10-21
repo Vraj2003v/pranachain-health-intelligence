@@ -52,7 +52,7 @@ class Register(BaseModel):
     role: str = "clinician"      # chosen on sign-up; "admin" can never be chosen
 
 
-ROLES = {"patient", "clinician", "researcher"}
+ROLES = {"patient", "clinician"}
 
 
 class Login(BaseModel):
