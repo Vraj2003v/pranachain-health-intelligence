@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
+import ThemeToggle from "./ThemeToggle.jsx";
 
 export default function Landing({ user, onDemo, onUpload, onSignOut, busy, error, failed }) {
   const input = useRef();
   const [over, setOver] = useState(false);
   return (
     <div className="landing">
+      <ThemeToggle floating />
       <header className="hero big">
         <h1>🫀 Welcome, {user.name.split(" ")[0]}</h1>
         <p>Add patient workbooks to see what changed, the evidence, and the history it connects to.</p>
