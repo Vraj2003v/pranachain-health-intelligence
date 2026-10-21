@@ -9,7 +9,7 @@ export default function ThemeToggle({ floating = false }) {
   return (
     <button type="button" className={"themebtn" + (floating ? " floating" : "")} onClick={go}
       aria-label={`Colour theme: ${LABEL[t][1]}. Click to change.`} title="Switch light / dark / auto">
-      <span aria-hidden>{LABEL[t][0]}</span> {LABEL[t][1]}
+      <span aria-hidden>{LABEL[t][0]}</span>
     </button>
   );
 }

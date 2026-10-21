@@ -348,3 +348,11 @@ body::after { content: ""; position: fixed; inset: -10%; z-index: -1; pointer-ev
 .chatfab { box-shadow: inset 0 2px 0 var(--glass-hi), inset 0 -8px 18px rgba(255,255,255,.08), 0 14px 40px var(--glass-shadow); }
 .chatpop { box-shadow: inset 0 2px 0 var(--glass-hi), inset 0 -20px 40px rgba(255,255,255,.04), 0 30px 80px var(--glass-shadow); }
 .chatpop { background: var(--glass-bg), color-mix(in srgb, var(--bg) 62%, transparent); }
+
+/* symbol-only controls */
+.iconbtn { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; border-radius: 50%; cursor: pointer; font: inherit; font-size: 1rem; line-height: 1; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--glass-border); box-shadow: inset 0 1px 0 var(--glass-hi); transition: transform .2s cubic-bezier(.2,.8,.3,1.3), background .2s; }
+.iconbtn:hover { transform: scale(1.1); background: var(--kind-bg); } .iconbtn:active { transform: scale(.92); }
+.sendbtn { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; font-size: 1.15rem; font-weight: 700; flex: none; }
+.themebtn { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; font-size: 1.05rem; }
+.chatpop .askhead .row { gap: 6px; }
