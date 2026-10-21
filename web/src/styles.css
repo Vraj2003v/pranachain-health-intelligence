@@ -437,3 +437,14 @@ h1, .hero h1, .home h1 { font-family: var(--script); font-weight: 700; letter-sp
   .shell.slim .rail .themebtn { width: 30px; height: 30px; padding: 0; }
   .shell.slim .brandrow { gap: 12px; }
 }
+
+/* content stays centred in the space beside the sidebar, expanded or collapsed */
+.main { margin-left: auto; margin-right: auto; max-width: 1240px; }
+.shell.folded .main { max-width: 1320px; }
+.shell.folded .rail .avatar { margin-bottom: 2px; }
+.foldbtn:focus-visible, .iconbtn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.iconbtn svg { display: block; }
+/* never let a wide table or tab bar push the page sideways */
+.main { overflow-x: clip; }
+.tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; } .tabs::-webkit-scrollbar { display: none; }
+.userbox .uname { word-break: break-word; }
