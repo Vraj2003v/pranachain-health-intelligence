@@ -53,6 +53,11 @@ for r, key, bold in [(2, "subtitle", True), (3, "team", False)]:
     c = ws.cell(r, 1, data[key]); c.font = F(bold=bold); c.alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[r].height = 18
 
+RANGE = {"1": "Sep 28 - Oct 4", "2-3": "Oct 5 - Oct 18", "4": "Oct 19 - Oct 25"}
+def wk(w):
+    w = str(w)
+    return f"Week {w}\n{RANGE[w]}" if w in RANGE else f"Week {w}"
+
 heads = ["Week", "Week ending", "What we planned", "What we built / completed", "Evidence", "What changed", "Next step"]
 for i, h in enumerate(heads, 1):
     c = ws.cell(5, i, h); c.font = F(bold=True); c.fill = PatternFill("solid", fgColor=BLUE); c.border = box
@@ -60,7 +65,7 @@ for i, h in enumerate(heads, 1):
 ws.row_dimensions[5].height = 24
 r = 6
 for t in data["team_log"]:
-    vals = [t["week"], t["ending"], t["planned"], t["built"], t["evidence"], t["changed"], t["next"]]
+    vals = [wk(t["week"]), t["ending"], t["planned"], t["built"], t["evidence"], t["changed"], t["next"]]
     for i, v in enumerate(vals, 1):
         c = ws.cell(r, i, v); c.font = F(); c.border = box
         c.alignment = Alignment(horizontal="center" if i <= 2 else "left", vertical="top", wrap_text=True)
@@ -82,7 +87,7 @@ for p in data["people"]:
         ws.cell(r, col).border = box; ws.cell(r, col).fill = PatternFill("solid", fgColor=BLUE)
     ws.row_dimensions[r].height = 24; r += 1
     for x in p["rows"]:
-        for col, v in [(1, x["week"]), (2, x["task"]), (4, x["evidence"]), (5, x["result"]), (6, x["next"])]:
+        for col, v in [(1, wk(x["week"])), (2, x["task"]), (4, x["evidence"]), (5, x["result"]), (6, x["next"])]:
             c = ws.cell(r, col, v); c.font = F(); c.alignment = Alignment(horizontal="center" if col in (1, 5) else "left", vertical="top", wrap_text=True)
         for a, b in [(2, 3), (6, 7)]:
             ws.merge_cells(start_row=r, start_column=a, end_row=r, end_column=b)
