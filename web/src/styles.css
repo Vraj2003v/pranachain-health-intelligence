@@ -356,3 +356,22 @@ body::after { content: ""; position: fixed; inset: -10%; z-index: -1; pointer-ev
 .sendbtn { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; font-size: 1.15rem; font-weight: 700; flex: none; }
 .themebtn { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; font-size: 1.05rem; }
 .chatpop .askhead .row { gap: 6px; }
+
+/* ---- friendlier extras ---- */
+html[data-size="large"] { zoom: 1.12; } html[data-size="xlarge"] { zoom: 1.25; }
+.tools { display: inline-flex; gap: 6px; align-items: center; } .mobile-pick .tools { margin-right: auto; }
+.themebtn b { font-size: .85rem; }
+.starter { border-radius: 22px; padding: 14px 18px; margin: 12px 0; background: var(--glass-bg); border: 1px solid var(--glass-border); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); box-shadow: inset 0 1px 0 var(--glass-hi), 0 8px 28px var(--glass-shadow); }
+.starthead { display: flex; align-items: center; gap: 10px; } .starthead .iconbtn { margin-left: auto; }
+.meter { height: 6px; border-radius: 99px; background: var(--quiet-bg); overflow: hidden; margin: 8px 0; } .meter i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--brand), var(--brand2)); transition: width .5s cubic-bezier(.2,.8,.3,1); }
+.starter ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.starter li { color: var(--muted); } .starter li.ok { color: var(--ok); text-decoration: line-through; text-decoration-thickness: 1px; }
+.howto { margin: 8px 0; } .howto ul { margin: 6px 0 0; padding-left: 20px; line-height: 1.7; }
+.scrim { position: fixed; inset: 0; z-index: 60; background: rgba(10,16,24,.38); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; animation: fadein .2s; }
+@keyframes fadein { from { opacity: 0; } }
+.guide { width: min(560px, 100%); max-height: 84vh; overflow-y: auto; border-radius: 28px; padding: 20px 24px; background: var(--glass-bg), color-mix(in srgb, var(--bg) 70%, transparent); border: 1px solid var(--glass-border); box-shadow: inset 0 1px 0 var(--glass-hi), 0 30px 80px var(--glass-shadow); animation: pop .3s cubic-bezier(.2,.9,.3,1.25); }
+.guide h2 { margin: 0; } .guide dl { margin: 12px 0 0; display: grid; gap: 12px; } .guide dt { font-weight: 700; } .guide dd { margin: 2px 0 0; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .scrim, .guide { animation: none; } }
+.brandrow { flex-wrap: wrap; row-gap: 6px; } .brand { white-space: nowrap; }
+.rail .themebtn { width: 32px; height: 32px; } .rail .tools { gap: 4px; }
+.tabs { display: flex; width: fit-content; margin-left: auto; margin-right: auto; }
