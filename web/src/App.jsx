@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Logo from "./components/Logo.jsx";
 import { api } from "./api";
 import Auth from "./components/Auth.jsx";
 import Landing from "./components/Landing.jsx";
@@ -98,9 +99,9 @@ export default function App() {
   const needsPatient = ["summary", "ask", "insights", "timeline", "explore", "coverage"].includes(shown);
 
   return (
-    <div className="shell">
+    <div className={"shell" + (view.rail ? "" : " slim")}>
       <aside className="rail">
-        <div className="brandrow"><div className="brand">🫀 <b>PranaPulse</b></div><Tools /></div>
+        <div className="brandrow"><div className="brand"><Logo /></div><Tools /></div>
         {view.rail && <>
         <input className="search" placeholder="Search patient ID" value={q} onChange={(e) => setQ(e.target.value)} />
         <label className="check"><input type="checkbox" checked={flaggedOnly} onChange={(e) => setFlaggedOnly(e.target.checked)} /> Only patients with an insight</label>
@@ -115,10 +116,11 @@ export default function App() {
         </div>
         </>}
         <div className="userbox">
+          <span className="avatar" aria-hidden="true">{(user.name || "?").trim()[0].toUpperCase()}</span>
           <div className="uname"><b>{user.name}</b><span className="muted small">{user.email} · {{ patient: "Patient", clinician: "Healthcare provider", researcher: "Researcher", admin: "Administrator" }[user.role] || user.role}</span></div>
           <div className="railfoot">
-            <button className="btn ghost small" onClick={signOut}>Sign out</button>
-            <button className="btn ghost small" onClick={deleteAccount} title="Delete my account and data">Delete account</button>
+            <button className="iconbtn" onClick={signOut} aria-label="Sign out" title="Sign out">⎋</button>
+            <button className="iconbtn danger" onClick={deleteAccount} aria-label="Delete my account and data" title="Delete my account and data">🗑</button>
           </div>
         </div>
       </aside>
