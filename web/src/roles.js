@@ -4,7 +4,7 @@ const LABEL = { summary: "My summary", ask: "Ask a question", timeline: "Trends"
   coverage: "Data quality", explore: "Compare", cohort: "All patients", documents: "Files", audit: "Activity log" };
 
 const VIEWS = {
-  patient:    { home: "summary", tabs: ["summary", "ask", "timeline", "explore", "documents"], rail: false, labels: { documents: "My files" } },
+  patient:    { home: "summary", tabs: ["summary", "ask", "timeline", "explore", "documents"], rail: true, labels: { documents: "My files" } },
   clinician:  { home: "cohort",  tabs: ["cohort", "summary", "ask", "timeline", "explore", "insights", "coverage", "documents"], rail: true, labels: { summary: "Patient summary" } },
   admin:      { home: "cohort",  tabs: ["cohort", "summary", "ask", "timeline", "explore", "insights", "coverage", "documents", "audit"], rail: true, labels: { summary: "Patient summary" } },
 };
