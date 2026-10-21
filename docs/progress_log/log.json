@@ -167,10 +167,10 @@
         },
         {
           "week": 4,
-          "task": "AI tool use: Claude (Claude Code) helped write code, docs and plans",
-          "evidence": "Co-author line in commits",
+          "task": "Used an AI assistant for code, documents and planning",
+          "evidence": "Disclosed in the evaluation form",
           "result": "Disclosed",
-          "next": "Disclose in evaluation forms"
+          "next": "Keep the disclosure in the evaluation forms"
         }
       ]
     },
