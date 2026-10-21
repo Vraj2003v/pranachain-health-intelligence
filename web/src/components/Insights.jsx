@@ -55,7 +55,7 @@ function Card({ pkey, i, ins, onTimeline }) {
 }
 
 const SECTIONS = [
-  { scenario: "Cardiovascular / hypertension", icon: "🫀", title: "Cardiovascular",
+  { scenario: "Cardiovascular / hypertension", icon: "🩺", title: "Cardiovascular",
     watches: "Blood pressure, resting heart rate, HRV and LDL cholesterol",
     why: "Changes in these measures can matter for heart and blood-vessel health, so they are worth discussing with a healthcare provider alongside the patient's history." },
   { scenario: "Metabolic health", icon: "⚖️", title: "Metabolic",

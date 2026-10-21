@@ -1,5 +1,5 @@
 export const AREAS = [
-  { scenario: "Cardiovascular / hypertension", icon: "🫀", title: "Heart and blood pressure", short: "Cardiovascular", hue: "#b03a48",
+  { scenario: "Cardiovascular / hypertension", icon: "🩺", title: "Heart and blood pressure", short: "Cardiovascular", hue: "#b03a48",
     measures: ["sbp", "dbp", "rhr", "hrv"], watches: "Blood pressure, resting heart rate, HRV and LDL cholesterol",
     why: "Changes in these measures can matter for heart and blood-vessel health, so they are worth discussing with a healthcare provider alongside your history.",
     calm: "Your blood pressure and heart readings stayed within your own usual range." },
