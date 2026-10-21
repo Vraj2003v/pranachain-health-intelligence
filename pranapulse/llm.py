@@ -4,12 +4,13 @@ Safe by design: only computed facts are sent, nothing leaves the machine, every 
 check_language, and any failure falls back to the template text.
 """
 import json
+import os
 import urllib.request
 
 from .explain import check_language
 
-OLLAMA_URL = "http://localhost:11434"
-DEFAULT_MODEL = "llama3.1:8b"
+OLLAMA_URL = os.environ.get("PRANAPULSE_OLLAMA_URL", "http://localhost:11434")
+DEFAULT_MODEL = os.environ.get("PRANAPULSE_MODEL", "llama3.1:8b")   # e.g. set to llama3.2:3b on an 8 GB laptop
 
 SYSTEM = (
     "You rewrite a health-pattern summary for a patient in plain, calm language. Use ONLY the facts given. "
@@ -35,8 +36,8 @@ def available(model: str = DEFAULT_MODEL, url: str = OLLAMA_URL) -> bool:
         return False
 
 
-def _generate(prompt: str, model: str, url: str, timeout: int) -> str:
-    body = json.dumps({"model": model, "system": SYSTEM, "prompt": prompt, "stream": False,
+def _generate(prompt: str, model: str, url: str, timeout: int, system: str = SYSTEM) -> str:
+    body = json.dumps({"model": model, "system": system, "prompt": prompt, "stream": False,
                        "options": {"temperature": 0.2}}).encode()
     req = urllib.request.Request(f"{url}/api/generate", body, {"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:

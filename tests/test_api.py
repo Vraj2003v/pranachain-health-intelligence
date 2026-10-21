@@ -115,3 +115,24 @@ def test_chat_answers_from_readings_stay_inside_wording_rules():
         hist.append({"who": "me", "text": q, "key": None}); hist.append({"who": "bot", "text": r["text"], "key": r.get("key")})
     r = c.post(f"/api/documents/{doc}/ask", json={"question": "weight vs steps"}).json()
     assert r["action"]["tab"] == "explore" and set(r["action"]["keys"]) == {"weight", "steps"}
+
+
+def test_ai_reply_is_used_only_when_it_passes_the_checks(monkeypatch):
+    from pranapulse import llm
+    c, _ = user("ai@example.com")
+    c.post("/api/documents/demo")
+    doc = c.get("/api/documents").json()[0]["key"]
+    ask = lambda q: c.post(f"/api/documents/{doc}/ask", json={"question": q}).json()
+    monkeypatch.setattr(llm, "available", lambda *a, **k: True)
+    good = "Your weight may have crept up over the year, which could be worth raising with a healthcare provider."
+    monkeypatch.setattr(llm, "_generate", lambda *a, **k: good)
+    assert ask("how is my weight")["source"] == "local model"
+    monkeypatch.setattr(llm, "_generate", lambda *a, **k: "Your weight rose by 77.7 kg, which may matter to a provider.")   # invented number
+    assert ask("how is my weight")["source"] == "template"
+    monkeypatch.setattr(llm, "_generate", lambda *a, **k: "You have diabetes. See a provider; this may help.")   # banned wording
+    assert ask("how is my weight")["source"] == "template"
+    monkeypatch.setattr(llm, "_generate", lambda *a, **k: good)
+    assert ask("do I have diabetes?")["source"] == "template"   # safety questions never go to the model
+    def boom(*a, **k): raise OSError("offline")
+    monkeypatch.setattr(llm, "_generate", boom)
+    assert ask("how is my weight")["source"] == "template"

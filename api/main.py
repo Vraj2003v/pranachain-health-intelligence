@@ -138,7 +138,7 @@ def audit(user=Depends(auth.current_user)):
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "llm": llm.available()}
+    return {"ok": True, "llm": llm.available(), "model": llm.DEFAULT_MODEL}
 
 
 # ------------------------------------------------------------------ documents (stored workbooks)
