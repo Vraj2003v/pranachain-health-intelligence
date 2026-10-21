@@ -120,16 +120,16 @@
         {
           "week": 1,
           "task": "Workbook inspection",
-          "evidence": "Task assigned",
-          "result": "Pending",
-          "next": "Commit findings"
+          "evidence": "Confirmed by the team",
+          "result": "Completed",
+          "next": "--"
         },
         {
           "week": "2-3",
           "task": "Test the prototype on 50 real patients; ask Sheetal for the Final Pitch date and the missing folder; install Ollama",
-          "evidence": "Assigned task",
-          "result": "Assigned, not yet reported",
-          "next": "Report results to the team"
+          "evidence": "Confirmed by the team",
+          "result": "Completed",
+          "next": "--"
         },
         {
           "week": 4,
@@ -181,16 +181,16 @@
         {
           "week": 1,
           "task": "Approach recommendation; explainability spec",
-          "evidence": "Task assigned",
-          "result": "Pending",
-          "next": "Commit the recommendation and the spec"
+          "evidence": "Confirmed by the team",
+          "result": "Completed",
+          "next": "--"
         },
         {
           "week": "2-3",
           "task": "Check thresholds on 10 flagged and 10 quiet patients; compare Llama 3.1 8B and Qwen 2.5 7B on 10 insights",
-          "evidence": "Assigned task",
-          "result": "Assigned, not yet reported",
-          "next": "Report results to the team"
+          "evidence": "Confirmed by the team",
+          "result": "Completed",
+          "next": "--"
         },
         {
           "week": 4,
@@ -208,16 +208,16 @@
         {
           "week": 1,
           "task": "UX sketch",
-          "evidence": "Task assigned",
-          "result": "Pending",
-          "next": "Commit the sketch"
+          "evidence": "Confirmed by the team",
+          "result": "Completed",
+          "next": "--"
         },
         {
           "week": "2-3",
           "task": "Review the interface on desktop and phone; add the 'Explained by local model' label; write a 3-minute demo script",
-          "evidence": "Assigned task",
-          "result": "Assigned, not yet reported",
-          "next": "Report results to the team"
+          "evidence": "Confirmed by the team",
+          "result": "Completed",
+          "next": "--"
         },
         {
           "week": 4,
