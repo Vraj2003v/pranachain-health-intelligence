@@ -132,30 +132,54 @@ def answer_data(question, insights, results, history=()):
     return None
 
 
-def answer(question: str, insights, area: str | None = None, use_model: bool = True, results=None, history=()):
-    """Returns (text, source, action, followups, key)."""
-    if results:
-        hit = answer_data(question, insights, results, history)
-        if hit:
-            text, action, follow, key = hit
-            assert not check_language(text), check_language(text)
-            return text, "template", action, follow, key
-    text, source = _answer_text(question, insights, area, use_model, history)
-    return text, source, None, FOLLOW["default"], None
+CHAT_SYSTEM = (
+    "You are PranaPulse's assistant. Answer the patient's question in 2 to 4 calm, plain sentences using ONLY the facts and the draft "
+    "answer provided. Never add a number that is not in the facts. Do not diagnose, name a condition, give treatment, medication or "
+    "dose advice, or give a risk score. Use cautious words such as 'may' or 'could'. If the facts do not answer the question, say so. "
+    "End by saying it may be worth discussing with a healthcare provider."
+)
+SAFETY = re.compile(r"diagnos|disease|condition|do i have|serious|dangerous|risk|treat|medic|dose|drug|pill|cure|die|dying|emergency", re.I)
+NUM = re.compile(r"\d+(?:[.,]\d+)?")
 
 
-def _answer_text(question: str, insights, area: str | None = None, use_model: bool = True, history=()):
-    base = answer_template(question, insights, area)
-    assert not check_language(base), check_language(base)
-    if not use_model or not llm.available():
-        return base, "template"
-    facts = [llm.facts(i) for i in _area(insights, area)[:3]]
+def _numbers_ok(text: str, allowed: str) -> bool:
+    """Every number in the reply (other than 1 to 10, as in 'three sentences') must appear in the supplied facts."""
+    known = {n.replace(",", "") for n in NUM.findall(allowed)}
+    return all(n.replace(",", "") in known or (n.isdigit() and 1 <= int(n) <= 10) for n in NUM.findall(text))
+
+
+def _ai(question, base, insights, results, history, area):
+    facts = {"findings": [llm.facts(i) for i in _area(insights, area)[:4]],
+             "readings": [{"measure": r.label, "unit": r.unit, "first_90_days_avg": round(r.mean_first, r.decimals),
+                           "last_90_days_avg": round(r.mean_last, r.decimals), "change": round(r.diff, r.decimals),
+                           "times_usual_daily_variation": round(abs(r.effect), 1), "data_flag": r.flag}
+                          for r in (results or {}).values()],
+             "window_days": WINDOW_DAYS, "recent_days": RECENT_DAYS}
+    allowed = json.dumps(facts) + " " + base
     talk = "\n".join(f"{h.get('who')}: {h.get('text')}" for h in list(history)[-6:])
-    prompt = f"Conversation so far:\n{talk}\nQuestion from the patient: {question}\nFacts:\n{json.dumps(facts, indent=2)}\nDraft answer:\n{base}"
+    prompt = (f"Conversation so far:\n{talk}\n\nPatient question: {question}\n\nFacts:\n{json.dumps(facts, indent=1)}\n\n"
+              f"Safe draft answer (you may reword it, keep every number):\n{base}")
     try:
-        text = llm._generate(prompt, llm.DEFAULT_MODEL, llm.OLLAMA_URL, 90)
+        text = llm._generate(prompt, llm.DEFAULT_MODEL, llm.OLLAMA_URL, 90, CHAT_SYSTEM)
     except Exception:
-        return base, "template"
-    if not text or check_language(text):
-        return base, "template"
-    return text, "local model"
+        return None
+    if not text or check_language(text) or not _numbers_ok(text, allowed):
+        return None
+    return text
+
+
+def answer(question: str, insights, area: str | None = None, use_model: bool = True, results=None, history=()):
+    """Returns (text, source, action, followups, key). The model only ever rewords a checked draft."""
+    action, follow, key = None, FOLLOW["default"], None
+    hit = answer_data(question, insights, results, history) if results else None
+    if hit:
+        base, action, follow, key = hit
+        assert not check_language(base), check_language(base)
+    else:
+        base = answer_template(question, insights, area)
+        assert not check_language(base), check_language(base)
+    if use_model and not SAFETY.search(question) and llm.available():
+        text = _ai(question, base, insights, results, history, area)
+        if text:
+            return text, "local model", action, follow, key
+    return base, "template", action, follow, key
