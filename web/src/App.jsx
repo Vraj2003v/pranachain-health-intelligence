@@ -10,6 +10,7 @@ import Insights from "./components/Insights.jsx";
 import Timeline from "./components/Timeline.jsx";
 import Coverage from "./components/Coverage.jsx";
 import Explore from "./components/Explore.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 import ChatDock from "./components/ChatDock.jsx";
 import Audit from "./components/Audit.jsx";
 import { viewFor } from "./roles.js";
@@ -99,7 +100,7 @@ export default function App() {
   return (
     <div className="shell">
       <aside className="rail">
-        <div className="brand">🫀 <b>PranaPulse</b></div>
+        <div className="brandrow"><div className="brand">🫀 <b>PranaPulse</b></div><ThemeToggle /></div>
         {view.rail && <>
         <input className="search" placeholder="Search patient ID" value={q} onChange={(e) => setQ(e.target.value)} />
         <label className="check"><input type="checkbox" checked={flaggedOnly} onChange={(e) => setFlaggedOnly(e.target.checked)} /> Only patients with an insight</label>
