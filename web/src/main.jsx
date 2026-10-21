@@ -1,10 +1,11 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
-import { applyTheme, getTheme } from "./theme.js";
+import { applySize, applyTheme, getSize, getTheme } from "./theme.js";
 import "./styles.css";
 
 applyTheme(getTheme());
+applySize(getSize());
 createRoot(document.getElementById("root")).render(<App />);
 
 // Light follows the pointer: the glass edge highlight and the colour field react to it.

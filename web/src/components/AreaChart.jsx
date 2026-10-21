@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Area, Bar, BarChart, Brush, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmt } from "../api";
+import { mark } from "../progress.js";
 
 const T = (d) => Date.parse(d + "T00:00:00");
 const tick = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", year: "2-digit" });
@@ -66,13 +67,13 @@ export default function AreaChart({ d, area }) {
     <div className="achart">
       <div className="controls">
         <div className="pills" role="tablist" aria-label="Measure">
-          {keys.map((k) => <button key={k} role="tab" aria-selected={k === key} className={"pill" + (k === key ? " on" : "")} onClick={() => setKey(k)}>{d.series[k].label}</button>)}
+          {keys.map((k) => <button key={k} role="tab" aria-selected={k === key} className={"pill" + (k === key ? " on" : "")} onClick={() => { setKey(k); mark("chart"); }}>{d.series[k].label}</button>)}
         </div>
         <div className="pills" role="group" aria-label="Time range">
-          {RANGES.map(([l, n]) => <button key={l} aria-pressed={range === n} className={"pill" + (range === n ? " on" : "")} onClick={() => setRange(n)}>{l}</button>)}
+          {RANGES.map(([l, n]) => <button key={l} aria-pressed={range === n} className={"pill" + (range === n ? " on" : "")} onClick={() => { setRange(n); mark("chart"); }}>{l}</button>)}
         </div>
-        <label className="toggle"><input type="checkbox" checked={proj} onChange={(e) => setProj(e.target.checked)} /> Projection</label>
-        <label className="toggle"><input type="checkbox" checked={dots} onChange={(e) => setDots(e.target.checked)} /> Daily readings</label>
+        <label className="toggle"><input type="checkbox" checked={proj} onChange={(e) => { setProj(e.target.checked); mark("chart"); }} /> Projection</label>
+        <label className="toggle"><input type="checkbox" checked={dots} onChange={(e) => { setDots(e.target.checked); mark("chart"); }} /> Daily readings</label>
       </div>
       <h4>{s.label} ({s.unit})</h4>
       <ResponsiveContainer width="100%" height={340}>
@@ -87,9 +88,18 @@ export default function AreaChart({ d, area }) {
           {dots && <Line dataKey="v" stroke="none" dot={{ r: 1.8, fill: "#9db8bb", strokeWidth: 0 }} activeDot={false} isAnimationActive={false} />}
           <Line dataKey="w" stroke="#14919b" strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />
           {proj && <Line dataKey="p" stroke="#e0a21f" strokeWidth={3} strokeDasharray="7 5" dot={false} connectNulls isAnimationActive={false} />}
-          <Brush dataKey="t" height={26} stroke="#14919b" tickFormatter={tick} travellerWidth={10} />
+          <Brush onChange={() => mark("chart")} dataKey="t" height={26} stroke="#14919b" tickFormatter={tick} travellerWidth={10} />
         </ComposedChart>
       </ResponsiveContainer>
+      <details className="howto"><summary>How to read this chart</summary>
+        <ul>
+          <li><b>Thick teal line:</b> your weekly average.</li>
+          <li><b>Small dots:</b> each day's reading.</li>
+          <li><b>Dashed teal line:</b> your own usual level from your first 90 days.</li>
+          <li><b>Amber dashed line and shading:</b> where the trend could go over the next 8 weeks if nothing changes. It is not a prediction.</li>
+          <li><b>Handles under the chart:</b> drag to zoom into any stretch of time.</li>
+        </ul>
+      </details>
       <p className="muted small">Drag the handles under the chart to zoom. The dashed teal line is your own usual level; the amber dashed line is a straight-line projection, not a prediction.</p>
     </div>);
 }

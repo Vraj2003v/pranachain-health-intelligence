@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { STEPS, getSteps, mark } from "../progress.js";
 import { Line, LineChart, ReferenceLine, ResponsiveContainer, Bar, BarChart } from "recharts";
 import { AREAS } from "../areas.js";
 import AreaChart from "./AreaChart.jsx";
 import Ask from "./Ask.jsx";
 
 const T = (d) => Date.parse(d + "T00:00:00");
-const seen = () => { try { return localStorage.getItem("pranapulse.coach") === "1"; } catch { return false; } };
-const markSeen = () => { try { localStorage.setItem("pranapulse.coach", "1"); } catch { /* storage may be blocked */ } };
+const hello = () => { const h = new Date().getHours(); return h < 5 ? "Hello" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; };
+const dismissed = () => { try { return localStorage.getItem("pranapulse.coach") === "1"; } catch { return false; } };
+const dismiss = () => { try { localStorage.setItem("pranapulse.coach", "1"); } catch { /* storage may be blocked */ } };
 
 function Spark({ d, area }) {
   if (area.measures.length === 0) {
@@ -30,7 +32,9 @@ function Spark({ d, area }) {
 
 export default function Home({ user, canFull = true, docs, selected, detail, onPick, onFull, onTrends }) {
   const [open, setOpen] = useState(null);
-  const [coach, setCoach] = useState(!seen());
+  const [coach, setCoach] = useState(!dismissed());
+  const [done, setDone] = useState(getSteps());
+  useEffect(() => { const f = () => setDone(getSteps()); window.addEventListener("pp-steps", f); return () => window.removeEventListener("pp-steps", f); }, []);
   const first = user.name.split(" ")[0];
   const glow = (e) => { const r = e.currentTarget.getBoundingClientRect(); e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`); e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`); };
   if (!detail) return <div className="muted pad">Loading your summary…</div>;
@@ -43,7 +47,7 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
     <section className="home">
       <div className="greet">
         <div>
-          <h1>{user.role === "patient" ? `Hello, ${first}` : `Patient ${detail.patient.id}`}</h1>
+          <h1>{user.role === "patient" ? `${hello()}, ${first}` : `Patient ${detail.patient.id}`}</h1>
           <p className="lede">
             {found === 0 ? "Nothing in the latest readings moved beyond the usual range."
               : `${found} of 3 health areas show changes that may be worth a closer look.`}
@@ -58,17 +62,20 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
       <p className="muted small">Patient {detail.patient.id}, {detail.patient.age ?? "age unknown"}, {detail.patient.sex ?? "sex unknown"}. Readings from {detail.patient.start} to {detail.patient.end}.</p>
 
       {coach && (
-        <div className="coach" role="note">
-          <div><b>Start here.</b> Tap a health area below to see what changed and why. Use the question box inside it if something is unclear.</div>
-          <button className="btn ghost small" onClick={() => { markSeen(); setCoach(false); }}>Got it</button>
-        </div>)}
+        <aside className="starter" aria-label="Getting started">
+          <div className="starthead"><b>Getting started</b><span className="muted small">{done.length} of {STEPS.length} done</span>
+            <button type="button" className="iconbtn" onClick={() => { dismiss(); setCoach(false); }} aria-label="Hide getting started" title="Hide">✕</button></div>
+          <div className="meter" aria-hidden><i style={{ width: `${(done.length / STEPS.length) * 100}%` }} /></div>
+          <ul>{STEPS.map(([k, label]) => <li key={k} className={done.includes(k) ? "ok" : ""}><span aria-hidden>{done.includes(k) ? "✓" : "○"}</span> {label}</li>)}</ul>
+          {done.length === STEPS.length && <p className="small">All done. You can hide this card with ✕.</p>}
+        </aside>)}
 
       <div className="areas-grid">
         {AREAS.map((a) => {
           const items = by(a), hit = items.length > 0, on = open === a.scenario;
           return (
             <button key={a.scenario} onMouseMove={glow} className={"acard" + (hit ? " hit" : "") + (on ? " on" : "")} style={{ "--hue": a.hue }}
-              aria-expanded={on} onClick={() => setOpen(on ? null : a.scenario)}>
+              aria-expanded={on} onClick={() => { setOpen(on ? null : a.scenario); mark("area"); }}>
               <span className="ahead"><span className="aicon" aria-hidden>{a.icon}</span><b>{a.title}</b></span>
               <span className={"chip " + (hit ? "warn" : "ok")}>{hit ? `${items.length} change${items.length > 1 ? "s" : ""} found` : "No clear change"}</span>
               <span className="asum">{hit ? items[0].summary : a.calm}</span>
