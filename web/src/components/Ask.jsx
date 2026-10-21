@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
+import { mark } from "../progress.js";
 
 const CHIPS = ["What changed the most?", "Why was this flagged?", "How is my weight?", "Compare weight and steps",
   "What does the baseline mean?", "Does this mean I have a condition?"];
@@ -17,7 +18,7 @@ export default function Ask({ pkey, area, title = "Ask about your results", onAc
   const send = async (q) => {
     q = (q ?? text).trim();
     if (!q || busy) return;
-    setOpen(true);
+    setOpen(true); mark("ask");
     const history = msgs.map((m) => ({ who: m.who, text: m.text, key: m.key }));
     setText(""); setMsgs((m) => [...m, { who: "me", text: q }]); setBusy(true);
     try {
