@@ -164,9 +164,10 @@ def _ai(question, base, insights, results, history, area):
                            "times_usual_daily_variation": round(abs(r.effect), 1), "data_flag": r.flag}
                           for r in _pick(results, question)],
              "window_days": WINDOW_DAYS, "recent_days": RECENT_DAYS}
+    compact = json.dumps(facts, separators=(",", ":"))
     allowed = json.dumps(facts) + " " + base
     talk = "\n".join(f"{h.get('who')}: {h.get('text')}" for h in list(history)[-6:])
-    prompt = (f"Conversation so far:\n{talk}\n\nPatient question: {question}\n\nFacts:\n{json.dumps(facts, separators=(",", ":"))}\n\n"
+    prompt = (f"Conversation so far:\n{talk}\n\nPatient question: {question}\n\nFacts:\n{compact}\n\n"
               f"Safe draft answer (you may reword it, keep every number):\n{base}")
     try:
         text = llm._generate(prompt, llm.DEFAULT_MODEL, llm.OLLAMA_URL, 90, CHAT_SYSTEM)
