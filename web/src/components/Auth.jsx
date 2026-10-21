@@ -1,4 +1,5 @@
 import ThemeToggle from "./ThemeToggle.jsx";
+import Logo from "./Logo.jsx";
 import { useState } from "react";
 import { api } from "../api";
 
@@ -40,7 +41,7 @@ export default function Auth({ onDone }) {
     <div className="authwrap">
       <ThemeToggle floating />
       <form className="authcard" onSubmit={submit} noValidate>
-        <div className="authbrand">🫀 PranaPulse</div>
+        <div className="authbrand"><Logo size={38} /></div>
         <div className="seg" role="tablist">
           <button type="button" role="tab" aria-selected={!reg} className={!reg ? "on" : ""} onClick={() => switchMode("login")}>Sign in</button>
           <button type="button" role="tab" aria-selected={reg} className={reg ? "on" : ""} onClick={() => switchMode("register")}>Create account</button>
