@@ -402,3 +402,17 @@ h1 { font-weight: 700; } h2, h3 { font-weight: 600; }
   .shell.slim .railfoot { gap: 6px; }
   .shell.slim .main { max-width: 1180px; margin: 0 auto; }
 }
+
+/* collapsible sidebar (doctor view) */
+.shell { transition: grid-template-columns .25s ease; }
+.foldbtn { font-size: 1.2rem; font-weight: 700; margin-left: auto; }
+@media (min-width: 821px) {
+  .shell.folded { grid-template-columns: 72px 1fr; }
+  .shell.folded .rail { padding: 14px 10px; align-items: center; overflow: hidden; }
+  .shell.folded .brandrow { flex-direction: column; gap: 10px; }
+  .shell.folded .foldbtn { margin-left: 0; }
+  .shell.folded .search, .shell.folded .check, .shell.folded .plist, .shell.folded .uname { display: none; }
+  .shell.folded .userbox { border: 0; align-items: center; margin-top: auto; }
+  .shell.folded .railfoot { flex-direction: column; }
+}
+.shell.slim .foldbtn { display: none; }

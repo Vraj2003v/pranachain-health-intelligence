@@ -17,6 +17,8 @@ import Audit from "./components/Audit.jsx";
 import { viewFor } from "./roles.js";
 
 export default function App() {
+  const [folded, setFolded] = useState(() => { try { return localStorage.getItem("pp-rail") === "1"; } catch { return false; } });
+  const fold = () => setFolded((f) => { const n = !f; try { localStorage.setItem("pp-rail", n ? "1" : "0"); } catch {} return n; });
   const [user, setUser] = useState(undefined);   // undefined = checking, null = signed out
   const [docs, setDocs] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -99,9 +101,10 @@ export default function App() {
   const needsPatient = ["summary", "ask", "insights", "timeline", "explore", "coverage"].includes(shown);
 
   return (
-    <div className={"shell" + (view.rail ? "" : " slim")}>
+    <div className={"shell" + (view.rail ? (folded ? " folded" : "") : " slim")}>
       <aside className="rail">
-        <div className="brandrow"><div className="brand"><Logo /></div><Tools /></div>
+        <div className="brandrow"><div className="brand"><Logo text={!folded} /></div>{!folded && <Tools />}
+          {view.rail && <button type="button" className="iconbtn foldbtn" onClick={fold} aria-label={folded ? "Expand sidebar" : "Collapse sidebar"} title={folded ? "Expand sidebar" : "Collapse sidebar"}>{folded ? "›" : "‹"}</button>}</div>
         {view.rail && <>
         <input className="search" placeholder="Search patient ID" value={q} onChange={(e) => setQ(e.target.value)} />
         <label className="check"><input type="checkbox" checked={flaggedOnly} onChange={(e) => setFlaggedOnly(e.target.checked)} /> Only patients with an insight</label>
