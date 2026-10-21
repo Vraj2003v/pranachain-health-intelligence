@@ -122,8 +122,8 @@ export default function App() {
           <span className="avatar" aria-hidden="true">{(user.name || "?").trim()[0].toUpperCase()}</span>
           <div className="uname"><b>{user.name}</b><span className="muted small">{user.email} · {{ patient: "Patient", clinician: "Healthcare provider", researcher: "Researcher", admin: "Administrator" }[user.role] || user.role}</span></div>
           <div className="railfoot">
-            <button className="iconbtn" onClick={signOut} aria-label="Sign out" title="Sign out">⎋</button>
-            <button className="iconbtn danger" onClick={deleteAccount} aria-label="Delete my account and data" title="Delete my account and data">🗑</button>
+            <button className="iconbtn" onClick={signOut} aria-label="Sign out" title="Sign out"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button>
+            <button className="iconbtn danger" onClick={deleteAccount} aria-label="Delete my account and data" title="Delete my account and data"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
           </div>
         </div>
       </aside>
