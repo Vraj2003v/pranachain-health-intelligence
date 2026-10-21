@@ -164,13 +164,6 @@
           "evidence": "Working app on GitHub; docs/ai-integration-plan.md",
           "result": "Completed",
           "next": "Phase 2 of the AI plan (chat that calls our own functions); update the demo script"
-        },
-        {
-          "week": 4,
-          "task": "Used an AI assistant for code, documents and planning",
-          "evidence": "Disclosed in the evaluation form",
-          "result": "Disclosed",
-          "next": "Keep the disclosure in the evaluation forms"
         }
       ]
     },
