@@ -148,16 +148,25 @@ def _numbers_ok(text: str, allowed: str) -> bool:
     return all(n.replace(",", "") in known or (n.isdigit() and 1 <= int(n) <= 10) for n in NUM.findall(text))
 
 
+def _pick(results, question, n=5):
+    """Keep the prompt short (long prompts are what make a CPU model slow): measures named in the question, then the biggest changes."""
+    rs = list((results or {}).values())
+    q = question.lower()
+    named = [r for r in rs if any(w in q for w in r.label.lower().split() if len(w) > 3)]
+    rest = sorted((r for r in rs if r not in named), key=lambda r: -abs(r.effect))
+    return (named + rest)[:max(n, len(named))]
+
+
 def _ai(question, base, insights, results, history, area):
-    facts = {"findings": [llm.facts(i) for i in _area(insights, area)[:4]],
+    facts = {"findings": [llm.facts(i) for i in _area(insights, area)[:3]],
              "readings": [{"measure": r.label, "unit": r.unit, "first_90_days_avg": round(r.mean_first, r.decimals),
                            "last_90_days_avg": round(r.mean_last, r.decimals), "change": round(r.diff, r.decimals),
                            "times_usual_daily_variation": round(abs(r.effect), 1), "data_flag": r.flag}
-                          for r in (results or {}).values()],
+                          for r in _pick(results, question)],
              "window_days": WINDOW_DAYS, "recent_days": RECENT_DAYS}
     allowed = json.dumps(facts) + " " + base
     talk = "\n".join(f"{h.get('who')}: {h.get('text')}" for h in list(history)[-6:])
-    prompt = (f"Conversation so far:\n{talk}\n\nPatient question: {question}\n\nFacts:\n{json.dumps(facts, indent=1)}\n\n"
+    prompt = (f"Conversation so far:\n{talk}\n\nPatient question: {question}\n\nFacts:\n{json.dumps(facts, separators=(",", ":"))}\n\n"
               f"Safe draft answer (you may reword it, keep every number):\n{base}")
     try:
         text = llm._generate(prompt, llm.DEFAULT_MODEL, llm.OLLAMA_URL, 90, CHAT_SYSTEM)
