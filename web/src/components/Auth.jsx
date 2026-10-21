@@ -1,3 +1,4 @@
+import ThemeToggle from "./ThemeToggle.jsx";
 import { useState } from "react";
 import { api } from "../api";
 
@@ -37,6 +38,7 @@ export default function Auth({ onDone }) {
 
   return (
     <div className="authwrap">
+      <ThemeToggle floating />
       <form className="authcard" onSubmit={submit} noValidate>
         <div className="authbrand">🫀 PranaPulse</div>
         <div className="seg" role="tablist">
