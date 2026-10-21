@@ -59,18 +59,15 @@ export default function Ask({ pkey, area, title = "Ask about your results", onAc
 
   if (bar) {
     return (
-      <section className="chatbar" aria-label="Assistant">
-        {open && (
-          <div className="barpanel">
-            <div className="askhead">
-              <h3>Assistant {ai && <span className={"chip " + (ai.llm ? "ok" : "quiet")} title={ai.llm ? `Local model ${ai.model} is rewording answers` : "Standard answers. Start Ollama to switch the AI on."}>{ai.llm ? `AI on · ${ai.model}` : "AI off · standard answers"}</span>}</h3>
-              <span className="row">
-                {msgs.length > 0 && <button type="button" className="btn ghost small" onClick={() => setMsgs([])}>New chat</button>}
-                <button type="button" className="btn ghost small" onClick={() => setOpen(false)} aria-label="Minimise assistant">Minimise</button>
-              </span>
-            </div>
-            {thread}
-          </div>)}
+      <section className="chatpop" role="dialog" aria-label="Assistant">
+        <div className="askhead">
+          <h3>Assistant {ai && <span className={"chip " + (ai.llm ? "ok" : "quiet")} title={ai.llm ? `Local model ${ai.model} is rewording answers` : "Standard answers. Start Ollama to switch the AI on."}>{ai.llm ? `AI on · ${ai.model}` : "AI off · standard answers"}</span>}</h3>
+          <span className="row">
+            {msgs.length > 0 && <button type="button" className="btn ghost small" onClick={() => setMsgs([])}>New chat</button>}
+            <button type="button" className="btn ghost small" onClick={() => setOpen(false)} aria-label="Close assistant">Close</button>
+          </span>
+        </div>
+        {thread}
         {form}
       </section>);
   }

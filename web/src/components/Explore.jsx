@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Brush, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmt } from "../api";
 
-const COLORS = ["#0e6b73", "#c98a12", "#7a4fa3", "#b03a48", "#2f6fa8"];
+const COLORS = ["#14919b", "#e0a21f", "#7a4fa3", "#b03a48", "#2f6fa8"];
 const T = (d) => Date.parse(d + "T00:00:00");
 const tick = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", year: "2-digit" });
 const RANGES = [["3 months", 91], ["6 months", 182], ["Whole year", 9999]];
@@ -54,7 +54,7 @@ export default function Explore({ d, initial }) {
             <Legend verticalAlign="top" height={28} />
             {mode === "index" && <ReferenceLine y={0} stroke="#889" strokeDasharray="4 4" />}
             {sel.map((k, n) => <Line key={k} dataKey={k} name={d.series[k].label} stroke={COLORS[n % COLORS.length]} strokeWidth={2.5} dot={false} connectNulls isAnimationActive={false} />)}
-            <Brush dataKey="t" height={26} stroke="#0e6b73" tickFormatter={tick} travellerWidth={10} />
+            <Brush dataKey="t" height={26} stroke="#14919b" tickFormatter={tick} travellerWidth={10} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

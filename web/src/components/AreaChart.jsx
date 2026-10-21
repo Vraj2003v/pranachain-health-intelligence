@@ -81,13 +81,13 @@ export default function AreaChart({ d, area }) {
           <XAxis dataKey="t" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={tick} minTickGap={40} />
           <YAxis domain={dom} tickFormatter={(v) => fmt(v, s.decimals)} width={54} />
           <Tooltip content={<Tip unit={s.unit} dec={s.decimals} />} />
-          {s.windows && <ReferenceLine y={s.windows.meanFirst} stroke="#0e6b73" strokeDasharray="5 4"
-            label={{ value: `Your usual: ${fmt(s.windows.meanFirst, s.decimals)}`, position: "insideTopLeft", fontSize: 11, fill: "#0e6b73" }} />}
-          {proj && <Area dataKey="band" name="95% range" stroke="none" fill="#c98a12" fillOpacity={0.18} connectNulls isAnimationActive={false} />}
+          {s.windows && <ReferenceLine y={s.windows.meanFirst} stroke="#14919b" strokeDasharray="5 4"
+            label={{ value: `Your usual: ${fmt(s.windows.meanFirst, s.decimals)}`, position: "insideTopLeft", fontSize: 11, fill: "#14919b" }} />}
+          {proj && <Area dataKey="band" name="95% range" stroke="none" fill="#e0a21f" fillOpacity={0.18} connectNulls isAnimationActive={false} />}
           {dots && <Line dataKey="v" stroke="none" dot={{ r: 1.8, fill: "#9db8bb", strokeWidth: 0 }} activeDot={false} isAnimationActive={false} />}
-          <Line dataKey="w" stroke="#0e6b73" strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />
-          {proj && <Line dataKey="p" stroke="#c98a12" strokeWidth={3} strokeDasharray="7 5" dot={false} connectNulls isAnimationActive={false} />}
-          <Brush dataKey="t" height={26} stroke="#0e6b73" tickFormatter={tick} travellerWidth={10} />
+          <Line dataKey="w" stroke="#14919b" strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />
+          {proj && <Line dataKey="p" stroke="#e0a21f" strokeWidth={3} strokeDasharray="7 5" dot={false} connectNulls isAnimationActive={false} />}
+          <Brush dataKey="t" height={26} stroke="#14919b" tickFormatter={tick} travellerWidth={10} />
         </ComposedChart>
       </ResponsiveContainer>
       <p className="muted small">Drag the handles under the chart to zoom. The dashed teal line is your own usual level; the amber dashed line is a straight-line projection, not a prediction.</p>

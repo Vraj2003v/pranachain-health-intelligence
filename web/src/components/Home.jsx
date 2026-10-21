@@ -32,6 +32,7 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
   const [open, setOpen] = useState(null);
   const [coach, setCoach] = useState(!seen());
   const first = user.name.split(" ")[0];
+  const glow = (e) => { const r = e.currentTarget.getBoundingClientRect(); e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`); e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`); };
   if (!detail) return <div className="muted pad">Loading your summary…</div>;
 
   const by = (a) => detail.insights.filter((i) => i.scenario === a.scenario);
@@ -66,7 +67,7 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
         {AREAS.map((a) => {
           const items = by(a), hit = items.length > 0, on = open === a.scenario;
           return (
-            <button key={a.scenario} className={"acard" + (hit ? " hit" : "") + (on ? " on" : "")} style={{ "--hue": a.hue }}
+            <button key={a.scenario} onMouseMove={glow} className={"acard" + (hit ? " hit" : "") + (on ? " on" : "")} style={{ "--hue": a.hue }}
               aria-expanded={on} onClick={() => setOpen(on ? null : a.scenario)}>
               <span className="ahead"><span className="aicon" aria-hidden>{a.icon}</span><b>{a.title}</b></span>
               <span className={"chip " + (hit ? "warn" : "ok")}>{hit ? `${items.length} change${items.length > 1 ? "s" : ""} found` : "No clear change"}</span>
