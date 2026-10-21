@@ -8,7 +8,7 @@ export default function Landing({ user, onDemo, onUpload, onSignOut, busy, error
     <div className="landing">
       <ThemeToggle floating />
       <header className="hero big">
-        <h1>🫀 Welcome, {user.name.split(" ")[0]}</h1>
+        <h1>Welcome, {user.name.split(" ")[0]}</h1>
         <p>Add patient workbooks to see what changed, the evidence, and the history it connects to.</p>
         <div className="meta">Signed in as {user.email} · {user.role} · <a href="#" style={{ color: "#fff" }} onClick={(e) => { e.preventDefault(); onSignOut(); }}>Sign out</a></div>
       </header>
