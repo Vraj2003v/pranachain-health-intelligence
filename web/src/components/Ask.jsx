@@ -53,7 +53,7 @@ export default function Ask({ pkey, area, title = "Ask about your results", onAc
   const form = (
     <form className="askrow" onSubmit={(e) => { e.preventDefault(); send(); }}>
       <input value={text} onChange={(e) => setText(e.target.value)} onFocus={() => bar && setOpen(true)} placeholder="Ask in your own words" maxLength={300} aria-label="Your question" />
-      <button className="btn" disabled={busy || !text.trim()}>Ask</button>
+      <button className="btn sendbtn" disabled={busy || !text.trim()} aria-label="Send question" title="Send">↑</button>
     </form>
   );
 
@@ -63,8 +63,8 @@ export default function Ask({ pkey, area, title = "Ask about your results", onAc
         <div className="askhead">
           <h3>Assistant {ai && <span className={"chip " + (ai.llm ? "ok" : "quiet")} title={ai.llm ? `Local model ${ai.model} is rewording answers` : "Standard answers. Start Ollama to switch the AI on."}>{ai.llm ? `AI on · ${ai.model}` : "AI off · standard answers"}</span>}</h3>
           <span className="row">
-            {msgs.length > 0 && <button type="button" className="btn ghost small" onClick={() => setMsgs([])}>New chat</button>}
-            <button type="button" className="btn ghost small" onClick={() => setOpen(false)} aria-label="Close assistant">Close</button>
+            {msgs.length > 0 && <button type="button" className="iconbtn" onClick={() => setMsgs([])} aria-label="New chat" title="New chat">↺</button>}
+            <button type="button" className="iconbtn" onClick={() => setOpen(false)} aria-label="Close assistant" title="Close">✕</button>
           </span>
         </div>
         {thread}
@@ -75,7 +75,7 @@ export default function Ask({ pkey, area, title = "Ask about your results", onAc
   return (
     <section className={"ask" + (compact ? " compact" : "")} aria-label={title}>
       <div className="askhead"><h3>{title}</h3>
-        {msgs.length > 0 && <button type="button" className="btn ghost small" onClick={() => setMsgs([])}>New chat</button>}</div>
+        {msgs.length > 0 && <button type="button" className="iconbtn" onClick={() => setMsgs([])} aria-label="New chat" title="New chat">↺</button>}</div>
       {thread}
       {form}
     </section>
