@@ -2,11 +2,14 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
 const TERMS = [
-  ["Baseline", "Your own usual level. We average your first 90 days and compare later readings with that, never with other people."],
-  ["Weekly average", "The average of the readings in a week. It smooths out normal ups and downs so the trend is easier to see."],
+  ["Baseline", "Your own usual level. We average your earlier readings and compare newer readings with that, never with other people."],
+  ["Weekly average", "The average of your readings in a week. It smooths out normal ups and downs so the trend is easier to see."],
   ["Usual day-to-day variation", "How much your readings normally bounce around. A change is only highlighted when it is clearly bigger than that."],
-  ["Projection", "The trend carried forward 8 weeks in a straight line, with a shaded range. It shows what could happen if nothing changes. It is not a prediction."],
+  ["Trend", "The overall direction your readings are moving over time: up, down or steady."],
+  ["Recent check", "A comparison of your latest two weeks with your previous three months. It shows whether things have just shifted."],
+  ["Projection", "Your trend carried forward 8 weeks in a straight line, with a shaded range. It shows what could happen if nothing changes. It is not a prediction."],
   ["95% range", "The shaded band around the projection. Real readings would usually land inside it."],
+  ["Compare", "Puts two measures on one chart so you can see whether they moved together."],
   ["Data: sufficient / limited", "Sufficient means most days have readings. Limited means some days are missing, so a finding could be less reliable."],
   ["HbA1c", "A blood test that reflects average blood sugar over about three months."],
   ["HRV", "Heart-rate variability: the small changes in time between heartbeats."],
