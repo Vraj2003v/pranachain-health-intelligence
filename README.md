@@ -168,3 +168,5 @@ The earlier Streamlit prototype (`streamlit run app.py`) is kept for reference.
 - Every sign-in, upload, patient view, download and delete is written to an audit log. The administrator sees it in the **Audit log** tab.
 - In a Codespace the database lives inside the codespace and is lost if the codespace is deleted.
 - Prototype limits: no email verification or password reset, one process, and no HTTPS of its own (Codespaces and a reverse proxy provide it). Do not use it for real patient data.
+
+
