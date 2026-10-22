@@ -21,7 +21,7 @@ pip install -r requirements.txt
 1. `ollama pull llama3.1:8b`, `ollama pull llama3.2:3b`, `ollama pull qwen2.5:7b`
 2. Run: `python scripts/compare_models.py --models llama3.1:8b llama3.2:3b qwen2.5:7b --folder <workbooks> --patients 10`
 3. Open `model_comparison.csv`. Score **Faithful (1-5)** and **Tone (1-5)** by hand for each answer.
-4. Threshold: in `pranapulse/detect.py` find `RECENT_MIN_EFFECT = 1.5`. Run `python scripts/scan_dataset.py` with 1.5, 1.0 and 0.8 and note how many patients each flags.
+4. Threshold: run `python scripts/threshold_check.py <workbooks> 1.5 1.0 0.8`. It prints how many patients the recent-change check flags at each threshold (the current value is 1.5, set in `pranapulse/signals.py`).
 5. Submit: copy the CSV to `docs/results/model_comparison.csv`, commit, and comment on #36: the summary table printed by the script, your average scores, your recommended default model, and your recommended threshold with the counts.
 
 ## Krish (Issue #37): interface review and demo script
