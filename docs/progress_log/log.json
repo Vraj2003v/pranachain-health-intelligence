@@ -68,16 +68,79 @@
     },
     {
       "week": 4,
-      "ending": "Oct 25, 2026 (in progress)",
-      "planned": "Meeting 2 (Mon 19 Oct): demo to Abhishek",
-      "built": "6-slide deck, live demo by four speakers, scripts. Feedback: approach is on the right track; local Llama is fine; frontend needs light polish; highlight the cardiovascular, metabolic and women's-health sections; use a 90-day baseline and compare the latest weeks.",
-      "evidence": "Meeting transcript and notes",
-      "changed": "Apply feedback before meeting 3 (Mon 2 Nov). Final Pitch date still to be confirmed with Sheetal.",
-      "next": "Decide the baseline threshold; test the local model; hand-review 50 workbooks"
+      "ending": "Oct 25, 2026",
+      "planned": "Meeting 2 (Mon 19 Oct): live demo to the industry partner",
+      "built": "6-slide deck and a live demo on real patient data. All four members explained a part and asked the partner questions about the disease scenarios, the front end and the model choice.",
+      "evidence": "Meeting recording; Brightspace feedback (team 80/100, Vraj 175/200)",
+      "changed": "The partner asked us to explain the three approaches more clearly; the team lost points for incomplete feedback notes, hard-to-read sheet and an unclear testing plan.",
+      "next": "Items below record each point of partner feedback, why it matters and what we did"
     },
     {
       "week": 4,
-      "ending": "Oct 25, 2026 (in progress)",
+      "ending": "Oct 25, 2026",
+      "planned": "Partner feedback 1: Llama as a local model is fine; there is no constraint on the model",
+      "built": "Why it matters: patient readings stay on the computer and are never sent to an outside service. What we did: the assistant runs only on a local model; a comparison of three models is prepared.",
+      "evidence": "pranapulse/llm.py; docs/model-comparison.md",
+      "changed": "Replies are slow on the team laptop (no dedicated graphics card).",
+      "next": "Run the comparison on the real models and recommend one default before Mon 2 Nov"
+    },
+    {
+      "week": 4,
+      "ending": "Oct 25, 2026",
+      "planned": "Partner feedback 2: the front end needs light fine-tuning for the user",
+      "built": "Why it matters: a patient has to understand the result at a glance. What we did: summary page with three health-area cards, plain tab names, interactive charts, Compare tab, light and dark mode, collapsible menu, plain-language guide.",
+      "evidence": "Working app in the GitHub repository; docs/user-guide.md",
+      "changed": "Tab names changed, so the demo script is out of date.",
+      "next": "Krish reviews on desktop and phone and updates the demo script"
+    },
+    {
+      "week": 4,
+      "ending": "Oct 25, 2026",
+      "planned": "Partner feedback 3: highlight the cardiovascular, metabolic and women's-health sections and show evidence of the impact",
+      "built": "Why it matters: each finding is tied to a health area a patient recognises, and the evidence lets a healthcare provider check it. What we did: the three sections in Findings and on the summary page; every finding shows the dates compared, the averages and the days with data.",
+      "evidence": "Findings tab and summary page in the app",
+      "changed": "Not yet checked on the full data set.",
+      "next": "Verify each section with scripts/verify_sections.py and a hand review of 50 workbooks"
+    },
+    {
+      "week": 4,
+      "ending": "Oct 25, 2026",
+      "planned": "Partner feedback 4: use about 90 days of past data (3 months is enough, especially for cardiovascular); the baseline is the 90-day average; flag when the latest week differs",
+      "built": "Why it matters: a recent baseline shows what is normal for this person now; a long window hides recent change. What we did: the latest 14 days are compared with the 90 days before them. On 900 workbooks this check flags 0 patients at 1.5x the usual variation, 2 at 1.0x and 28 at 0.8x.",
+      "evidence": "pranapulse/signals.py and detect.py; 900-workbook run",
+      "changed": "The 1.5x threshold is a placeholder and decides how many patients are flagged.",
+      "next": "Decide the threshold; write the 90-day window by disease area in docs/three-approaches.md"
+    },
+    {
+      "week": 4,
+      "ending": "Oct 25, 2026",
+      "planned": "Partner feedback 5: use a year of data only when the history shows an event such as surgery",
+      "built": "Why it matters: a surgery or new diagnosis changes what is normal, so older readings may not be a fair baseline. What we did: not built yet.",
+      "evidence": "--",
+      "changed": "Open item.",
+      "next": "Decide how to read the history sheet for such events and whether to start the baseline after them"
+    },
+    {
+      "week": 4,
+      "ending": "Oct 25, 2026",
+      "planned": "Partner feedback 6: all three scenarios have equal priority; explainable output; no deep dive per disease",
+      "built": "Why it matters: the partner wants a clear, checkable result, not a diagnosis. What we did: the three sections use the same cards and the same wording rules; every finding says what moved and shows the evidence; no diagnosis, dose or risk score.",
+      "evidence": "Wording check; 30 safety questions prepared for the assistant",
+      "changed": "--",
+      "next": "Run the safety questions on the real model"
+    },
+    {
+      "week": 4,
+      "ending": "Oct 25, 2026",
+      "planned": "Course team feedback: explain the three approaches clearly, record the partner's feedback in full, make the sheet readable, define how the new sections are verified",
+      "built": "This sheet now has larger text, wider columns and one point per row. Three approaches written up per health area. Verification plan written, with a script that checks every flagged section (first run on the demo patients: 4 sections, 0 failures; 165 automated tests pass).",
+      "evidence": "docs/three-approaches.md; docs/verification-plan.md; scripts/verify_sections.py",
+      "changed": "The script has run only on demo patients so far.",
+      "next": "Run it on all 900 workbooks and hand-review 50 before Mon 2 Nov"
+    },
+    {
+      "week": 4,
+      "ending": "Oct 25, 2026",
       "planned": "Apply meeting 2 feedback",
       "built": "Latest-14-days vs 90-day baseline check; disease sections in Findings; friendlier tab names. On 900 workbooks: 0 errors, 85 flagged, baseline check flagged 0 at 1.5x (28 would flag at 0.8x).",
       "evidence": "GitHub repository; 900-workbook run results",
@@ -86,7 +149,7 @@
     },
     {
       "week": 4,
-      "ending": "Oct 25, 2026 (in progress)",
+      "ending": "Oct 25, 2026",
       "planned": "Make the app patient-friendly and interactive",
       "built": "Summary page with three health-area cards, interactive charts, Compare tab, sign-in redesign, role choice (Patient or Doctor / healthcare provider) with role-based views, assistant chat that answers from the patient's readings, local-AI wording behind number and wording checks, liquid-glass look with light/dark mode, plain-language guide, getting-started checklist, text-size control.",
       "evidence": "Working app on GitHub; 21 automated tests pass",
@@ -95,7 +158,7 @@
     },
     {
       "week": 4,
-      "ending": "Oct 25, 2026 (in progress)",
+      "ending": "Oct 25, 2026",
       "planned": "AI integration plan",
       "built": "Written plan: phases to 16 Nov, guardrails, model options per machine, questions for Abhishek.",
       "evidence": "docs/ai-integration-plan.md",
@@ -104,12 +167,30 @@
     },
     {
       "week": 4,
-      "ending": "Oct 25, 2026 (in progress)",
+      "ending": "Oct 25, 2026",
       "planned": "Run on the local network",
       "built": "run_network.py starts the app and prints the link for phones on the same Wi-Fi.",
       "evidence": "run_network.py in the GitHub repository",
       "changed": "--",
       "next": "Test on a phone or hotspot"
+    },
+    {
+      "week": 4,
+      "ending": "Oct 25, 2026",
+      "planned": "Equal contribution: each teammate commits their own work",
+      "built": "Task kit with test scripts and templates added. Harsh committed the assistant safety tests, pitch plan and results template; Krish committed the patient user guide and the updated plain-language glossary; Bhavya merged the threshold tests and model comparison template.",
+      "evidence": "Commits by Harsh, Krish and Bhavya in the GitHub repository",
+      "changed": "Results files still hold templates until the real-model runs are done.",
+      "next": "Real-model runs and filled-in results before Mon 2 Nov"
+    },
+    {
+      "week": 4,
+      "ending": "Oct 25, 2026",
+      "planned": "Make the local assistant faster",
+      "built": "Shorter prompt, capped reply length and model kept loaded for 30 minutes. Found the team laptop has no dedicated graphics card and was low on memory, so the 8B model runs on the processor.",
+      "evidence": "pranapulse/llm.py and pranapulse/ask.py in the GitHub repository",
+      "changed": "Replies are still slow on the laptop.",
+      "next": "Stream replies; free memory before the demo; time one reply with the 8B model"
     }
   ],
   "people": [
@@ -134,9 +215,9 @@
         {
           "week": 4,
           "task": "Test the assistant: 30 safety questions (diagnosis, doses, risk) and 20 normal questions on 10 patients; confirm the Final Pitch date with Sheetal; lead meeting 3 on Mon 2 Nov",
-          "evidence": "To be linked (issue or comment)",
-          "result": "Assigned",
-          "next": "Report results before Mon 2 Nov"
+          "evidence": "Commits by Harsh: tests/test_assistant_safety.py, docs/pitch-plan.md, docs/safety-test-results.md",
+          "result": "In progress",
+          "next": "Run the 50 questions on the 8B model, fill in the results, confirm the Final Pitch date before Mon 2 Nov"
         }
       ]
     },
@@ -160,10 +241,10 @@
         },
         {
           "week": 4,
-          "task": "Led the meeting 2 demo; applied the feedback (baseline check, disease sections); built the patient-friendly interface, roles, assistant chat with local-AI wording, Compare tab, liquid-glass look, plain-language guide; wrote the AI integration plan",
-          "evidence": "Working app on GitHub; docs/ai-integration-plan.md",
+          "task": "Led the meeting 2 demo and asked the partner about the baseline window; explained and applied the feedback (latest 14 days against the previous 90 days, disease sections); built the patient-friendly interface, assistant, Compare tab and guide; wrote the AI plan; prepared the task kit and checked the local model speed",
+          "evidence": "Working app in the GitHub repository; docs/ai-integration-plan.md. Analysis: on 900 workbooks the 90-day check flags 0 patients at 1.5x, 2 at 1.0x and 28 at 0.8x, so the threshold choice changes the result",
           "result": "Completed",
-          "next": "Phase 2 of the AI plan (chat that calls our own functions); update the demo script"
+          "next": "Decide the threshold with the team; assistant phase 2; update the demo script"
         }
       ]
     },
@@ -188,9 +269,9 @@
         {
           "week": 4,
           "task": "Run the model comparison with real output: Llama 3.1 8B, Llama 3.2 3B and Qwen 2.5 7B on 10 insights and 10 chat questions; score faithfulness (no invented numbers), tone and how often the wording check passes; check the new 90-day baseline threshold (now 1.5x)",
-          "evidence": "To be linked (issue or comment)",
-          "result": "Assigned",
-          "next": "Recommend one default model before Mon 2 Nov"
+          "evidence": "Threshold tests and model comparison template merged; real-model results not yet committed",
+          "result": "In progress",
+          "next": "Run the comparison, commit the results and a model recommendation before Mon 2 Nov"
         }
       ]
     },
@@ -215,9 +296,9 @@
         {
           "week": 4,
           "task": "Review the new interface on desktop and phone in light and dark mode (summary, charts, Compare, assistant popup, text size, guide); list anything confusing for a patient; update the demo script with the new tab names",
-          "evidence": "To be linked (issue or comment)",
-          "result": "Assigned",
-          "next": "Send the list and updated script before Mon 2 Nov"
+          "evidence": "Commits by Krish: docs/user-guide.md and updated glossary (Guide.jsx)",
+          "result": "In progress",
+          "next": "Review the app against the guide, update docs/demo-script.md, send the confusing-items list before Mon 2 Nov"
         }
       ]
     }
