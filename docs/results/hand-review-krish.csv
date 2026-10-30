@@ -1,0 +1,13 @@
+patient,section,all checks passed (yes/no),note
+PC0098,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows are 91 days, table says 'of 90'"
+PC0132,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows are 91 days, table says 'of 90'"
+PC0132,Cardiovascular / hypertension,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows are 91 days, table says 'of 90'"
+PC0313,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+PC0395,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+PC0423,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+PC0495,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+PC0578,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+PC0894,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+PC0532,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+PC0412,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+PC0574,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
