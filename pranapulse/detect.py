@@ -49,6 +49,7 @@ class Insight:
     bullets: list = field(default_factory=list)
     closing: str = ""
     scenario: str = ""         # which validation scenario this belongs to
+    insight_id: str = ""       # F1, F2, ... for this patient, in the order shown
 
 
 def _fmt(v, d):
@@ -204,6 +205,20 @@ def recent_check(p: Patient, key: str):
             "base_win": (b_start, b_end), "rec_win": (r_start, end)}
 
 
+def number_evidence(insights):
+    """Give every finding an ID (F1, F2, ...) and every evidence row an ID (E1, E2, ...).
+
+    The numbers run across the patient's findings in the order they are shown, so a sentence
+    or a chart can point to exactly the row that supports it.
+    """
+    n = 0
+    for f, ins in enumerate(insights, 1):
+        ins.insight_id = f"F{f}"
+        for e in ins.evidence:
+            n += 1
+            e["id"] = f"E{n}"
+
+
 def detect(p: Patient):
     """Return (insights to show, list of notes about what was held back and why)."""
     results = {k: analyse_signal(p, k) for k in SIGNALS}
@@ -320,4 +335,5 @@ def detect(p: Patient):
                 ins.scenario = SCENARIO["cycle"]
             else:
                 ins.scenario = SCENARIO["cardio"] if ins.signals and ins.signals[0] in ("sbp", "dbp", "rhr", "hrv") else SCENARIO["metabolic"]
+    number_evidence(insights)
     return insights, held, results

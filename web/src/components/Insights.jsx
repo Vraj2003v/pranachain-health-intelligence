@@ -3,7 +3,7 @@ import { api, fmt } from "../api";
 
 const ICON = { pattern: "🔗", single: "📈", cycle: "🗓️", recent: "🕒" };
 const KIND = { pattern: "Pattern across measures", single: "Single measure", cycle: "Cycle timing", recent: "Latest vs 90-day baseline" };
-const EVID = [["signal", "Signal"], ["source", "Source sheet"], ["first_window", "Earlier period"], ["last_window", "Recent period"],
+const EVID = [["id", "ID"], ["signal", "Signal"], ["source", "Source sheet"], ["first_window", "Earlier period"], ["last_window", "Recent period"],
   ["first_mean", "Earlier value"], ["last_mean", "Recent value"], ["days_with_data", "Days with data"], ["size_vs_own_variation", "Change vs usual variation"], ["trend_p", "Trend p-value"]];
 
 function Card({ pkey, i, ins, onTimeline }) {
@@ -20,6 +20,7 @@ function Card({ pkey, i, ins, onTimeline }) {
   return (
     <article className="card">
       <h2>{ICON[ins.kind]} {ins.title}</h2>
+      <p className="muted small" title="Finding ID and the evidence rows that support it">{ins.id} · evidence {ins.evidence.map((e) => e.id).join(", ")}</p>
       <div className="chips">
         <span className="chip kind">{ins.scenario}</span><span className="chip kind">{KIND[ins.kind]}</span>
         <span className={"chip " + (ins.flag === "Limited" ? "warn" : "ok")}>● {ins.flag === "Limited" ? "Limited data" : "Data sufficient"}</span>
