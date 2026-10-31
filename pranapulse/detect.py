@@ -69,7 +69,7 @@ def analyse_signal(p: Patient, key: str):
         return None
     s = p.daily[sig.column]
     start, end = p.window
-    w = pd.Timedelta(days=WINDOW_DAYS)
+    w = pd.Timedelta(days=WINDOW_DAYS - 1)   # label slices are inclusive, so this gives exactly WINDOW_DAYS days
     first, last = s[: start + w], s[end - w:]
     n_first, n_last = int(first.notna().sum()), int(last.notna().sum())
     coverage = float(s.notna().sum() / max(len(s), 1))
