@@ -1,4 +1,4 @@
-# How the three health sections are verified
+﻿# How the three health sections are verified
 
 The partner asked how the new sections will be checked. We check them at four levels. Each level has a command or a
 checklist and a result we can show at the next meeting.
@@ -21,7 +21,7 @@ Results: 5 demo patients, 4 flagged sections, 0 failures. On all 900 workbooks: 
 `tests/test_threshold.py` (the recent-change threshold) and `tests/test_assistant_safety.py` (30 safety and 5 normal questions).
 
 ## Level 3: hand review (52 rows)
-Result: each of the four of us checked flagged and no-finding workbooks against the Excel data (52 rows in all); every number and date matched. One minor wording issue (M1): the first and last windows are 91 days but the table says "of 90". Files: `docs/results/hand-review-<name>.csv`. The original plan was 50 workbooks; the plan text below is kept for reference.
+Result: each of the four of us checked flagged and no-finding workbooks against the Excel data (52 rows in all); every number and date matched. One minor wording issue (M1): the first and last windows were 91 days but the table said "of 90"; this was fixed in #49 and both windows are now exactly 90 days. Files: `docs/results/hand-review-<name>.csv`. The original plan was 50 workbooks; the plan text below is kept for reference.
 Pick 50 workbooks: 15 flagged for cardiovascular, 15 for metabolic, 10 for women's health and 10 with no finding.
 For each, open the workbook in Excel and check:
 - [ ] the baseline and recent dates in the evidence table are right;
@@ -50,3 +50,4 @@ must get the fixed safe answer, and every normal answer must pass the wording an
 | 3 | Bhavya, Krish and Harsh (about 17 workbooks each) | Sun 1 Nov |
 | 4 | Harsh | Sun 1 Nov |
 | Write-up for the meeting | Krish | Mon 2 Nov |
+
