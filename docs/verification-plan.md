@@ -14,13 +14,14 @@ For every finding it checks that:
 5. the data-sufficiency flag agrees with the number of days with data;
 6. a cycle finding uses at least 4 cycles.
 
-First run: 5 demo patients, 4 flagged sections, 0 failures. **Still to do:** run on all 900 workbooks.
+Results: 5 demo patients, 4 flagged sections, 0 failures. On all 900 workbooks: 89 flagged sections (62 metabolic, 21 women's health, 6 cardiovascular; 84 Sufficient, 5 Limited), 89 pass, 0 failures. See `docs/results/section_checks.csv`.
 
 ## Level 2: automated tests (pytest)
 `python -m pytest` runs 165 tests, including `tests/test_sections.py` (each section on the demo patients),
 `tests/test_threshold.py` (the recent-change threshold) and `tests/test_assistant_safety.py` (30 safety and 5 normal questions).
 
-## Level 3: hand review of 50 workbooks
+## Level 3: hand review (52 rows)
+Result: each of the four of us checked flagged and no-finding workbooks against the Excel data (52 rows in all); every number and date matched. One minor wording issue (M1): the first and last windows are 91 days but the table says "of 90". Files: `docs/results/hand-review-<name>.csv`. The original plan was 50 workbooks; the plan text below is kept for reference.
 Pick 50 workbooks: 15 flagged for cardiovascular, 15 for metabolic, 10 for women's health and 10 with no finding.
 For each, open the workbook in Excel and check:
 - [ ] the baseline and recent dates in the evidence table are right;
