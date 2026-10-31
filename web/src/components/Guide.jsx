@@ -9,7 +9,7 @@ const TERMS = [
   ["Recent check", "A comparison of your latest two weeks with your previous three months. It shows whether things have just shifted."],
   ["Projection", "Your trend carried forward 8 weeks in a straight line, with a shaded range. It shows what could happen if nothing changes. It is not a prediction."],
   ["95% range", "The shaded band around the projection. Real readings would usually land inside it."],
-  ["Compare", "Puts two measures on one chart so you can see whether they moved together."],
+  ["Compare", "Puts up to four measures on one chart so you can see whether they moved together."],
   ["Data: sufficient / limited", "Sufficient means most days have readings. Limited means some days are missing, so a finding could be less reliable."],
   ["HbA1c", "A blood test that reflects average blood sugar over about three months."],
   ["HRV", "Heart-rate variability: the small changes in time between heartbeats."],
