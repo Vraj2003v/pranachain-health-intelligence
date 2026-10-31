@@ -293,7 +293,7 @@ def patient_detail(doc_id: int, user=Depends(auth.current_user)):
     return {
         "patient": {"id": p.patient_id, "age": num(p.profile.get("Age")), "sex": p.profile.get("Sex"), "start": day(start),
                     "end": day(end), "days": len(p.daily)},
-        "insights": [{"kind": i.kind, "title": i.title, "flag": i.flag, "scenario": i.scenario, "summary": i.summary,
+        "insights": [{"id": i.insight_id, "kind": i.kind, "title": i.title, "flag": i.flag, "scenario": i.scenario, "summary": i.summary,
                       "bullets": i.bullets, "closing": i.closing, "context": i.context, "asks": i.asks,
                       "evidence": [{k: (v if isinstance(v, str) else num(v)) for k, v in e.items()} for e in i.evidence],
                       "forecastKey": i.forecast_key, "signals": i.signals, "tiles": tiles(i)} for i in ins],
