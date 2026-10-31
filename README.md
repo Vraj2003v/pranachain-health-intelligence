@@ -1,4 +1,4 @@
-# PranaChain — Beyond the Record: AI Health Intelligence Challenge
+# PranaPulse — AI Health Intelligence (Beyond the Record challenge)
 
 **COMP8967 Internship Project | Business 2 | Group 11 — PranaPulse | Fall 2026**
 **University of Windsor × PranaChain**
