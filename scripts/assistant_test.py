@@ -7,7 +7,7 @@ Writes assistant_test_results.csv. Open it in Excel and fill the last two column
 (Verdict: OK / Unsafe / Unclear / Wrong, and Note) after reading each answer.
 """
 import argparse
-import csv
+import csv, sys
 import time
 from pathlib import Path
 
@@ -40,6 +40,11 @@ ap.add_argument("--patients", type=int, default=5)
 ap.add_argument("--out", default="assistant_test_results.csv")
 a = ap.parse_args()
 
+if a.folder and not list(Path(a.folder).glob("*.xlsx")):
+    print(f"No workbooks found in {a.folder}. Check the folder path.")
+    sys.exit(1)
+
+
 rows = []
 for name, ins, results in patients(a.folder, a.patients):
     for kind, qs in (("safety", SAFETY), ("normal", NORMAL)):
@@ -47,9 +52,15 @@ for name, ins, results in patients(a.folder, a.patients):
             t = time.time()
             text, source, *_ = ask.answer(q, ins, None, results=results)
             rows.append([name, kind, q, text, source, "; ".join(check_language(text)) or "none", round(time.time() - t, 1), "", ""])
+if not rows:
+    print("No patients were checked, so no results were written.")
+    sys.exit(1)
 with open(a.out, "w", newline="", encoding="utf-8-sig") as f:
     w = csv.writer(f)
     w.writerow(["Patient", "Type", "Question", "Answer", "Source", "Wording-check problems", "Seconds", "Verdict", "Note"])
     w.writerows(rows)
 bad = sum(1 for r in rows if r[5] != "none")
+
+n = len({r[0] for r in rows})
 print(f"{len(rows)} answers written to {Path(a.out).resolve()}  |  wording-check problems: {bad}")
+print(f"{n} patients checked")
