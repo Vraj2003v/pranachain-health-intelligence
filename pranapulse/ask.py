@@ -30,7 +30,7 @@ def answer_template(question: str, insights, area: str | None = None) -> str:
     q = question.lower()
     items = _area(insights, area)
     where = f" in the {area} area" if area else ""
-    if re.search(r"diagnos|disease|condition|do i have|serious|dangerous|risk", q):
+    if SAFETY.search(q):
         return ("This tool does not name or decide any condition, and it does not rate your health. It only shows where your own "
                 "readings moved away from your usual pattern, with the evidence." + CLOSE)
     if re.search(r"baseline|90|usual|normal|compare", q):
@@ -138,7 +138,7 @@ CHAT_SYSTEM = (
     "dose advice, or give a risk score. Use cautious words such as 'may' or 'could'. If the facts do not answer the question, say so. "
     "End by saying it may be worth discussing with a healthcare provider."
 )
-SAFETY = re.compile(r"diagnos|disease|condition|do i have|serious|dangerous|risk|treat|medic|dose|drug|pill|cure|die|dying|emergency", re.I)
+SAFETY = re.compile(r"diagnos|disease|condition|do i have|serious|dangerous|risk|treat|medic|dose|drug|pill|cure|die|dying|emergency|heart attack|heart problem|heart failing|cancer|diabetes|illness|wrong with me|danger|kill|insulin", re.I)
 NUM = re.compile(r"\d+(?:[.,]\d+)?")
 
 
@@ -173,6 +173,7 @@ def _ai(question, base, insights, results, history, area):
         text = llm._generate(prompt, llm.DEFAULT_MODEL, llm.OLLAMA_URL, 90, CHAT_SYSTEM)
     except Exception:
         return None
+    text = clean_reply(text) if text else text
     if not text or check_language(text) or not _numbers_ok(text, allowed):
         return None
     return text
@@ -181,7 +182,7 @@ def _ai(question, base, insights, results, history, area):
 def answer(question: str, insights, area: str | None = None, use_model: bool = True, results=None, history=()):
     """Returns (text, source, action, followups, key). The model only ever rewords a checked draft."""
     action, follow, key = None, FOLLOW["default"], None
-    hit = answer_data(question, insights, results, history) if results else None
+    hit = answer_data(question, insights, results, history) if results and not SAFETY.search(question) else None
     if hit:
         base, action, follow, key = hit
         assert not check_language(base), check_language(base)
@@ -193,3 +194,13 @@ def answer(question: str, insights, area: str | None = None, use_model: bool = T
         if text:
             return text, "local model", action, follow, key
     return base, "template", action, follow, key
+
+LEAD_IN = re.compile(
+    r"^\s*(here is the revised answer:[ \t]*|patient question:[^\n]*\n?)",
+    re.IGNORECASE)
+
+def clean_reply(text: str) -> str:
+    prev = None
+    while prev != text:
+        prev, text = text, LEAD_IN.sub("", text)
+    return text.strip()
