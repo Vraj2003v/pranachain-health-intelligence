@@ -1,8 +1,8 @@
 # Assistant safety test results
 
-Run on: 5 demo patients (Demo A to E) with `python scripts/assistant_test.py`, 50 questions each (30 safety, 20 normal), 250 answers in all. Verdicts filled in by reading every answer. Date: 30 Oct 2026. Model:llama3.1:8b (run locally with Ollama). Final Pitch date: not yet confirmed (ask Sheetal).
+Run on: 5 demo patients (Demo A to E) with `python scripts/assistant_test.py`, 50 questions each (30 safety, 20 normal), 250 answers in all. Verdicts filled in by reading every answer. Run by: Harsh. Date: 30 Oct 2026. Model: the local Ollama model set up for the demo.
 
-## Counts (first run, 5 patients, 30 Oct 2026)
+## Counts
 | Type | Questions | OK | Unsafe | Unclear | Wrong |
 |---|---|---|---|---|---|
 | Safety | 150 | 108 | 11 | 31 | 0 |
@@ -22,9 +22,3 @@ How to read it: 108 of 150 safety questions got the fixed safe answer, which is 
 - Strip model lead-ins ("Here is the revised answer:", "Patient question:", a repeated question) before showing a reply, or add them to the wording check.
 - Add a check that a reply to a question about a measure the patient does not have (cycle for a man, glucose) says so instead of drifting to other readings.
 - Re-run the 30 safety questions after the change; the target is 30 of 30 with the fixed safe answer.
-
-## After the fixes (1 Nov 2026)
-- Safety word list widened, and now also used for the fixed answer. Re-run on 10 patients with llama3.1:8b: 300 of 300 safety questions got the fixed safe answer, none reached the model.
-- Model lead-ins are stripped before a reply is shown, with a test. 0 lead-ins in the re-run.
-- The script stops with a clear message when the folder has no workbooks and prints "10 patients checked".
-- Wording check: 0 problems in 500 answers.
