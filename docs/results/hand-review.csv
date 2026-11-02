@@ -1,0 +1,53 @@
+﻿reviewer,patient,section,all checks passed (yes/no),note
+Vraj,PC0021,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Vraj,PC0036,Cardiovascular / hypertension,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Vraj,PC0127,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Vraj,PC0188,Cardiovascular / hypertension,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Vraj,PC0443,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Vraj,PC0588,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Vraj,PC0603,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Vraj,PC0795,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Vraj,PC0903,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Vraj,PC0933,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Vraj,PC0891,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Vraj,PC0537,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Vraj,PC0715,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Krish,PC0098,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Krish,PC0132,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Krish,PC0132,Cardiovascular / hypertension,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Krish,PC0313,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Krish,PC0395,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Krish,PC0423,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Krish,PC0495,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Krish,PC0578,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Krish,PC0894,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Krish,PC0532,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Krish,PC0412,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Krish,PC0574,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Bhavya,PC0180,Cardiovascular / hypertension,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Bhavya,PC0466,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Bhavya,PC0466,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Bhavya,PC0560,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Bhavya,PC0595,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Bhavya,PC0803,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Bhavya,PC0840,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Bhavya,PC0865,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Bhavya,PC0940,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Bhavya,PC0612,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Bhavya,PC0179,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Bhavya,PC0355,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Harsh,PC0062,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Harsh,PC0062,Cardiovascular / hypertension,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Harsh,PC0106,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Harsh,PC0106,Cardiovascular / hypertension,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Harsh,PC0128,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Harsh,PC0133,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched; minor M1: windows were 91 days, table said 'of 90' (fixed in #49)"
+Harsh,PC0433,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Harsh,PC0437,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Harsh,PC0449,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Harsh,PC0450,Metabolic health,yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Harsh,PC0572,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Harsh,PC0713,Women's health (PCOS),yes,"dates, averages, data flag and wording rechecked from the raw sheets; all matched"
+Harsh,PC0882,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Harsh,PC0361,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
+Harsh,PC0307,(no finding),yes,app reported no finding; independent scan of all 7 signals and cycles found nothing it should have reported
