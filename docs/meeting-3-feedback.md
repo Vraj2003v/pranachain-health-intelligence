@@ -60,3 +60,18 @@ Details: `docs/results/range_check.csv` and `scripts/range_check.py`.
 | Re-run the full 250-answer safety test with the model, incl. measures the patient does not have; improve the "how much data is behind this" prompt | Harsh | Nov 11 | Table of safe, unclear, unsafe counts |
 | Persistence rule and larger minimum change for steps, then re-test at lower thresholds | Vraj, Bhavya | Nov 12 | 900-workbook counts at 1.5, 1.0, 0.8 |
 | Update slides, demo script and logs | All | Nov 14 | Deck matches the code and results |
+
+
+## Follow-up: attention level per disease (5 Nov 2026)
+Abhishek spoke about "predicting" disease risk. We have no outcome data to train or validate a risk model, so we added a plain, rule-based **attention level** for each disease area instead. It is not a diagnosis and not a probability.
+
+| Level | When it is shown |
+|---|---|
+| No clear change | The area has no finding |
+| Worth watching | One finding that is within the usual range, on the personal baseline only, or has limited data |
+| Worth discussing with a healthcare provider | A finding outside the usual range with enough data, or two or more findings in the area |
+
+- Code: `attention()` and `attention_by_area()` in `pranapulse/reference.py`; returned as `attention` by the detail endpoint; shown on the Home area cards and in Full findings.
+- Demo patients: A (metabolic) and D (cardiovascular) and E (cycle) show "Worth discussing"; B shows no change; C has the same drift as A but limited data, so it shows "Worth watching".
+- Tests: `test_attention_rules` and `test_attention_level_is_rule_based_and_never_a_diagnosis`.
+- Open question for the final meeting: does he expect a risk level, and are these three levels enough?

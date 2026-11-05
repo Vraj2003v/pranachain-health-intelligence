@@ -80,3 +80,27 @@ def test_area_is_inferred_from_the_question_when_none_is_chosen():
 def test_range_question_has_a_safe_answer():
     text = ask.answer_template("What is the usual range?", [])
     assert not check_language(text)
+
+
+def test_attention_level_is_rule_based_and_never_a_diagnosis():
+    for _, insights, _ in DEMO:
+        by_area = ref.attention_by_area(insights)
+        assert set(by_area) == set(ref.AREAS)
+        for sc, a in by_area.items():
+            assert a["level"] in (ref.ATT_NONE, ref.ATT_WATCH, ref.ATT_DISCUSS)
+            assert "does not name a condition" in a["note"]
+            banned = [m for m in check_language(a["level"] + " " + a["reason"] + " " + a["note"]) if not m.startswith("must")]
+            assert not banned
+            if not any(i.scenario == sc for i in insights):
+                assert a["level"] == ref.ATT_NONE
+
+
+def test_attention_rules():
+    class F:  # a minimal finding
+        def __init__(self, tier, flag="Sufficient"): self.tier, self.flag = tier, flag
+    assert ref.attention([])[0] == ref.ATT_NONE
+    assert ref.attention([F(ref.TIER_OUT)])[0] == ref.ATT_DISCUSS
+    assert ref.attention([F(ref.TIER_OUT, "Limited")])[0] == ref.ATT_WATCH
+    assert ref.attention([F(ref.TIER_IN)])[0] == ref.ATT_WATCH
+    assert ref.attention([F(ref.TIER_NONE)])[0] == ref.ATT_WATCH
+    assert ref.attention([F(ref.TIER_IN), F(ref.TIER_NONE)])[0] == ref.ATT_DISCUSS
