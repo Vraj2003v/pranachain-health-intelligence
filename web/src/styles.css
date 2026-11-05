@@ -114,9 +114,9 @@ details { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 8px; 
 .dsec .impact { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 8px 0 14px; }
 .dsec .card { background: var(--panel); }
 
-.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--quiet-bg); border-radius: 10px; padding: 4px; gap: 4px; }
-.seg button { border: 0; background: transparent; padding: 9px; border-radius: 8px; font-weight: 600; color: var(--muted); cursor: pointer; }
-.seg button.on { background: var(--panel); color: var(--brand); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.authseg { display: grid; grid-template-columns: 1fr 1fr; background: var(--quiet-bg); border-radius: 10px; padding: 4px; gap: 4px; }
+.authseg button { border: 0; background: transparent; padding: 9px; border-radius: 8px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.authseg button.on { background: var(--panel); color: var(--brand); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .pwrow { display: flex; gap: 8px; align-items: center; } .pwrow input { flex: 1; }
 .rules { list-style: none; padding: 0; margin: 0; color: var(--muted); } .rules li.met { color: var(--ok); }
 .warn-text { color: var(--warn); }
