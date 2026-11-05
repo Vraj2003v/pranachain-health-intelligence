@@ -109,6 +109,5 @@ export default function AreaChart({ d, area, onSelect }) {
           <li><b>Handles under the chart:</b> drag to zoom into any stretch of time.</li>
         </ul>
       </details>
-      <p className="muted small">Drag the handles under the chart to zoom. The dashed teal line is your own usual level; the amber dashed line is a straight-line projection, not a prediction.</p>
     </div>);
 }
