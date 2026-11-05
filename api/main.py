@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from pranapulse import ask as ask_mod, forecast, llm
+from pranapulse import reference as ref
 from pranapulse.demo_data import all_demo_workbooks
 from pranapulse.detect import detect
 from pranapulse.loader import load_patient
@@ -260,7 +261,9 @@ def series_block(p, results, key):
         last = wk.index[-1]
         rows.setdefault(day(last), {"d": day(last)})["p"] = num(wk.iloc[-1])
     r = results.get(key)
+    rng = ref.RANGES.get(key)
     out = {"key": key, "label": sig.label, "unit": sig.unit, "decimals": sig.decimals,
+           "range": {"low": rng.low, "high": rng.high, "text": ref.text(rng)} if rng else None,
            "rows": sorted(rows.values(), key=lambda x: x["d"]), "hasProjection": proj is not None}
     if r is not None:
         out["windows"] = {"first": [day(r.window_first[0]), day(r.window_first[1])], "last": [day(r.window_last[0]), day(r.window_last[1])],
@@ -289,11 +292,13 @@ def patient_detail(doc_id: int, user=Depends(auth.current_user)):
     positives = [f"{r.label} moved from {r.mean_first:,.{r.decimals}f} to {r.mean_last:,.{r.decimals}f} {r.unit}"
                  for r in results.values() if r.direction == "improving" and r.flag != "Insufficient"]
     tiles = lambda i: [{"label": results[k].label, "value": num(results[k].mean_last), "diff": num(results[k].diff),
-                        "unit": results[k].unit, "decimals": results[k].decimals} for k in i.signals if k in results]
+                        "unit": results[k].unit, "decimals": results[k].decimals,
+                        "range": ref.text(ref.RANGES.get(k)), "position": ref.position(results[k].mean_last, ref.RANGES.get(k)) or "no range"}
+                       for k in i.signals if k in results]
     return {
         "patient": {"id": p.patient_id, "age": num(p.profile.get("Age")), "sex": p.profile.get("Sex"), "start": day(start),
                     "end": day(end), "days": len(p.daily)},
-        "insights": [{"id": i.insight_id, "kind": i.kind, "title": i.title, "flag": i.flag, "scenario": i.scenario, "summary": i.summary,
+        "insights": [{"id": i.insight_id, "kind": i.kind, "title": i.title, "flag": i.flag, "scenario": i.scenario, "tier": i.tier, "summary": i.summary,
                       "bullets": i.bullets, "closing": i.closing, "context": i.context, "asks": i.asks,
                       "evidence": [{k: (v if isinstance(v, str) else num(v)) for k, v in e.items()} for e in i.evidence],
                       "forecastKey": i.forecast_key, "signals": i.signals, "tiles": tiles(i)} for i in ins],

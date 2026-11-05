@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmt, shortDate } from "../api";
 
@@ -18,7 +18,15 @@ function Tip({ active, payload, label, unit, dec }) {
     </div>);
 }
 
+function useNarrow(px = 640) {
+  const q = () => typeof window !== "undefined" && window.innerWidth <= px;
+  const [n, setN] = useState(q);
+  useEffect(() => { const f = () => setN(q()); window.addEventListener("resize", f); return () => window.removeEventListener("resize", f); }, []);
+  return n;
+}
+
 export default function Timeline({ d, initialKey }) {
+  const narrow = useNarrow();
   const keys = Object.keys(d.series);
   const first = (keys.includes(initialKey) && initialKey) || d.insights.find((i) => i.forecastKey)?.forecastKey || keys[0];
   const [key, setKey] = useState(first);
@@ -26,12 +34,24 @@ export default function Timeline({ d, initialKey }) {
   const labNames = Object.keys(d.labs);
   const [lab, setLab] = useState(labNames.includes("HbA1c") ? "HbA1c" : labNames[0]);
 
-  const data = useMemo(() => s.rows.map((r) => ({ ...r, t: T(r.d) })), [s]);
+  const [span, setSpan] = useState("all");      // how much of the year to show: 3 months, 6 months or all
+  const [showRange, setShowRange] = useState(true);
+  const all = useMemo(() => s.rows.map((r) => ({ ...r, t: T(r.d) })), [s]);
+  const data = useMemo(() => {
+    if (span === "all") return all;
+    const lastReading = Math.max(...all.filter((r) => r.v != null || r.w != null).map((r) => r.t));
+    const from = lastReading - (span === "3m" ? 91 : 182) * 86400000;
+    return all.filter((r) => r.t >= from);
+  }, [all, span]);
   const dom = useMemo(() => {
     const vals = data.flatMap((r) => [r.v, r.w, r.p, ...(r.band || [])]).filter((v) => v != null);
+    if (showRange && s.range) vals.push(...[s.range.low, s.range.high].filter((v) => v != null));
     const lo = Math.min(...vals), hi = Math.max(...vals), pad = (hi - lo) * 0.08 || 1;
     return [lo - pad, hi + pad];
-  }, [data]);
+  }, [data, showRange, s]);
+  const recent = s.windows?.meanLast;
+  const where = s.range && recent != null
+    ? (s.range.high != null && recent > s.range.high ? "above" : s.range.low != null && recent < s.range.low ? "below" : "within") : null;
   const start = d.patient.start;
   const inWin = d.markers.filter((m) => !m.before);
   const before = d.markers.filter((m) => m.before);
@@ -39,30 +59,49 @@ export default function Timeline({ d, initialKey }) {
 
   return (
     <section>
-      <div className="pills">
-        {keys.map((k) => <button key={k} className={"pill" + (k === key ? " on" : "")} onClick={() => setKey(k)}>{d.series[k].label}</button>)}
+      <div className="pills scrollrow" role="tablist" aria-label="Measure">
+        {keys.map((k) => <button key={k} role="tab" aria-selected={k === key} className={"pill" + (k === key ? " on" : "")} onClick={() => setKey(k)}>{d.series[k].label}</button>)}
+      </div>
+      <div className="chartctl">
+        <div className="seg" role="group" aria-label="How much of the year to show">
+          {[["3m", "3 months"], ["6m", "6 months"], ["all", "Full year"]].map(([k, l]) => (
+            <button key={k} type="button" aria-pressed={span === k} className={span === k ? "on" : ""} onClick={() => setSpan(k)}>{l}</button>))}
+        </div>
+        {s.range && <label className="check inline"><input type="checkbox" checked={showRange} onChange={(e) => setShowRange(e.target.checked)} /> Show usual range</label>}
       </div>
       <div className="chartcard">
         <h3>{s.label} ({s.unit})</h3>
-        <ResponsiveContainer width="100%" height={430}>
-          <ComposedChart data={data} margin={{ top: 28, right: 18, bottom: 6, left: 0 }}>
+        <ResponsiveContainer width="100%" height={narrow ? 340 : 430}>
+          <ComposedChart data={data} margin={{ top: narrow ? 8 : 28, right: narrow ? 8 : 18, bottom: 6, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
             <XAxis dataKey="t" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={tick} minTickGap={40} />
-            <YAxis domain={dom} tickFormatter={(v) => fmt(v, s.decimals)} width={56} />
+            <YAxis domain={dom} tickFormatter={(v) => fmt(v, s.decimals)} width={narrow ? 44 : 56} tick={{ fontSize: narrow ? 11 : 12 }} />
             <Tooltip content={<Tip unit={s.unit} dec={s.decimals} />} />
-            <Legend verticalAlign="top" height={30} />
+            <Legend verticalAlign={narrow ? "bottom" : "top"} height={narrow ? 48 : 30} wrapperStyle={narrow ? { fontSize: 11 } : undefined} />
+            {showRange && s.range && <ReferenceArea y1={s.range.low ?? dom[0]} y2={s.range.high ?? dom[1]} fill="#2ea043" fillOpacity={0.13} ifOverflow="extendDomain"
+              label={narrow ? undefined : { value: `Usual range ${s.range.text}`, position: "insideBottomRight", fontSize: 11, fill: "#2e7d32" }} />}
             {s.windows && [["first", "Earlier", s.windows.meanFirst], ["last", "Recent", s.windows.meanLast]].map(([w, name, mean]) => (
               <ReferenceArea key={w} x1={T(s.windows[w][0])} x2={T(s.windows[w][1])} fill="#788" fillOpacity={0.1}
-                label={{ value: `${name} 90 days · avg ${fmt(mean, s.decimals)} ${s.unit}`, position: "insideTopLeft", fontSize: 11, fill: "#667" }} />))}
+                label={narrow ? undefined : { value: `${name} 90 days · avg ${fmt(mean, s.decimals)} ${s.unit}`, position: "insideTopLeft", fontSize: 11, fill: "#667" }} />))}
             {inWin.map((m) => (
               <ReferenceLine key={m.date + m.text} x={T(m.date)} stroke="#889" strokeDasharray="2 3"
-                label={{ value: m.text, angle: -90, position: "insideTopRight", fontSize: 10, fill: "#667" }} />))}
+                label={narrow ? undefined : { value: m.text, angle: -90, position: "insideTopRight", fontSize: 10, fill: "#667" }} />))}
             <Area dataKey="band" name="95% range" stroke="none" fill={C.band} fillOpacity={0.16} connectNulls isAnimationActive={false} />
             <Line dataKey="v" name="Daily value" stroke="none" dot={{ r: 1.8, fill: C.dots, strokeWidth: 0 }} activeDot={false} isAnimationActive={false} legendType="circle" />
             <Line dataKey="w" name="Weekly average" stroke={C.line} strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />
             <Line dataKey="p" name="Projection" stroke={C.proj} strokeWidth={3} strokeDasharray="7 5" dot={false} connectNulls isAnimationActive={false} />
           </ComposedChart>
         </ResponsiveContainer>
+        <p className={"rangeline " + (where === "within" ? "in" : where ? "out" : "none")}>
+          {where
+            ? `Recent 90-day average ${fmt(recent, s.decimals)} ${s.unit} is ${where} the usual range (${s.range.text}). The usual range adds context; the change is still judged against your own baseline.`
+            : "There is no single usual range for this measure, so it is compared with your own baseline only."}
+        </p>
+        {narrow && (
+          <div className="small" style={{ margin: "6px 0" }}>
+            {s.windows && <p className="muted small">Earlier 90 days avg {fmt(s.windows.meanFirst, s.decimals)} {s.unit} → Recent 90 days avg {fmt(s.windows.meanLast, s.decimals)} {s.unit} (shaded)</p>}
+            {inWin.length > 0 && <p className="muted small">Dashed lines: {inWin.map((m) => `${m.text} (${shortDate(m.date)})`).join("; ")}</p>}
+          </div>)}
         {before.length > 0 && <p className="muted small">◀ Before this window: {before.map((m) => `${m.text} (${shortDate(m.date)})`).join("; ")}</p>}
         <p className="muted small">
           {s.hasProjection

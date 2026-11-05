@@ -23,7 +23,7 @@ SYSTEM = (
 def facts(insight) -> dict:
     return {"title": insight.title, "summary": insight.summary, "points": insight.bullets,
             "linked_history": [c.split(" — ")[0] for c in insight.context[:3]],
-            "data_flag": insight.flag}
+            "data_flag": insight.flag, "disease_area": insight.scenario, "against_usual_range": getattr(insight, "tier", "")}
 
 
 def available(model: str = DEFAULT_MODEL, url: str = OLLAMA_URL) -> bool:
