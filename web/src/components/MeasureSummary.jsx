@@ -47,7 +47,7 @@ function Quiet({ s, cov }) {
       <ul>
         <li>{s.label} averaged {fmt(w.meanFirst, dec)} {s.unit} in your first 90 days and {fmt(w.meanLast, dec)} {s.unit} in your last 90 days.</li>
         <li>This difference is small next to your usual day-to-day variation, so it is not shown as a finding.</li>
-        {(pos === "above" || pos === "below") && <li>The last 90 days sit {pos} the usual range. A value that stays steady outside the range is not shown as a finding, because findings look at change. You can raise it with a healthcare provider.</li>}
+        {(pos === "above" || pos === "below") && <li>The last 90 days sit {pos} the usual range. It is counted in the overview of this area, but it is not a finding, because findings look at change. You can raise it with a healthcare provider.</li>}
       </ul>
       <p className="muted small">Data: {cov?.flag === "Limited" ? "limited, some readings were missing" : cov?.flag === "Insufficient" ? "insufficient" : "sufficient"}.</p>
     </div>);

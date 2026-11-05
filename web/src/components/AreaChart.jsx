@@ -24,13 +24,15 @@ const chartKeys = (d, area) => area.measures.filter((k) => d.series[k] && d.seri
 // The measure shown first: the one behind the area's first projection, otherwise the first with data.
 export function defaultKey(d, area) {
   const keys = chartKeys(d, area);
-  const wanted = d.insights.find((i) => i.scenario === area.scenario && i.forecastKey)?.forecastKey;
+  const mine = d.insights.filter((i) => i.scenario === area.scenario);
+  const wanted = mine.find((i) => i.forecastKey)?.forecastKey ?? mine.flatMap((i) => i.signals).find((k) => keys.includes(k));
   return keys.includes(wanted) ? wanted : keys[0] ?? null;
 }
 
 export default function AreaChart({ d, area, onSelect }) {
   const keys = chartKeys(d, area);
   const [key, setKey] = useState(defaultKey(d, area));
+  const hasFinding = (k) => d.insights.some((i) => i.scenario === area.scenario && i.signals.includes(k));
   useEffect(() => { onSelect?.(key); }, [key]); // lets the summary above follow the tab
   const [range, setRange] = useState(9999);
   const [proj, setProj] = useState(true);
@@ -81,7 +83,7 @@ export default function AreaChart({ d, area, onSelect }) {
     <div className="achart">
       <div className="controls">
         <div className="pills" role="tablist" aria-label="Measure">
-          {keys.map((k) => <button key={k} role="tab" aria-selected={k === key} className={"pill" + (k === key ? " on" : "")} onClick={() => { setKey(k); mark("chart"); }}>{d.series[k].label}</button>)}
+          {keys.map((k) => <button key={k} role="tab" aria-selected={k === key} className={"pill" + (k === key ? " on" : "") + (hasFinding(k) ? " hasf" : "")} title={hasFinding(k) ? "This measure has a finding" : undefined} onClick={() => { setKey(k); mark("chart"); }}>{d.series[k].label}</button>)}
         </div>
         <div className="pills" role="group" aria-label="Time range">
           {RANGES.map(([l, n]) => <button key={l} aria-pressed={range === n} className={"pill" + (range === n ? " on" : "")} onClick={() => { setRange(n); mark("chart"); }}>{l}</button>)}

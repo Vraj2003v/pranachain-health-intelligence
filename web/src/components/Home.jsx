@@ -4,6 +4,7 @@ import { Line, LineChart, ReferenceLine, ResponsiveContainer, Bar, BarChart } fr
 import { AREAS } from "../areas.js";
 import AreaChart, { defaultKey } from "./AreaChart.jsx";
 import MeasureSummary from "./MeasureSummary.jsx";
+import Overview from "./Overview.jsx";
 import Ask from "./Ask.jsx";
 
 const T = (d) => Date.parse(d + "T00:00:00");
@@ -91,6 +92,7 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
           {detail.attention?.[area.scenario] && !detail.attention[area.scenario].level.startsWith("No clear") &&
             <p className="muted small" title={detail.attention[area.scenario].note}><b>Attention level for this area:</b> {detail.attention[area.scenario].level}</p>}
           {by(area).length === 0 && <p className="muted">{area.calm}</p>}
+          <Overview ov={detail.overview?.[area.scenario]} />
           <MeasureSummary d={detail} area={area} sel={area.measures.includes(sel) ? sel : defaultKey(detail, area)} />
           <AreaChart d={detail} area={area} onSelect={setSel} />
           <Ask pkey={selected} area={area.scenario} title={`Ask about ${area.title.toLowerCase()}`} />
