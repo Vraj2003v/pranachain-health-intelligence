@@ -9,6 +9,7 @@ const T = (d) => Date.parse(d + "T00:00:00");
 const tierClass = (t) => (t.startsWith("Outside") ? "out" : t.startsWith("Within") ? "in" : "none");
 const rangeLine = (t) => (t.position === "no range" ? "Compared with your own baseline only"
   : t.position === "within" ? `Within the usual range (${t.range})` : `${t.position === "above" ? "Above" : "Below"} the usual range (${t.range})`);
+const attClass = (l) => (l.startsWith("Worth discussing") ? "out" : l.startsWith("Worth watching") ? "in" : "none");
 const hello = () => { const h = new Date().getHours(); return h < 5 ? "Hello" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; };
 const dismissed = () => { try { return localStorage.getItem("pranapulse.coach") === "1"; } catch { return false; } };
 const dismiss = () => { try { localStorage.setItem("pranapulse.coach", "1"); } catch { /* storage may be blocked */ } };
@@ -77,6 +78,7 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
               <span className="ahead"><span className="aicon" aria-hidden>{a.icon}</span><b>{a.title}</b></span>
               <span className="asub">{a.sub}</span>
               <span className={"chip " + (hit ? "warn" : "ok")}>{hit ? `${items.length} change${items.length > 1 ? "s" : ""} found` : "No clear change"}</span>
+              {detail.attention?.[a.scenario] && !detail.attention[a.scenario].level.startsWith("No clear") && <span className={"chip tier " + attClass(detail.attention[a.scenario].level)} title={detail.attention[a.scenario].note}>{detail.attention[a.scenario].level}</span>}
               <span className="asum">{hit ? items[0].summary : a.calm}</span>
               <Spark d={detail} area={a} />
               <span className="acta">{on ? "Hide details" : hit ? "See what changed" : "See your readings"}</span>
@@ -89,6 +91,7 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
           <h2>{area.icon} {area.title}</h2>
           {by(area).length > 0 ? (
             <>
+              {detail.attention?.[area.scenario] && <p className="muted small"><b>Attention level:</b> {detail.attention[area.scenario].level}. {detail.attention[area.scenario].reason} {detail.attention[area.scenario].note}</p>}
               <p className="impact"><b>Why it may matter.</b> {area.why}</p>
               {by(area).map((ins, n) => (
                 <div className="finding" key={n}>
