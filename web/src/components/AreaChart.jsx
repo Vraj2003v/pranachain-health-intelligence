@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Area, Bar, BarChart, Brush, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, Bar, BarChart, Brush, CartesianGrid, Cell, ComposedChart, LabelList, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmt } from "../api";
 import { mark } from "../progress.js";
 
@@ -46,23 +46,28 @@ export default function AreaChart({ d, area, onSelect }) {
   }, [s, range, proj]);
 
   if (area.measures.length === 0) {
-    const cyc = d.cycles.map((c) => ({ ...c, t: T(c.d) }));
+    const cyc = d.cycles.map((c) => ({ ...c, label: new Date(T(c.d)).toLocaleDateString(undefined, { month: "short", year: "2-digit" }) }));
+    const out = (v) => v < 21 || v > 35;
+    const top = Math.max(42, ...cyc.map((c) => c.v)) + 7;
     return (
       <div className="achart">
         <h4>Length of each cycle (days)</h4>
         {cyc.length === 0 ? <p className="muted small">No cycle records in this file.</p> : (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={cyc} margin={{ top: 12, right: 12, bottom: 4, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
-              <XAxis dataKey="t" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={tick} />
-              <YAxis domain={[0, "dataMax + 7"]} width={36} />
-              <Tooltip labelFormatter={(t) => new Date(t).toLocaleDateString()} formatter={(v) => [`${v} days`, "Cycle"]} />
-              <ReferenceLine y={21} stroke="#7a4fa3" strokeDasharray="4 4" label={{ value: "21", position: "left", fontSize: 10 }} />
-              <ReferenceLine y={35} stroke="#7a4fa3" strokeDasharray="4 4" label={{ value: "35", position: "left", fontSize: 10 }} />
-              <Bar dataKey="v" fill="#7a4fa3" radius={[4, 4, 0, 0]} />
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={cyc} margin={{ top: 22, right: 28, bottom: 4, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.25} vertical={false} />
+              <XAxis dataKey="label" interval={0} minTickGap={4} />
+              <YAxis domain={[0, top]} ticks={[0, 21, 35, ...(top > 49 ? [Math.round(top / 7) * 7] : [])]} width={40} />
+              <Tooltip labelFormatter={(l, p) => (p?.[0] ? new Date(T(p[0].payload.d)).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : l)} formatter={(v) => [`${v} days`, "Cycle"]} />
+              <ReferenceLine y={21} stroke="#7a4fa3" strokeDasharray="4 4" />
+              <ReferenceLine y={35} stroke="#7a4fa3" strokeDasharray="4 4" />
+              <Bar dataKey="v" radius={[4, 4, 0, 0]} maxBarSize={56} isAnimationActive={false}>
+                {cyc.map((c, i) => <Cell key={i} fill={out(c.v) ? "#e0a21f" : "#7a4fa3"} />)}
+                <LabelList dataKey="v" position="top" fontSize={12} fill="currentColor" />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>)}
-        <p className="muted small">Dashed lines mark the usual 21 to 35 day range.</p>
+        <p className="muted small">Dashed lines mark the usual 21 to 35 day range. Amber bars are outside it.</p>
       </div>);
   }
   if (!s) return <p className="muted small">No readings for this area in this file.</p>;
