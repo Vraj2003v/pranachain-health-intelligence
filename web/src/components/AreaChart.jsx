@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Area, Bar, BarChart, Brush, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmt } from "../api";
 import { mark } from "../progress.js";
@@ -19,10 +19,19 @@ function Tip({ active, payload, label, unit, dec }) {
     </div>);
 }
 
-export default function AreaChart({ d, area }) {
-  const keys = area.measures.filter((k) => d.series[k] && d.series[k].rows.some((r) => r.w != null));
+const chartKeys = (d, area) => area.measures.filter((k) => d.series[k] && d.series[k].rows.some((r) => r.w != null));
+
+// The measure shown first: the one behind the area's first projection, otherwise the first with data.
+export function defaultKey(d, area) {
+  const keys = chartKeys(d, area);
   const wanted = d.insights.find((i) => i.scenario === area.scenario && i.forecastKey)?.forecastKey;
-  const [key, setKey] = useState(keys.includes(wanted) ? wanted : keys[0]);
+  return keys.includes(wanted) ? wanted : keys[0] ?? null;
+}
+
+export default function AreaChart({ d, area, onSelect }) {
+  const keys = chartKeys(d, area);
+  const [key, setKey] = useState(defaultKey(d, area));
+  useEffect(() => { onSelect?.(key); }, [key]); // lets the summary above follow the tab
   const [range, setRange] = useState(9999);
   const [proj, setProj] = useState(true);
   const [dots, setDots] = useState(true);
