@@ -7,6 +7,7 @@ import json
 import re
 
 from . import llm
+from . import reference as ref
 from .explain import check_language
 from .signals import RECENT_DAYS, WINDOW_DAYS
 
@@ -17,9 +18,26 @@ SUGGESTED = [
     "What does the baseline mean?",
     "How much data is behind this?",
     "What does the projection show?",
+    "What is the usual range?",
     "What should I do next?",
     "Does this mean I have a condition?",
 ]
+
+
+AREA_WORDS = [
+    (r"heart|cardio|blood pressure|\bbp\b|systolic|diastolic|pulse|\bhrv\b|ldl", "Cardiovascular / hypertension"),
+    (r"metabolic|sugar|glucose|hba1c|weight|sleep", "Metabolic health"),
+    (r"cycle|period|pcos|women", "Women's health (PCOS)"),
+]
+
+
+def infer_area(question: str, area=None):
+    """The disease area a question is about: the one the person is looking at, else the one the words point to."""
+    if area:
+        return area
+    q = question.lower()
+    hits = [name for pat, name in AREA_WORDS if re.search(pat, q)]
+    return hits[0] if len(hits) == 1 else None
 
 
 def _area(insights, area):
@@ -33,6 +51,11 @@ def answer_template(question: str, insights, area: str | None = None) -> str:
     if SAFETY.search(q):
         return ("This tool does not name or decide any condition, and it does not rate your health. It only shows where your own "
                 "readings moved away from your usual pattern, with the evidence." + CLOSE)
+    if re.search(r"usual range|reference|healthy range|normal range|range", q):
+        return ("For each measure that has one, we show the usual adult range next to your readings. Your own baseline is still the main "
+                "comparison, and the range adds context: a change that ends outside the usual range is marked as such, while a change that stays "
+                "inside it is marked as worth watching. Weight, steps and HRV have no single usual range, so they are compared with "
+                "your own baseline only." + CLOSE)
     if re.search(r"baseline|90|usual|normal|compare", q):
         return (f"Your baseline is your own average over a {WINDOW_DAYS}-day stretch. We compare your first and last {WINDOW_DAYS} days, "
                 f"and your latest {RECENT_DAYS} days against the {WINDOW_DAYS} days before them, so you are compared with yourself, "
@@ -125,7 +148,15 @@ def answer_data(question, insights, results, history=()):
         r = results[k]
         flagged = any(k in i.signals for i in insights)
         extra = (" This measure is part of a flagged finding." if flagged else " It stayed within your usual range, so nothing was flagged for it.")
-        return (_line(r) + "." + extra + CLOSE,
+        rng = ref.RANGES.get(k)
+        where = ref.position(r.mean_last, rng)
+        range_line = ("" if rng is None else
+                      f" The usual adult range is {ref.text(rng)}, and your last {WINDOW_DAYS} days average sits {where} it."
+                      if where in ("above", "below") else
+                      f" The usual adult range is {ref.text(rng)}, and your last {WINDOW_DAYS} days average sits within it.")
+        if rng is None:
+            range_line = " There is no single usual range for this measure, so it is compared with your own baseline only."
+        return (_line(r) + "." + range_line + extra + CLOSE,
                 {"tab": "timeline", "key": k, "label": f"Open {r.label} trend"}, FOLLOW["measure"], k)
     if re.search(r"how many days|how long|how much data|readings", q) and re.search(r"how many days|how long", q):
         return None
@@ -148,21 +179,30 @@ def _numbers_ok(text: str, allowed: str) -> bool:
     return all(n.replace(",", "") in known or (n.isdigit() and 1 <= int(n) <= 10) for n in NUM.findall(text))
 
 
-def _pick(results, question, n=5):
-    """Keep the prompt short (long prompts are what make a CPU model slow): measures named in the question, then the biggest changes."""
+def _pick(results, question, n=5, area=None):
+    """Keep the prompt short (long prompts are what make a CPU model slow): measures named in the question, then the biggest changes.
+    Only measures that belong to the disease area being discussed are included, so an unrelated measure never reaches the model."""
     rs = list((results or {}).values())
+    if area in ref.AREAS:
+        rs = [r for r in rs if r.key in ref.AREAS[area].signals]
     q = question.lower()
     named = [r for r in rs if any(w in q for w in r.label.lower().split() if len(w) > 3)]
     rest = sorted((r for r in rs if r not in named), key=lambda r: -abs(r.effect))
     return (named + rest)[:max(n, len(named))]
 
 
+def _reading(r):
+    rng = ref.RANGES.get(r.key)
+    return {"measure": r.label, "unit": r.unit, "first_90_days_avg": round(r.mean_first, r.decimals),
+            "last_90_days_avg": round(r.mean_last, r.decimals), "change": round(r.diff, r.decimals),
+            "times_usual_daily_variation": round(abs(r.effect), 1), "data_flag": r.flag,
+            "usual_range": ref.text(rng), "last_90_days_vs_range": ref.position(r.mean_last, rng) or "no range"}
+
+
 def _ai(question, base, insights, results, history, area):
-    facts = {"findings": [llm.facts(i) for i in _area(insights, area)[:3]],
-             "readings": [{"measure": r.label, "unit": r.unit, "first_90_days_avg": round(r.mean_first, r.decimals),
-                           "last_90_days_avg": round(r.mean_last, r.decimals), "change": round(r.diff, r.decimals),
-                           "times_usual_daily_variation": round(abs(r.effect), 1), "data_flag": r.flag}
-                          for r in _pick(results, question)],
+    facts = {"disease_area": area or "not specified",
+             "findings": [llm.facts(i) for i in _area(insights, area)[:3]],
+             "readings": [_reading(r) for r in _pick(results, question, area=area)],
              "window_days": WINDOW_DAYS, "recent_days": RECENT_DAYS}
     compact = json.dumps(facts, separators=(",", ":"))
     allowed = json.dumps(facts) + " " + base
@@ -182,6 +222,7 @@ def _ai(question, base, insights, results, history, area):
 def answer(question: str, insights, area: str | None = None, use_model: bool = True, results=None, history=()):
     """Returns (text, source, action, followups, key). The model only ever rewords a checked draft."""
     action, follow, key = None, FOLLOW["default"], None
+    area = infer_area(question, area)
     hit = answer_data(question, insights, results, history) if results and not SAFETY.search(question) else None
     if hit:
         base, action, follow, key = hit

@@ -4,7 +4,11 @@ import { api, fmt } from "../api";
 const ICON = { pattern: "🔗", single: "📈", cycle: "🗓️", recent: "🕒" };
 const KIND = { pattern: "Pattern across measures", single: "Single measure", cycle: "Cycle timing", recent: "Latest vs 90-day baseline" };
 const EVID = [["id", "ID"], ["signal", "Signal"], ["source", "Source sheet"], ["first_window", "Earlier period"], ["last_window", "Recent period"],
-  ["first_mean", "Earlier value"], ["last_mean", "Recent value"], ["days_with_data", "Days with data"], ["size_vs_own_variation", "Change vs usual variation"], ["trend_p", "Trend p-value"]];
+  ["first_mean", "Earlier value"], ["last_mean", "Recent value"], ["reference_range", "Usual range"], ["range_position", "Recent value vs range"],
+  ["days_with_data", "Days with data"], ["size_vs_own_variation", "Change vs usual variation"], ["trend_p", "Trend p-value"]];
+const tierClass = (t) => (t.startsWith("Outside") ? "out" : t.startsWith("Within") ? "in" : "none");
+const rangeLine = (t) => (t.position === "no range" ? "Compared with your own baseline only"
+  : t.position === "within" ? `Within the usual range (${t.range})` : `${t.position === "above" ? "Above" : "Below"} the usual range (${t.range})`);
 
 function Card({ pkey, i, ins, onTimeline }) {
   const [text, setText] = useState(null);
@@ -23,6 +27,7 @@ function Card({ pkey, i, ins, onTimeline }) {
       <p className="muted small" title="Finding ID and the evidence rows that support it">{ins.id} · evidence {ins.evidence.map((e) => e.id).join(", ")}</p>
       <div className="chips">
         <span className="chip kind">{ins.scenario}</span><span className="chip kind">{KIND[ins.kind]}</span>
+        {ins.tier && <span className={"chip tier " + tierClass(ins.tier)} title="Where the recent readings sit against the usual adult range">{ins.tier}</span>}
         <span className={"chip " + (ins.flag === "Limited" ? "warn" : "ok")}>● {ins.flag === "Limited" ? "Limited data" : "Data sufficient"}</span>
         {ins.flag === "Limited" && <span className="muted small">some expected data was missing</span>}
       </div>
@@ -35,6 +40,7 @@ function Card({ pkey, i, ins, onTimeline }) {
               <div className="l">{t.label}</div>
               <div className="v">{fmt(t.value, t.decimals)} <span className="u">{t.unit}</span></div>
               <div className="d">{t.diff > 0 ? "↑" : "↓"} {t.diff > 0 ? "+" : ""}{fmt(t.diff, t.decimals)} vs earlier 90 days</div>
+              <div className={"rng " + (t.position === "within" ? "in" : t.position === "no range" ? "none" : "out")}>{rangeLine(t)}</div>
             </div>))}
         </div>)}
       <ul>{ins.bullets.map((b) => <li key={b}>{b}</li>)}</ul>
@@ -57,10 +63,10 @@ function Card({ pkey, i, ins, onTimeline }) {
 
 const SECTIONS = [
   { scenario: "Cardiovascular / hypertension", icon: "🩺", title: "Cardiovascular",
-    watches: "Blood pressure, resting heart rate, HRV and LDL cholesterol",
+    watches: "Blood pressure, resting heart rate, HRV, steps and LDL cholesterol",
     why: "Changes in these measures can matter for heart and blood-vessel health, so they are worth discussing with a healthcare provider alongside the patient's history." },
   { scenario: "Metabolic health", icon: "⚖️", title: "Metabolic",
-    watches: "Weight, activity, sleep, HbA1c and fasting glucose",
+    watches: "Weight, steps, sleep, HbA1c and fasting glucose",
     why: "Shifts in these measures can relate to how the body handles blood sugar and weight, so they are worth discussing with a healthcare provider alongside the patient's history." },
   { scenario: "Women's health (PCOS)", icon: "🌸", title: "Women's health",
     watches: "Cycle length and regularity, with related history",
@@ -69,14 +75,22 @@ const SECTIONS = [
 
 export default function Insights({ pkey, d, onTimeline }) {
   const indexed = d.insights.map((ins, i) => ({ ins, i }));
+  const jump = (id) => document.getElementById(id)?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   const other = indexed.filter(({ ins }) => !SECTIONS.some((s) => s.scenario === ins.scenario));
   return (
     <section>
-      <p className="muted small">Results are grouped under the three areas we focus on. Each section shows what moved, the evidence, and why it may matter.</p>
+      <p className="muted small">Each disease area looks only at its own measures. Every section shows what moved, where the readings sit against the usual range, the evidence, and why it may matter.</p>
+      <div className="jump" role="navigation" aria-label="Jump to a disease area">
+        {SECTIONS.map((sec) => {
+          const n = indexed.filter(({ ins }) => ins.scenario === sec.scenario).length;
+          return <button key={sec.scenario} type="button" className={"pill" + (n ? " hit" : "")} onClick={() => jump("sec-" + sec.title.replace(/\W+/g, ""))}>
+            {sec.icon} {sec.title} <span className="count">{n || "–"}</span></button>;
+        })}
+      </div>
       {SECTIONS.map((sec) => {
         const items = indexed.filter(({ ins }) => ins.scenario === sec.scenario);
         return (
-          <div key={sec.scenario} className={"dsec" + (items.length ? " found" : "")}>
+          <div key={sec.scenario} id={"sec-" + sec.title.replace(/\W+/g, "")} className={"dsec" + (items.length ? " found" : "")}>
             <div className="dhead">
               <h2>{sec.icon} {sec.title}</h2>
               <span className={"chip " + (items.length ? "warn" : "ok")}>{items.length ? `Changes found (${items.length})` : "No clear change"}</span>
