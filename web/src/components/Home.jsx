@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 import { STEPS, getSteps, mark } from "../progress.js";
 import { Line, LineChart, ReferenceLine, ResponsiveContainer, Bar, BarChart } from "recharts";
 import { AREAS } from "../areas.js";
-import AreaChart from "./AreaChart.jsx";
+import AreaChart, { defaultKey } from "./AreaChart.jsx";
+import MeasureSummary from "./MeasureSummary.jsx";
 import Ask from "./Ask.jsx";
 
 const T = (d) => Date.parse(d + "T00:00:00");
-const tierClass = (t) => (t.startsWith("Outside") ? "out" : t.startsWith("Within") ? "in" : "none");
-const rangeLine = (t) => (t.position === "no range" ? "Compared with your own baseline only"
-  : t.position === "within" ? `Within the usual range (${t.range})` : `${t.position === "above" ? "Above" : "Below"} the usual range (${t.range})`);
 const attClass = (l) => (l.startsWith("Worth discussing") ? "out" : l.startsWith("Worth watching") ? "in" : "none");
 const hello = () => { const h = new Date().getHours(); return h < 5 ? "Hello" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; };
 const dismissed = () => { try { return localStorage.getItem("pranapulse.coach") === "1"; } catch { return false; } };
@@ -36,6 +34,7 @@ function Spark({ d, area }) {
 
 export default function Home({ user, canFull = true, docs, selected, detail, onPick, onFull, onTrends }) {
   const [open, setOpen] = useState(null);
+  const [sel, setSel] = useState(null);
   const [coach, setCoach] = useState(!dismissed());
   const [done, setDone] = useState(getSteps());
   useEffect(() => { const f = () => setDone(getSteps()); window.addEventListener("pp-steps", f); return () => window.removeEventListener("pp-steps", f); }, []);
@@ -93,23 +92,9 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
             <>
               {detail.attention?.[area.scenario] && <p className="muted small"><b>Attention level:</b> {detail.attention[area.scenario].level}. {detail.attention[area.scenario].reason} {detail.attention[area.scenario].note}</p>}
               <p className="impact"><b>Why it may matter.</b> {area.why}</p>
-              {by(area).map((ins, n) => (
-                <div className="finding" key={n}>
-                  <h3>{ins.title}</h3>
-                  {ins.tier && <p className="tierline"><span className={"chip tier " + tierClass(ins.tier)}>{ins.tier}</span></p>}
-                  {ins.tiles.length > 0 && (
-                    <div className="tiles">{ins.tiles.map((t) => (
-                      <div className="tile" key={t.label}><div className="l">{t.label}</div>
-                        <div className="v">{Number(t.value).toLocaleString(undefined, { maximumFractionDigits: t.decimals })} <span className="u">{t.unit}</span></div>
-                        <div className="d">{t.diff > 0 ? "up" : "down"} {Math.abs(t.diff).toLocaleString(undefined, { maximumFractionDigits: t.decimals })} compared with your first 90 days</div>
-                        <div className={"rng " + (t.position === "within" ? "in" : t.position === "no range" ? "none" : "out")}>{rangeLine(t)}</div></div>))}
-                    </div>)}
-                  <ul>{ins.bullets.map((b) => <li key={b}>{b}</li>)}</ul>
-                  {ins.context.length > 0 && <p className="ctx"><b>Connects to your history:</b> {ins.context.slice(0, 3).map((c) => c.split(" — ")[0]).join(" · ")}</p>}
-                  <p className="muted small">Data: {ins.flag === "Limited" ? "limited, some readings were missing" : "sufficient"}.</p>
-                </div>))}
             </>) : <p className="muted">{area.calm} Here are your readings, in case you want to look closer.</p>}
-          <AreaChart d={detail} area={area} />
+          <MeasureSummary d={detail} area={area} sel={area.measures.includes(sel) ? sel : defaultKey(detail, area)} />
+          <AreaChart d={detail} area={area} onSelect={setSel} />
           <Ask pkey={selected} area={area.scenario} title={`Ask about ${area.title.toLowerCase()}`} />
           <div className="row">
             {canFull && <button className="btn ghost small" onClick={onFull}>See the full evidence</button>}
