@@ -83,3 +83,7 @@ These work as described for patients, for whichever patient is selected in the s
 ## Tips
 - If a result worries you, talk to a healthcare provider.
 - This is a prototype for academic use on synthetic or anonymised data.
+
+
+### Attention level
+Each disease area shows a short level: **No clear change**, **Worth watching** or **Worth discussing with a healthcare provider**. It is a simple rule on the findings shown (how far the readings sit from the usual range, and how much data is behind them). It does not name a condition and is not a measure of likelihood.

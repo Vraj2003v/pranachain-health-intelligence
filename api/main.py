@@ -302,6 +302,7 @@ def patient_detail(doc_id: int, user=Depends(auth.current_user)):
                       "bullets": i.bullets, "closing": i.closing, "context": i.context, "asks": i.asks,
                       "evidence": [{k: (v if isinstance(v, str) else num(v)) for k, v in e.items()} for e in i.evidence],
                       "forecastKey": i.forecast_key, "signals": i.signals, "tiles": tiles(i)} for i in ins],
+        "attention": ref.attention_by_area(ins),
         "held": held, "positives": positives, "coverage": coverage, "windowDays": WINDOW_DAYS,
         "series": {k: series_block(p, results, k) for k in SIGNALS}, "markers": marks, "labs": labs,
         "cycles": [{"d": day(r.start), "v": num(r.cycle_length)} for r in p.cycles.itertuples()],

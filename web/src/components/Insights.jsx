@@ -6,6 +6,7 @@ const KIND = { pattern: "Pattern across measures", single: "Single measure", cyc
 const EVID = [["id", "ID"], ["signal", "Signal"], ["source", "Source sheet"], ["first_window", "Earlier period"], ["last_window", "Recent period"],
   ["first_mean", "Earlier value"], ["last_mean", "Recent value"], ["reference_range", "Usual range"], ["range_position", "Recent value vs range"],
   ["days_with_data", "Days with data"], ["size_vs_own_variation", "Change vs usual variation"], ["trend_p", "Trend p-value"]];
+const attClass = (l) => (l.startsWith("Worth discussing") ? "out" : l.startsWith("Worth watching") ? "in" : "none");
 const tierClass = (t) => (t.startsWith("Outside") ? "out" : t.startsWith("Within") ? "in" : "none");
 const rangeLine = (t) => (t.position === "no range" ? "Compared with your own baseline only"
   : t.position === "within" ? `Within the usual range (${t.range})` : `${t.position === "above" ? "Above" : "Below"} the usual range (${t.range})`);
@@ -96,6 +97,7 @@ export default function Insights({ pkey, d, onTimeline }) {
               <span className={"chip " + (items.length ? "warn" : "ok")}>{items.length ? `Changes found (${items.length})` : "No clear change"}</span>
             </div>
             <p className="muted small"><b>What we look at:</b> {sec.watches}</p>
+            {d.attention?.[sec.scenario] && <p className="small"><span className={"chip tier " + attClass(d.attention[sec.scenario].level)}>{d.attention[sec.scenario].level}</span> <span className="muted">{d.attention[sec.scenario].reason} {d.attention[sec.scenario].note}</span></p>}
             {items.length > 0 && <p className="impact"><b>Why it may matter:</b> {sec.why}</p>}
             {items.length === 0 && <p className="muted small">Nothing in this area moved beyond this patient's own usual range.</p>}
             {items.map(({ ins, i }) => <Card key={i} pkey={pkey} i={i} ins={ins} onTimeline={onTimeline} />)}
