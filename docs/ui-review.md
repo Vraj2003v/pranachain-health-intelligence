@@ -19,3 +19,11 @@ Checks (mark OK or note a problem):
 - [x] Assistant popup opens, answers, closes with the cross or Escape: OK. "Why was this flagged?" answered from the readings; "Do I have diabetes?" got the safety reply; Escape closes it. Not tested with the local model running.
 - [x] Light and dark mode both readable: OK. The button cycles Auto → Light → Dark.
 - [x] Phone: no sideways scrolling, tabs usable: OK, no page scrolls sideways on any tab (patient or doctor). Note: the tab bar itself scrolls sideways with no hint (row 3).
+
+
+## Follow-up after Meeting 3 (2 Nov 2026)
+- The partner asked for the exact disease names as labels. Areas are now **Cardiovascular**, **Metabolic** and **Women's health**, each with a one-line list of its own measures.
+- The **Ask a question** tab was removed; the assistant is the 💬 button on every screen. Tabs no longer repeat the same content.
+- Phone layout: tabs in a bottom bar (swipeable), measure buttons that swipe, 44 px touch targets, a sticky jump bar on **Full findings**, and two-column tiles.
+- Interactive additions: **3 months / 6 months / Full year** on Trends, a **Show usual range** toggle with a green band, and tags showing where recent readings sit against the usual range.
+- Checked on a 390 px phone and a 1440 px desktop with screenshots in `docs/ui-review-screens/`.

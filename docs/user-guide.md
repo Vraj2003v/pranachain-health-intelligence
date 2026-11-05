@@ -23,20 +23,20 @@ On the welcome screen, choose **Upload workbooks** (.xlsx), or **Try demo patien
 - The **?** and light/dark buttons are hidden while the sidebar is folded; press **›** to see them again.
 - At the bottom of the sidebar, you can sign out or permanently delete your account and all your files.
 
-On a phone, the sidebar becomes a drop-down for picking a workbook, with the **?**, theme and **Sign out** buttons above the tabs. Swipe the tab bar sideways to reach the last tabs.
+On a phone, the sidebar becomes a drop-down for picking a workbook, with the **?**, theme and **Sign out** buttons at the top. The tabs sit in a bar at the bottom of the screen, within thumb reach; swipe it sideways to reach the last tabs. Measure buttons and the **3 months / 6 months / Full year** buttons also swipe and tap easily.
 
 ## For patients
 
-Your tabs are **My summary**, **Ask a question**, **Trends**, **Compare** and **My files**.
+Your tabs are **My summary**, **Trends**, **Compare** and **My files**. The assistant is the round 💬 button in the corner on every screen.
 
 ### 1. My summary
-Shows three health areas: **Heart and blood pressure**, **Weight, sugar and activity**, and **Cycle and hormones**. Each card says **No clear change**, or how many changes were found (for example **1 change found**), with a plain sentence about what moved. Click a card to read more, or choose **Open all trends**. A **Getting started** checklist appears the first time; hide it with ✕.
+Shows three disease areas, named plainly: **Cardiovascular**, **Metabolic** and **Women's health**. Each card lists the measures it looks at (a disease area only uses its own measures) and says **No clear change**, or how many changes were found (for example **1 change found**), with a plain sentence about what moved. Click a card to read more, or choose **Open all trends**. A **Getting started** checklist appears the first time; hide it with ✕.
 
-### 2. Ask a question
-Open **Ask a question**, or use the 💬 chat button. Ask things like "Why was this flagged?" or "How is my weight?". Answers come from your own readings, and the assistant can open the matching chart for you. Questions about diagnosis, medicines or treatment are not answered; ask a healthcare provider instead.
+### 2. The assistant (💬 button)
+Press the 💬 button. Ask things like "Why was this flagged?" "How is my weight?" or "What is the usual range?". Answers come from your own readings and only from the measures of the disease area you are asking about, and the assistant can open the matching chart for you. Questions about diagnosis, medicines or treatment are not answered; ask a healthcare provider instead.
 
 ### 3. Trends
-Pick a measure to see daily values, the weekly average and, where there is enough data, a straight-line **projection** 8 weeks ahead with a shaded **95% range**. Events from your history are marked on the chart. Lab results (such as HbA1c, fasting glucose and LDL cholesterol) and cycle length have their own charts. Hover over the chart to see exact values. The projection shows what happens if the recent trend continues; it is not a prediction.
+Pick a measure to see daily values, the weekly average and, where there is enough data, a straight-line **projection** 8 weeks ahead with a shaded **95% range**. Events from your history are marked on the chart. Lab results (such as HbA1c, fasting glucose and LDL cholesterol) and cycle length have their own charts. Hover over (or tap) the chart to see exact values. Choose **3 months**, **6 months** or **Full year** above the chart. For measures with a usual adult range (blood pressure, resting heart rate, sleep) a green band shows it, and a line under the chart says whether the recent average is within it; tick or untick **Show usual range**. Weight, steps and HRV have no single usual range, so they are compared with your own baseline only. The projection shows what happens if the recent trend continues; it is not a prediction.
 
 ### 4. Compare
 Pick up to four measures to see on one chart whether they moved together. Each line shows the weekly average as a % change from your own first 90 days, so different units fit on one scale. Choose **3 months**, **6 months** or **Whole year**, and switch between **% change** and **Real units** (real units work with two measures or fewer).
@@ -46,7 +46,7 @@ Upload more workbooks, add demo patients, open a file, or delete one file or all
 
 ## For doctors and healthcare providers
 
-Doctors start on **All patients** and also have **Patient summary**, **Ask a question**, **Trends**, **Compare**, **Full findings**, **Data quality** and **Files**. The administrator also has **Activity log**.
+Doctors start on **All patients** and also have **Patient summary**, **Trends**, **Compare**, **Full findings**, **Data quality** and **Files**. The administrator also has **Activity log**.
 
 ### All patients
 - The top row shows how many patients are loaded, how many have an insight, how many are quiet, and how many insights rest on limited data.
@@ -71,10 +71,13 @@ For each signal: the source sheet, the share of days with data, how many reading
 
 The flag describes how much data was available, not how certain the result is.
 
+### Full findings
+Findings are grouped by disease area, with jump buttons (Cardiovascular, Metabolic, Women's health) and a count for each. Every finding shows a tag for where the recent readings sit against the usual range: **Outside the usual range**, **Within the usual range, worth watching**, or **Personal baseline only** (no single usual range exists). The evidence table has the usual range and where the recent value sits against it.
+
 ### Activity log (administrator only)
 A list of who did what in the app (sign-ins, failed sign-ins, uploads, patients opened, questions asked, deletions), newest first, showing the last 200 events. Only the administrator sees this tab. The administrator is the first account created on a new installation; nobody can choose this role when signing up.
 
-### Trends, Compare and Ask a question
+### Trends, Compare and the assistant
 These work as described for patients, for whichever patient is selected in the sidebar.
 
 ## Tips
