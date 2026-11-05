@@ -42,7 +42,7 @@ export default function Auth({ onDone }) {
       <ThemeToggle floating />
       <form className="authcard" onSubmit={submit} noValidate>
         <div className="authbrand"><Logo size={38} /></div>
-        <div className="seg" role="tablist">
+        <div className="authseg" role="tablist">
           <button type="button" role="tab" aria-selected={!reg} className={!reg ? "on" : ""} onClick={() => switchMode("login")}>Sign in</button>
           <button type="button" role="tab" aria-selected={reg} className={reg ? "on" : ""} onClick={() => switchMode("register")}>Create account</button>
         </div>
