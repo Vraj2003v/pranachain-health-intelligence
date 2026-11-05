@@ -88,11 +88,9 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
       {area && (
         <div className="adetail" style={{ "--hue": area.hue }} key={area.scenario}>
           <h2>{area.icon} {area.title}</h2>
-          {by(area).length > 0 ? (
-            <>
-              {detail.attention?.[area.scenario] && <p className="muted small"><b>Attention level:</b> {detail.attention[area.scenario].level}. {detail.attention[area.scenario].reason} {detail.attention[area.scenario].note}</p>}
-              <p className="impact"><b>Why it may matter.</b> {area.why}</p>
-            </>) : <p className="muted">{area.calm} Here are your readings, in case you want to look closer.</p>}
+          {detail.attention?.[area.scenario] && !detail.attention[area.scenario].level.startsWith("No clear") &&
+            <p className="muted small" title={detail.attention[area.scenario].note}><b>Attention level for this area:</b> {detail.attention[area.scenario].level}</p>}
+          {by(area).length === 0 && <p className="muted">{area.calm}</p>}
           <MeasureSummary d={detail} area={area} sel={area.measures.includes(sel) ? sel : defaultKey(detail, area)} />
           <AreaChart d={detail} area={area} onSelect={setSel} />
           <Ask pkey={selected} area={area.scenario} title={`Ask about ${area.title.toLowerCase()}`} />
