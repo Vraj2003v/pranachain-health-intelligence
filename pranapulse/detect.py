@@ -6,6 +6,7 @@ import pandas as pd
 from scipy import stats
 
 from . import forecast
+from . import reference as ref
 from .explain import check_language
 from .loader import Patient
 from .signals import CLUSTERS, MAX_TREND_P, MIN_EFFECT, RECENT_DAYS, RECENT_MIN_EFFECT, SIGNALS, WINDOW_DAYS
@@ -50,6 +51,7 @@ class Insight:
     closing: str = ""
     scenario: str = ""         # which validation scenario this belongs to
     insight_id: str = ""       # F1, F2, ... for this patient, in the order shown
+    tier: str = ""             # where the latest readings sit against the usual range (see reference.py)
 
 
 def _fmt(v, d):
@@ -132,8 +134,13 @@ def _bullet(r: SignalResult):
             f"({r.diff:+,.{d}f}) between the first and last {WINDOW_DAYS} days, well outside this patient's usual day-to-day variation")
 
 
+def _range_fields(rng, value):
+    pos = ref.position(value, rng)
+    return {"reference_range": ref.text(rng), "range_position": pos or "no range"}
+
+
 def _evidence(r: SignalResult):
-    return {
+    return {**_range_fields(ref.RANGES.get(r.key), r.mean_last),
         "signal": r.label, "source": f"{r.sheet}",
         "first_window": f"{r.window_first[0]:%d %b %Y} – {r.window_first[1]:%d %b %Y}",
         "last_window": f"{r.window_last[0]:%d %b %Y} – {r.window_last[1]:%d %b %Y}",
@@ -262,7 +269,9 @@ def detect(p: Patient):
                                      "first_window": f"{l['first'].date:%d %b %Y}", "last_window": f"{l['last'].date:%d %b %Y}",
                                      "first_mean": f"{l['first'].result:g} {l['first'].unit}", "last_mean": f"{l['last'].result:g} {l['last'].unit}",
                                      "days_with_data": f"{l['n']} results", "overall_coverage": "—",
-                                     "size_vs_own_variation": "—", "trend_p": "—"} for l in lab_hits],
+                                     "size_vs_own_variation": "—", "trend_p": "—",
+                                     **_range_fields(ref.lab_range(l["last"].ref_low, l["last"].ref_high, l["last"].unit), float(l["last"].result))}
+                                    for l in lab_hits],
                                 ctx, text, _asks(p, usable, list(c["labs"]), lab_hits), usable[0].key if usable else "",
                                 f"{len(bullets)} related measures moved in the same direction over this patient's year.", bullets, closing,
                                 SCENARIO[cname]))
@@ -301,7 +310,8 @@ def detect(p: Patient):
                                 [{"signal": sig.label, "source": sig.sheet, "first_window": w(rc["base_win"]), "last_window": w(rc["rec_win"]),
                                   "first_mean": f"{rc['base']:,.{d}f} {sig.unit}", "last_mean": f"{rc['rec']:,.{d}f} {sig.unit}",
                                   "days_with_data": f"{rc['n_base']} baseline, {rc['n_rec']} recent", "overall_coverage": "—",
-                                  "size_vs_own_variation": f"{abs(rc['effect']):.1f}x", "trend_p": "—"}],
+                                  "size_vs_own_variation": f"{abs(rc['effect']):.1f}x", "trend_p": "—",
+                                  **_range_fields(ref.RANGES.get(key), rc["rec"])}],
                                 [], text, [], key, "The latest readings differ from this patient's own recent baseline.", [bullet], closing,
                                 SCENARIO["cardio"] if key in ("sbp", "dbp", "rhr", "hrv") else SCENARIO["metabolic"]))
 
@@ -321,7 +331,8 @@ def detect(p: Patient):
                 "signal": "Cycle length", "source": "Women Health", "first_window": f"{cy.start.min():%d %b %Y}",
                 "last_window": f"{cy.start.max():%d %b %Y}", "first_mean": f"{mean_len:.0f} days (mean)",
                 "last_mean": f"{sd_len:.1f} days (variation)", "days_with_data": f"{len(cy)} cycles",
-                "overall_coverage": "—", "size_vs_own_variation": "—", "trend_p": "—"}], ctx, text, [], "",
+                "overall_coverage": "—", "size_vs_own_variation": "—", "trend_p": "—",
+                **_range_fields(ref.CYCLE_RANGE, float(mean_len))}], ctx, text, [], "",
                                 "Cycle timing varies more than usual.",
                                 [f"Cycle length averaged {mean_len:.0f} days across {len(cy)} cycles and varied by about {sd_len:.0f} days between cycles "
                                  "(usual range is roughly 21–35 days with small variation)"],
@@ -335,5 +346,24 @@ def detect(p: Patient):
                 ins.scenario = SCENARIO["cycle"]
             else:
                 ins.scenario = SCENARIO["cardio"] if ins.signals and ins.signals[0] in ("sbp", "dbp", "rhr", "hrv") else SCENARIO["metabolic"]
+    for ins in insights:
+        ins.tier = ref.tier([e.get("range_position") if e.get("range_position") != "no range" else None for e in ins.evidence])
     number_evidence(insights)
     return insights, held, results
+
+
+def disease_input_problems(insights):
+    """Reasons a finding uses a measure that does not belong to its disease area. Empty when every finding is clean."""
+    out = []
+    for ins in insights:
+        area = ref.AREAS.get(ins.scenario)
+        if area is None:
+            out.append(f"{ins.insight_id} {ins.title}: unknown area {ins.scenario!r}")
+            continue
+        for k in ins.signals:
+            if k not in area.signals:
+                out.append(f"{ins.insight_id} {ins.title}: {k} does not belong to {area.short}")
+        for e in ins.evidence:
+            if e["source"] == "Lab Results" and e["signal"] not in area.labs:
+                out.append(f"{ins.insight_id} {ins.title}: lab {e['signal']} does not belong to {area.short}")
+    return out

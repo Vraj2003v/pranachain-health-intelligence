@@ -70,7 +70,7 @@ export default function Cohort({ patients, onOpen }) {
             {rows.slice(0, 300).map((p) => (
               <tr key={p.key} onClick={() => onOpen(p.key)} className="click">
                 <td><b>{p.id}</b></td><td>{p.age ?? "—"}</td><td>{p.sex ?? "—"}</td>
-                <td><span className={"chip " + (p.status === "Flagged" ? "warn" : "quiet")}>{p.status}</span></td>
+                <td><span className={"chip " + (p.status === "Flagged" ? "warn" : "quiet")}>{p.status === "Flagged" ? "Has insight" : "Quiet"}</span></td>
                 <td>{p.scenario ?? "—"}</td><td>{p.found}</td>
                 <td>{p.flag ? <span className={"chip " + (p.flag === "Limited" ? "warn" : "ok")}>{p.flag === "Limited" ? "Limited data" : "Data sufficient"}</span> : "—"}</td>
                 <td>{p.held}</td>

@@ -3,7 +3,7 @@ import { api } from "../api";
 import { mark } from "../progress.js";
 
 const CHIPS = ["What changed the most?", "Why was this flagged?", "How is my weight?", "Compare weight and steps",
-  "What does the baseline mean?", "Does this mean I have a condition?"];
+  "What does the baseline mean?", "What is the usual range?", "Does this mean I have a condition?"];
 
 export default function Ask({ pkey, area, title = "Ask about your results", onAction, compact = false, bar = false, open = true, setOpen = () => {} }) {
   const [msgs, setMsgs] = useState([]);

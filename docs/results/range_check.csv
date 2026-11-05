@@ -1,0 +1,90 @@
+patient,finding,area,kind,data_flag,range_tier,title
+PC0021,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0027,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0033,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0035,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0036,F1,Cardiovascular / hypertension,single,Limited,Outside the usual range,Systolic BP has changed
+PC0041,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0062,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0062,F2,Cardiovascular / hypertension,single,Sufficient,Outside the usual range,Systolic BP has changed
+PC0082,F1,Metabolic health,pattern,Sufficient,Outside the usual range,Weight and HbA1c are shifting together
+PC0083,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0085,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0086,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0096,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0098,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0103,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0106,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0106,F2,Cardiovascular / hypertension,single,Sufficient,Outside the usual range,Systolic BP has changed
+PC0115,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0118,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0124,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0127,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0128,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0132,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0132,F2,Cardiovascular / hypertension,single,Limited,Outside the usual range,Systolic BP has changed
+PC0133,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0136,F1,Metabolic health,single,Sufficient,Personal baseline only,Weight has changed
+PC0180,F1,Cardiovascular / hypertension,single,Sufficient,Outside the usual range,Systolic BP has changed
+PC0188,F1,Cardiovascular / hypertension,single,Limited,Outside the usual range,Systolic BP has changed
+PC0303,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0313,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0323,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0332,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0340,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0363,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0365,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0395,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0423,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0433,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0434,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0437,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0443,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0449,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0450,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0466,F1,Metabolic health,pattern,Limited,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0466,F2,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0488,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0495,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0498,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0502,F1,Metabolic health,pattern,Limited,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0512,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0519,F1,Metabolic health,pattern,Sufficient,"Within the usual range, worth watching",HbA1c and Fasting glucose are shifting together
+PC0546,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0560,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0572,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0578,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0588,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0589,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0595,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0603,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0613,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0633,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0635,F1,Metabolic health,pattern,Sufficient,"Within the usual range, worth watching",HbA1c and Fasting glucose are shifting together
+PC0640,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0665,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0703,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0713,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0740,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0763,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0765,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0766,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0795,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0803,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0813,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0823,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0835,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0840,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0854,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0863,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0865,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0886,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0894,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0903,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0913,F1,Women's health (PCOS),cycle,Sufficient,Outside the usual range,Cycle timing is irregular
+PC0933,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0940,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0965,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0982,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0985,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together
+PC0995,F1,Metabolic health,pattern,Sufficient,Outside the usual range,HbA1c and Fasting glucose are shifting together

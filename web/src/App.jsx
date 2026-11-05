@@ -4,7 +4,6 @@ import { api } from "./api";
 import Auth from "./components/Auth.jsx";
 import Landing from "./components/Landing.jsx";
 import Home from "./components/Home.jsx";
-import Ask from "./components/Ask.jsx";
 import Cohort from "./components/Cohort.jsx";
 import Documents from "./components/Documents.jsx";
 import Insights from "./components/Insights.jsx";
@@ -132,7 +131,7 @@ export default function App() {
         <div className="mobile-pick">
           <Tools />
           {view.rail && <select value={selected || ""} onChange={(e) => open(e.target.value, needsPatient ? shown : landing)}>
-            {docs.map((p) => <option key={p.key} value={p.key}>{p.id} · {p.status}</option>)}
+            {docs.map((p) => <option key={p.key} value={p.key}>{p.id} · {p.status === "Flagged" ? "Changes found" : "Quiet"}</option>)}
           </select>}
           <button className="btn ghost small" onClick={signOut}>Sign out</button>
         </div>
@@ -143,8 +142,8 @@ export default function App() {
 
         {detail && needsPatient && shown !== "summary" && (
           <header className="hero">
-            <h1>Patient {detail.patient.id}</h1>
-            <p>Changes against this patient's own baseline, connected to their history.</p>
+            <h1>{user.role === "patient" ? "Your results" : `Patient ${detail.patient.id}`}</h1>
+            <p>{user.role === "patient" ? "Changes against your own baseline, connected to your history." : "Changes against this patient's own baseline, connected to their history."}</p>
             <div className="meta">{detail.patient.age ?? "—"} years · {detail.patient.sex ?? "—"} · data {detail.patient.start} to {detail.patient.end} ({detail.patient.days} days)</div>
           </header>
         )}
@@ -157,7 +156,6 @@ export default function App() {
         {shown === "audit" && <Audit />}
         {needsPatient && !detail && <div className="muted pad">Loading patient…</div>}
         {shown === "summary" && <Home user={user} canFull={view.tabs.includes("insights")} docs={docs} selected={selected} detail={detail} onPick={(k) => open(k, landing)} onFull={() => setTab("insights")} onTrends={() => setTab("timeline")} />}
-        {shown === "ask" && selected && <div className="askpage"><Ask pkey={selected} area={null} title="Ask about your results" onAction={act} /></div>}
         {shown === "insights" && detail && <Insights pkey={selected} d={detail} onTimeline={() => setTab("timeline")} />}
         {shown === "timeline" && detail && <Timeline key={focus?.key || "t"} d={detail} initialKey={focus?.key} />}
         {shown === "explore" && detail && <Explore key={(focus?.keys || []).join()} d={detail} initial={focus?.keys} />}

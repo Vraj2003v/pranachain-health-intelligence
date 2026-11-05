@@ -6,6 +6,9 @@ import AreaChart from "./AreaChart.jsx";
 import Ask from "./Ask.jsx";
 
 const T = (d) => Date.parse(d + "T00:00:00");
+const tierClass = (t) => (t.startsWith("Outside") ? "out" : t.startsWith("Within") ? "in" : "none");
+const rangeLine = (t) => (t.position === "no range" ? "Compared with your own baseline only"
+  : t.position === "within" ? `Within the usual range (${t.range})` : `${t.position === "above" ? "Above" : "Below"} the usual range (${t.range})`);
 const hello = () => { const h = new Date().getHours(); return h < 5 ? "Hello" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; };
 const dismissed = () => { try { return localStorage.getItem("pranapulse.coach") === "1"; } catch { return false; } };
 const dismiss = () => { try { localStorage.setItem("pranapulse.coach", "1"); } catch { /* storage may be blocked */ } };
@@ -53,11 +56,6 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
               : `${found} of 3 health areas show changes that may be worth a closer look.`}
           </p>
         </div>
-        {docs.length > 1 && (
-          <label className="who">Viewing
-            <select value={selected || ""} onChange={(e) => { setOpen(null); onPick(e.target.value); }}>
-              {docs.map((p) => <option key={p.key} value={p.key}>{p.id}</option>)}
-            </select></label>)}
       </div>
       <p className="muted small">Patient {detail.patient.id}, {detail.patient.age ?? "age unknown"}, {detail.patient.sex ?? "sex unknown"}. Readings from {detail.patient.start} to {detail.patient.end}.</p>
 
@@ -77,6 +75,7 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
             <button key={a.scenario} onMouseMove={glow} className={"acard" + (hit ? " hit" : "") + (on ? " on" : "")} style={{ "--hue": a.hue }}
               aria-expanded={on} onClick={() => { setOpen(on ? null : a.scenario); mark("area"); }}>
               <span className="ahead"><span className="aicon" aria-hidden>{a.icon}</span><b>{a.title}</b></span>
+              <span className="asub">{a.sub}</span>
               <span className={"chip " + (hit ? "warn" : "ok")}>{hit ? `${items.length} change${items.length > 1 ? "s" : ""} found` : "No clear change"}</span>
               <span className="asum">{hit ? items[0].summary : a.calm}</span>
               <Spark d={detail} area={a} />
@@ -94,11 +93,13 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
               {by(area).map((ins, n) => (
                 <div className="finding" key={n}>
                   <h3>{ins.title}</h3>
+                  {ins.tier && <p className="tierline"><span className={"chip tier " + tierClass(ins.tier)}>{ins.tier}</span></p>}
                   {ins.tiles.length > 0 && (
                     <div className="tiles">{ins.tiles.map((t) => (
                       <div className="tile" key={t.label}><div className="l">{t.label}</div>
                         <div className="v">{Number(t.value).toLocaleString(undefined, { maximumFractionDigits: t.decimals })} <span className="u">{t.unit}</span></div>
-                        <div className="d">{t.diff > 0 ? "up" : "down"} {Math.abs(t.diff).toLocaleString(undefined, { maximumFractionDigits: t.decimals })} compared with your first 90 days</div></div>))}
+                        <div className="d">{t.diff > 0 ? "up" : "down"} {Math.abs(t.diff).toLocaleString(undefined, { maximumFractionDigits: t.decimals })} compared with your first 90 days</div>
+                        <div className={"rng " + (t.position === "within" ? "in" : t.position === "no range" ? "none" : "out")}>{rangeLine(t)}</div></div>))}
                     </div>)}
                   <ul>{ins.bullets.map((b) => <li key={b}>{b}</li>)}</ul>
                   {ins.context.length > 0 && <p className="ctx"><b>Connects to your history:</b> {ins.context.slice(0, 3).map((c) => c.split(" — ")[0]).join(" · ")}</p>}
