@@ -86,5 +86,5 @@ Abhishek asked whether the cardiovascular result considers all of that disease's
 - **Screens.** Measure tabs that have a finding show an amber dot, and the area opens on that tab.
 - Code: `overview()` and `overview_by_area()` in `pranapulse/reference.py`; returned as `overview` by the detail endpoint; `Overview.jsx` on the interface.
 - Tests: `test_overview_uses_only_the_areas_own_measures`, `test_a_steady_value_outside_the_range_is_counted_without_being_a_finding`, `test_insufficient_data_is_not_counted_as_outside`.
-- Not changed: the measure lists themselves. The kickoff also lists weight and sleep for cardiovascular and lipids for metabolic; Bhavya confirms the final lists, because changing them changes which findings appear.
+- Kickoff lists: the measures the kickoff lists for each disease but that are not finding inputs (sleep and weight for cardiovascular, lipids for metabolic, weight, sleep and steps for women's health) now appear in that disease's overview, marked "also considered". They create no findings and are not counted in the attention level, so finding counts are unchanged. Bhavya confirms whether any should become finding inputs.
 - No risk score or trained model: the kickoff says not to build a black-box risk score or a diagnosis.

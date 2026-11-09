@@ -19,14 +19,21 @@ class Area:
     signals: tuple         # daily measures that may feed this area
     labs: tuple            # lab tests that may feed this area
     cycle: bool = False    # uses the cycle-length rule
+    # Measures the kickoff lists for this disease that are shown in the overview as context only. They do not feed findings
+    # or the attention level, so finding IDs and the 900-workbook counts are unchanged.
+    context_signals: tuple = ()
+    context_labs: tuple = ()
 
 
 AREAS = {
     "Cardiovascular / hypertension": Area("Cardiovascular / hypertension", "Cardiovascular",
-                                          ("sbp", "dbp", "rhr", "hrv", "steps"), ("LDL cholesterol",)),
+                                          ("sbp", "dbp", "rhr", "hrv", "steps"), ("LDL cholesterol",),
+                                          context_signals=("sleep", "weight"), context_labs=("Total cholesterol", "HDL cholesterol")),
     "Metabolic health": Area("Metabolic health", "Metabolic",
-                             ("weight", "steps", "sleep"), ("HbA1c", "Fasting glucose")),
-    "Women's health (PCOS)": Area("Women's health (PCOS)", "Women's health", (), (), cycle=True),
+                             ("weight", "steps", "sleep"), ("HbA1c", "Fasting glucose"),
+                             context_labs=("Total cholesterol", "LDL cholesterol", "HDL cholesterol", "Triglycerides")),
+    "Women's health (PCOS)": Area("Women's health (PCOS)", "Women's health", (), (), cycle=True,
+                                  context_signals=("weight", "sleep", "steps")),
 }
 
 
@@ -130,11 +137,12 @@ def overview(scenario, insights, results, labs, cycles):
     used_labs = {e["signal"] for i in mine for e in i.evidence if e.get("source") == "Lab Results"}
     rows = []
 
-    def row(key, label, value, unit, dec, rng, changed, usable=True):
+    def row(key, label, value, unit, dec, rng, changed, usable=True, context=False):
         pos = position(value, rng) if usable else None
         rows.append({"key": key, "label": label, "value": None if not usable or value is None else round(float(value), 4),
                      "unit": unit, "decimals": dec, "range": text(rng) if rng else "no usual range",
-                     "position": pos or ("no range" if usable and value is not None else "no data"), "changed": bool(changed)})
+                     "position": pos or ("no range" if usable and value is not None else "no data"), "changed": bool(changed),
+                     "context": context})
 
     for k in area.signals:
         r = results.get(k)
@@ -151,14 +159,29 @@ def overview(scenario, insights, results, labs, cycles):
     if area.cycle and cycles is not None and len(cycles) >= 4:
         row("cycle", "Cycle length", float(cycles.cycle_length.mean()), "days", 0, CYCLE_RANGE, bool(mine))
 
-    ranged = [r for r in rows if r["position"] in ("above", "below", "within")]
+    every = {k for i in insights for k in i.signals}
+    every_labs = {e["signal"] for i in insights for e in i.evidence if e.get("source") == "Lab Results"}
+    for k in area.context_signals:
+        r = results.get(k)
+        if r is not None:
+            row(k, r.label, r.mean_last, r.unit, r.decimals, RANGES.get(k), k in every, usable=r.flag != "Insufficient", context=True)
+    for test in area.context_labs:
+        sub = labs[labs.test == test].sort_values("date") if labs is not None and len(labs) else None
+        if sub is None or sub.empty:
+            continue
+        last = sub.iloc[-1]
+        v = float(last.result)
+        row(test, test, v, str(last.unit), 2 if abs(v) < 10 else 1, lab_range(last.ref_low, last.ref_high, last.unit), test in every_labs, context=True)
+
+    core = [r for r in rows if not r["context"]]
+    ranged = [r for r in core if r["position"] in ("above", "below", "within")]
     outside = [r for r in ranged if r["position"] in ("above", "below")]
-    changed = [r for r in rows if r["changed"]]
-    if not rows:
+    changed = [r for r in core if r["changed"]]
+    if not core:
         line = "No readings for this area in this file."
     else:
         line = (f"{len(outside)} of {len(ranged)} measures with a usual range are outside it. "
-                f"{len(changed)} of {len(rows)} measures changed.")
+                f"{len(changed)} of {len(core)} measures changed.")
     return {"rows": rows, "ranged": len(ranged), "outside": len(outside), "changed": len(changed), "text": line}
 
 
