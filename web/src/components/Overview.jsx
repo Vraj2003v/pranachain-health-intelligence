@@ -15,7 +15,7 @@ export default function Overview({ ov }) {
             const [label, cls] = POS[r.position] || POS["no data"];
             return (
               <tr key={r.key}>
-                <th scope="row">{r.label}</th>
+                <th scope="row">{r.label}{r.context && <span className="ovctx" title="Listed for this disease at the kickoff. Shown for context; it does not create findings here."> also considered</span>}</th>
                 <td>{r.value == null ? "—" : `${fmt(r.value, r.decimals)} ${r.unit}`}</td>
                 <td>{r.range}</td>
                 <td><span className={"chip tier " + cls}>{label}</span></td>

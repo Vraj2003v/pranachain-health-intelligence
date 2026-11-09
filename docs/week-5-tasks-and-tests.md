@@ -36,11 +36,13 @@ Questions for Abhishek:
 ### 1.2 Re-check the disease lists against the kickoff
 Owner: Bhavya. Check: the list for each disease matches the kickoff document.
 
-| Disease area | Kickoff lists (ongoing and clinical) | App uses now | Difference to decide |
+| Disease area | Kickoff lists (ongoing and clinical) | Feeds findings | Shown in the overview as context ("also considered") |
 |---|---|---|---|
-| Cardiovascular | blood pressure, resting heart rate, activity, sleep, weight; BP history, cholesterol | systolic BP, diastolic BP, resting heart rate, HRV, steps, LDL | Kickoff adds sleep and weight; app adds HRV |
-| Metabolic | activity, sleep, weight, glucose; HbA1c, glucose, lipids, weight/BMI | weight, steps, sleep, HbA1c, fasting glucose | Kickoff adds lipids |
-| Women's health | cycle patterns, weight, sleep, activity | cycle length | Kickoff adds weight, sleep, steps as context |
+| Cardiovascular | blood pressure, resting heart rate, activity, sleep, weight; BP history, cholesterol | systolic BP, diastolic BP, resting heart rate, HRV, steps, LDL | sleep, weight, total and HDL cholesterol |
+| Metabolic | activity, sleep, weight, glucose; HbA1c, glucose, lipids, weight/BMI | weight, steps, sleep, HbA1c, fasting glucose | total, LDL, HDL cholesterol and triglycerides |
+| Women's health | cycle patterns, weight, sleep, activity | cycle length | weight, sleep, steps |
+
+Every measure the kickoff lists now appears in the overview of its disease. Context measures do not create findings and are not counted in "outside the usual range" or in the attention level, so finding IDs, the attention levels and the 900-workbook counts are unchanged. To make one of them feed findings, move it from `context_signals`/`context_labs` to `signals`/`labs` in `pranapulse/reference.py`; that changes the counts, so re-run `scripts\range_check.py` and agree it with Bhavya first.
 
 How to check: open `pranapulse/reference.py` (`AREAS`), compare with the table above, then run `python -m pytest tests\test_disease_inputs.py -q`. Changing a list changes which findings appear, so re-run `python scripts\range_check.py <folder of workbooks>` and record the counts.
 Rule agreed in Meeting 3: a disease uses only its own measures (HbA1c and glucose never feed cardiovascular, LDL never feeds metabolic).
@@ -60,7 +62,7 @@ Rule agreed in Meeting 3: a disease uses only its own measures (HbA1c and glucos
 
 | File | Tests | What it checks |
 |---|---|---|
-| `tests/test_disease_inputs.py` | 22 | Each finding uses only its own disease's measures; HbA1c/glucose never belong to cardiovascular and LDL never to metabolic; usual-range tags; attention level rules and wording; overview uses only an area's own measures; a steady out-of-range value is counted but is not a finding; insufficient data is never counted as outside |
+| `tests/test_disease_inputs.py` | 23 | Each finding uses only its own disease's measures; kickoff context measures are shown but never feed findings or attention; HbA1c/glucose never belong to cardiovascular and LDL never to metabolic; usual-range tags; attention level rules and wording; overview uses only an area's own measures; a steady out-of-range value is counted but is not a finding; insufficient data is never counted as outside |
 | `tests/test_api.py` | 11 | Sign-in required; sign-up rules (the first account is the administrator; the role choice never grants administrator); wrong password and sign-out; demo patients and the detail endpoint; users cannot see each other's files; bad files are reported and deletion works; the activity log is administrator-only; assistant answers pass the wording check and stay private |
 | `tests/test_assistant_safety.py` | 135 | The assistant never diagnoses, gives doses or treatment, or adds numbers; safety questions get the fixed safe answer |
 | `tests/test_evidence_ids.py` | 6 | Every finding has an ID (F1, F2, ...) and every evidence row an ID (E1, E2, ...) |
@@ -68,7 +70,7 @@ Rule agreed in Meeting 3: a disease uses only its own measures (HbA1c and glucos
 | `tests/test_threshold.py` | 3 | The recent-change check flags a clear move of the latest 14 days and stays quiet otherwise |
 | `tests/test_prototype.py` | 10 | Core detection on the demo patients: a drifting patient gets one pattern with history, a stable patient stays quiet, missing data downgrades the flag, cardiovascular and cycle patterns, every narrative passes the wording guardrails, the AI reply is used only when it passes the checks; date formats load |
 | `tests/test_clean_reply.py` | 1 | Lead-in phrases are stripped from assistant replies |
-| Total | 194 | |
+| Total | 195 | |
 
 ### 2.3 Last known results
 
@@ -77,7 +79,7 @@ Rule agreed in Meeting 3: a disease uses only its own measures (HbA1c and glucos
 | Full suite on the merged Meeting 3 work | 189 passed in 1365 s | 4 Nov |
 | `test_disease_inputs.py` and `test_api.py` with the overview change | 33 passed | 5 Nov |
 | `test_evidence_ids.py`, `test_prototype.py`, `test_clean_reply.py` with the overview change | 17 passed | 5 Nov |
-| Full suite after #55 to #59 and the overview change (194 tests) | **Not run yet.** Run once before the evaluation and record the number here | |
+| Full suite after #55 to #59 and the overview change (195 tests) | **Not run yet.** Run once before the evaluation and record the number here | |
 
 ### 2.4 Checks on the 900 workbooks (not part of pytest)
 

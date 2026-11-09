@@ -124,7 +124,9 @@ def test_overview_uses_only_the_areas_own_measures():
         for sc, o in ov.items():
             area = ref.AREAS[sc]
             for r in o["rows"]:
-                assert r["key"] in area.signals or r["key"] in area.labs or (area.cycle and r["key"] == "cycle"), (name, sc, r["key"])
+                assert r["key"] in area.signals or r["key"] in area.labs or (area.cycle and r["key"] == "cycle") \
+                    or r["key"] in area.context_signals or r["key"] in area.context_labs, (name, sc, r["key"])
+                assert r["context"] == (r["key"] in area.context_signals or r["key"] in area.context_labs)
             assert o["outside"] <= o["ranged"] <= len(o["rows"])
             assert o["changed"] <= len(o["rows"])
             assert not [m for m in check_language(o["text"]) if not m.startswith("must")]
@@ -145,4 +147,20 @@ def test_insufficient_data_is_not_counted_as_outside():
         label, unit, decimals, flag, mean_last = "Systolic BP", "mmHg", 0, "Insufficient", 140.0
     ov = ref.overview("Cardiovascular / hypertension", [], {"sbp": R}, None, None)
     assert ov["rows"][0]["position"] == "no data" and ov["outside"] == 0
+    assert ref.attention([], ov)[0] == ref.ATT_NONE
+
+
+def test_kickoff_context_measures_are_shown_but_do_not_feed_findings_or_attention():
+    assert {"sleep", "weight"} <= set(ref.AREAS["Cardiovascular / hypertension"].context_signals)
+    assert "Triglycerides" in ref.AREAS["Metabolic health"].context_labs
+    for area in ref.AREAS.values():                          # a context measure is never also a finding input
+        assert not set(area.context_signals) & set(area.signals)
+        assert not set(area.context_labs) & set(area.labs)
+
+    class R:
+        label, unit, decimals, flag, mean_last = "Sleep", "h", 1, "Sufficient", 5.0
+    ov = ref.overview("Women's health (PCOS)", [], {"sleep": R}, None, None)
+    row = ov["rows"][0]
+    assert row["context"] is True and row["position"] == "below"
+    assert ov["outside"] == 0 and ov["ranged"] == 0           # context rows are not counted
     assert ref.attention([], ov)[0] == ref.ATT_NONE

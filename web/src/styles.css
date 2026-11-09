@@ -520,3 +520,5 @@ h1, .hero h1, .home h1 { font-family: var(--script); font-weight: 700; letter-sp
 .ovtable thead th { font-weight: 600; opacity: .75; font-size: .8rem; }
 .ovtable tbody th { font-weight: 600; }
 .pill.hasf::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 7px; border-radius: 50%; background: #e0a21f; vertical-align: middle; }
+
+.ovctx{font-weight:400;font-size:.8em;color:var(--muted,#5b6770);margin-left:.4em}
