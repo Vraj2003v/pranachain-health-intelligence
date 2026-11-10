@@ -90,3 +90,6 @@ Each disease area shows a short level: **No clear change**, **Worth watching** o
 
 ### The summary follows the measure you pick
 In an area's detail, the summary above the graph changes with the measure tab (for example Systolic BP, then Diastolic BP). A measure with a finding shows that finding. A measure without one shows its latest value, the change against your first 90 days, and where it sits against the usual range. Other findings in the same area are listed under it.
+
+### All measures in this area
+Under each disease area you now see every measure that belongs to it, with the latest value, the usual range and where the value sits. A value that stays outside its range is listed here even when it did not change, so it is not a finding. A dot on a measure tab means that measure has a finding.

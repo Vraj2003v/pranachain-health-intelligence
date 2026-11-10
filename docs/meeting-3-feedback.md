@@ -75,3 +75,16 @@ Abhishek spoke about "predicting" disease risk. We have no outcome data to train
 - Demo patients: A (metabolic) and D (cardiovascular) and E (cycle) show "Worth discussing"; B shows no change; C has the same drift as A but limited data, so it shows "Worth watching".
 - Tests: `test_attention_rules` and `test_attention_level_is_rule_based_and_never_a_diagnosis`.
 - Open question for the final meeting: does he expect a risk level, and are these three levels enough?
+
+
+## Follow-up: all of a disease's own measures together (5 Nov 2026)
+Abhishek asked whether the cardiovascular result considers all of that disease's parameters, not only the ones that changed. The kickoff lists each area's inputs, and he said each disease should use only its own.
+
+- **Overview per area.** Each disease area now lists all of its own measures with the latest value, the usual range, where the value sits (above, within, below, or own baseline only) and whether a finding involves it. Cardiovascular: systolic and diastolic BP, resting heart rate, HRV, steps, LDL. Metabolic: weight, steps, sleep, HbA1c, fasting glucose. Women's health: cycle length.
+- **Steady values count.** A value that stays outside its usual range without changing is counted in the overview ("3 of 4 measures with a usual range are outside it"). It is not a numbered finding, so finding IDs (F1, F2) and the 900-workbook finding counts do not change.
+- **Attention level.** Findings decide "worth discussing", as before. Measures outside their range lift an area with no finding to "worth watching". `OUTSIDE_FOR_DISCUSS` in `pranapulse/reference.py` is left off: in the synthetic journeys almost every patient is above range on blood pressure and below on sleep, so a count would flag nearly everyone.
+- **Screens.** Measure tabs that have a finding show an amber dot, and the area opens on that tab.
+- Code: `overview()` and `overview_by_area()` in `pranapulse/reference.py`; returned as `overview` by the detail endpoint; `Overview.jsx` on the interface.
+- Tests: `test_overview_uses_only_the_areas_own_measures`, `test_a_steady_value_outside_the_range_is_counted_without_being_a_finding`, `test_insufficient_data_is_not_counted_as_outside`.
+- Kickoff lists: the measures the kickoff lists for each disease but that are not finding inputs (sleep and weight for cardiovascular, lipids for metabolic, weight, sleep and steps for women's health) now appear in that disease's overview, marked "also considered". They create no findings and are not counted in the attention level, so finding counts are unchanged. Bhavya confirms whether any should become finding inputs.
+- No risk score or trained model: the kickoff says not to build a black-box risk score or a diagnosis.

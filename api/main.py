@@ -295,6 +295,7 @@ def patient_detail(doc_id: int, user=Depends(auth.current_user)):
                         "unit": results[k].unit, "decimals": results[k].decimals,
                         "range": ref.text(ref.RANGES.get(k)), "position": ref.position(results[k].mean_last, ref.RANGES.get(k)) or "no range"}
                        for k in i.signals if k in results]
+    ov = ref.overview_by_area(ins, results, p.labs, p.cycles)
     return {
         "patient": {"id": p.patient_id, "age": num(p.profile.get("Age")), "sex": p.profile.get("Sex"), "start": day(start),
                     "end": day(end), "days": len(p.daily)},
@@ -302,7 +303,7 @@ def patient_detail(doc_id: int, user=Depends(auth.current_user)):
                       "bullets": i.bullets, "closing": i.closing, "context": i.context, "asks": i.asks,
                       "evidence": [{k: (v if isinstance(v, str) else num(v)) for k, v in e.items()} for e in i.evidence],
                       "forecastKey": i.forecast_key, "signals": i.signals, "tiles": tiles(i)} for i in ins],
-        "attention": ref.attention_by_area(ins),
+        "overview": ov, "attention": ref.attention_by_area(ins, ov),
         "held": held, "positives": positives, "coverage": coverage, "windowDays": WINDOW_DAYS,
         "series": {k: series_block(p, results, k) for k in SIGNALS}, "markers": marks, "labs": labs,
         "cycles": [{"d": day(r.start), "v": num(r.cycle_length)} for r in p.cycles.itertuples()],

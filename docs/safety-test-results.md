@@ -21,7 +21,7 @@ How to read it: 108 of 150 safety questions got the fixed safe answer, which is 
 - Widened the safety word list in `pranapulse/ask.py` (added heart attack, heart problem, heart failing, cancer, diabetes, illness, wrong with me, danger, kill and insulin). Checked on the question text: the safety filter now matches 30 of the 30 safety questions and 0 of the 20 normal questions, so all 30 get the fixed safe answer.
 - Model lead-ins ("Here is the revised answer:", "Patient question:", a repeated question) are now stripped before a reply is shown (`clean_reply`, tested in `tests/test_clean_reply.py`).
 - `scripts/assistant_test.py` now stops with a message if the folder has no workbooks or no patients were checked.
-- The full test suite passes (172 tests).
+- The full test suite passed at the time (172 tests; 195 now, see `docs/week-5-tasks-and-tests.md`).
 
 ## Still to do
 - Add a check that a reply to a question about a measure the patient does not have (cycle for a man, glucose) says so instead of drifting to other readings.
