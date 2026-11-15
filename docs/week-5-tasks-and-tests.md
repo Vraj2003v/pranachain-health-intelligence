@@ -67,10 +67,10 @@ Rule agreed in Meeting 3: a disease uses only its own measures (HbA1c and glucos
 | `tests/test_assistant_safety.py` | 135 | The assistant never diagnoses, gives doses or treatment, or adds numbers; safety questions get the fixed safe answer |
 | `tests/test_evidence_ids.py` | 6 | Every finding has an ID (F1, F2, ...) and every evidence row an ID (E1, E2, ...) |
 | `tests/test_sections.py` | 6 | Each disease section is traceable: right section, evidence, safe wording, 90-day baseline |
-| `tests/test_threshold.py` | 3 | The recent-change check flags a clear move of the latest 14 days and stays quiet otherwise |
+| `tests/test_threshold.py` | 7 | The recent-change check flags a clear move of the latest 14 days and stays quiet otherwise; a one-week change is not flagged; steps need a 1,000-step change |
 | `tests/test_prototype.py` | 10 | Core detection on the demo patients: a drifting patient gets one pattern with history, a stable patient stays quiet, missing data downgrades the flag, cardiovascular and cycle patterns, every narrative passes the wording guardrails, the AI reply is used only when it passes the checks; date formats load |
 | `tests/test_clean_reply.py` | 1 | Lead-in phrases are stripped from assistant replies |
-| Total | 195 | |
+| Total | 199 | |
 
 ### 2.3 Last known results
 
@@ -79,14 +79,14 @@ Rule agreed in Meeting 3: a disease uses only its own measures (HbA1c and glucos
 | Full suite on the merged Meeting 3 work | 189 passed in 1365 s | 4 Nov |
 | `test_disease_inputs.py` and `test_api.py` with the overview change | 33 passed | 5 Nov |
 | `test_evidence_ids.py`, `test_prototype.py`, `test_clean_reply.py` with the overview change | 17 passed | 5 Nov |
-| Full suite after #55 to #59 and the overview change (195 tests) | **Not run yet.** Run once before the evaluation and record the number here | |
+| Full suite after #55 to #59 and the overview change (199 tests) | **Not run yet.** Run once before the evaluation and record the number here | |
 
 ### 2.4 Checks on the 900 workbooks (not part of pytest)
 
 | Script | What it does | Last result |
 |---|---|---|
 | `python scripts\range_check.py <folder>` | Findings per patient, tier counts, findings using the wrong disease's measure | 85 of 900 patients with a finding (9.4%); 89 findings; 0 from the wrong disease |
-| `python scripts\threshold_check.py <folder> 1.5 1.0 0.8` | How many patients the recent-change check flags at each threshold | Re-test due 12 Nov |
+| `python scripts\threshold_check.py <folder> 1.5 1.0 0.8` | How many patients the recent-change check flags at each threshold | Re-tested 15 Nov with the persistence rule: 0 / 2 / 17 patients at 1.5 / 1.0 / 0.8 (`docs/results/threshold_retest.md`) |
 | `python scripts\verify_sections.py <folder>` | Section checks for every finding | `docs/results/section_checks.csv` |
 | `python scripts\assistant_test.py` | 250 assistant answers on the demo patients (needs the local model) | `docs/safety-test-results.md` |
 | `python scripts\validate_scenarios.py` | The three validation scenarios | `docs/results/validation_summary.md` |
