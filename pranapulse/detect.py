@@ -9,7 +9,7 @@ from . import forecast
 from . import reference as ref
 from .explain import check_language
 from .loader import Patient
-from .signals import CLUSTERS, MAX_TREND_P, MIN_EFFECT, RECENT_DAYS, RECENT_MIN_EFFECT, SIGNALS, WINDOW_DAYS
+from .signals import CLUSTERS, MAX_TREND_P, MIN_EFFECT, RECENT_DAYS, RECENT_MIN_EFFECT, RECENT_PERSIST_SHARE, SIGNALS, WINDOW_DAYS
 
 RANK = {"Sufficient": 2, "Limited": 1, "Insufficient": 0}
 
@@ -185,6 +185,19 @@ def _join(items):
     return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
 
 
+def _persists(s, r_start, end, base_mean, sd, bad):
+    """The change must hold in both of the latest two weeks, not just one: each week has to sit on the same side of
+    the baseline and show at least RECENT_PERSIST_SHARE of the distance the threshold asks for."""
+    mid = r_start + pd.Timedelta(days=RECENT_DAYS // 2)
+    for part in (s[r_start:mid - pd.Timedelta(days=1)].dropna(), s[mid:end].dropna()):
+        if len(part) < 3:
+            return False
+        effect = (float(part.mean()) - base_mean) / sd
+        if np.sign(effect) != bad or abs(effect) < RECENT_PERSIST_SHARE * RECENT_MIN_EFFECT:
+            return False
+    return True
+
+
 def recent_check(p: Patient, key: str):
     """Latest RECENT_DAYS against the patient's own average over the WINDOW_DAYS before them (the baseline).
     Returns a dict when the latest readings moved in the concerning direction, else None."""
@@ -205,6 +218,8 @@ def recent_check(p: Patient, key: str):
     diff = float(rec.mean() - base.mean())
     effect = diff / sd
     if np.sign(diff) != sig.bad or abs(diff) < sig.min_abs or abs(effect) < RECENT_MIN_EFFECT:
+        return None
+    if not _persists(s, r_start, end, float(base.mean()), sd, sig.bad):
         return None
     flag = "Sufficient" if len(base) >= 72 and len(rec) >= 11 else "Limited"
     return {"sig": sig, "base": float(base.mean()), "rec": float(rec.mean()), "diff": diff, "effect": effect,

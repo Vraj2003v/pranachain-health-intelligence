@@ -22,7 +22,7 @@ is which readings are used and how far back we look.
 | Limits | Few days with readings gives "Limited" or no finding | Same; lab results are few (every few months) | Needs at least 4 cycles; no daily readings |
 
 ## Open decisions (for the team to settle before Mon 2 Nov)
-- **The 1.5x threshold is a placeholder.** On 900 workbooks the recent check flags 0 patients at 1.5x, 2 at 1.0x and 28 at 0.8x. The threshold decides how many people are flagged.
+- **The 1.5x threshold is a placeholder.** On 900 workbooks the recent check flags 0 patients at 1.5x, 2 at 1.0x and 26 at 0.8x. The threshold decides how many people are flagged.
 - **Longer baseline after a history event.** The partner said a year of data is only appropriate when the history shows an event such as surgery. This is not built yet. Proposal: if the history sheet lists such an event, start the baseline after it.
 - **Women's health window.** The cycle check currently uses every cycle recorded. Proposal: use the most recent 6 cycles, so old cycles do not hide a recent change.
 
