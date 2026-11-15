@@ -27,6 +27,6 @@ Context from our own runs: on the demo laptop the 8B model took about 20 s per a
 |---|---|
 | 1.5 | 0 |
 | 1.0 | 2 |
-| 0.8 | 28 |
+| 0.8 | 26 |
 
-Recommended: 0.8, because 1.5 flags nobody (so the recent-change check would never show anything) and 1.0 flags only 2 of 900, while 0.8 flags 28 (about 3%) and matches the 0.8 effect size the first-vs-last check already uses. The team confirms the final value at the meeting.
+Recommended: 0.8, because 1.5 flags nobody (so the recent-change check would never show anything) and 1.0 flags only 2 of 900, while 0.8 flags 26 (about 3%) and matches the 0.8 effect size the first-vs-last check already uses. The team confirms the final value at the meeting.

@@ -21,7 +21,7 @@ recorded, and the three approaches were not clear enough. This plan fixes that.
 | 6. Partner questions and feedback | Everyone | Note-taker records every point |
 
 ## Questions for the partner
-1. Which threshold should flag a person: 1.5x, 1.0x or 0.8x the usual variation (0, 2 or 28 of 900 patients)?
+1. Which threshold should flag a person: 1.5x, 1.0x or 0.8x the usual variation (0, 2 or 26 of 900 patients)?
 2. For a person with surgery in their history, should the baseline start after it?
 3. Is the answer wording acceptable for a patient to read?
 4. What should the Final Pitch show first?

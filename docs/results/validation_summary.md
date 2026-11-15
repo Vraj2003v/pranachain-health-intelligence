@@ -19,11 +19,11 @@ Share of people who get a finding in a section, split by whether their recorded 
 
 | Section | With related history: people | With a finding | Without related history: people | With a finding |
 |---|---|---|---|---|
-| Cardiovascular / hypertension | 394 | 13 (3%) | 506 | 18 (4%) |
-| Metabolic health | 555 | 41 (7%) | 345 | 22 (6%) |
+| Cardiovascular / hypertension | 394 | 13 (3%) | 506 | 10 (2%) |
+| Metabolic health | 555 | 40 (7%) | 345 | 22 (6%) |
 | Women's health (PCOS) | 146 | 21 (14%) | 754 | 0 (0%) |
 
-110 of 900 people (12%) have at least one finding; 6 have a finding based on limited data.
+101 of 900 people (11%) have at least one finding; 5 have a finding based on limited data.
 
 ## 2. Known patterns (five demo patients)
 
