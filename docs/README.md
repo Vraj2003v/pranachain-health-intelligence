@@ -24,7 +24,7 @@ Test counts and commands are kept in one place: [week-5-tasks-and-tests.md](week
 |---|---|
 | [meeting-3-feedback.md](meeting-3-feedback.md) | Partner feedback, disease inputs, usual ranges, attention level, overview |
 | [results/range_check.md](results/range_check.md) | Findings across the 900 workbooks |
-| Rule in one line | A measure is flagged when its first-versus-last 90-day change is at least 0.8 times the patient's own variation and the trend p is 0.01 or lower; the latest 14 days are also compared with the prior 90 (threshold 1.5). No diagnosis and no risk score. |
+| Rule in one line | A measure is flagged when its first-versus-last 90-day change is at least 0.8 times the patient's own variation and the trend p is 0.01 or lower; the latest 14 days are also compared with the prior 90 (threshold 0.8, with a persistence rule). No diagnosis and no risk score. |
 
 ## 4. Testing and verification
 | Document | What it covers |
