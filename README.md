@@ -102,14 +102,16 @@ At each checkpoint: show what works, what doesn't yet work, what was learned, an
 ## Repository Structure
 
 ```
-├── docs/                    # Architecture notes, checkpoint write-ups, decisions
+├── pranapulse/              # Detection, evidence, wording checks, assistant
+├── api/                     # FastAPI backend (accounts, uploads, analysis)
+├── web/                     # React interface (built files in web/dist)
+├── scripts/                 # Validation and test scripts that run on the workbooks
+├── tests/                   # pytest checks
+├── docs/                    # Architecture notes, results, plans, user guide
 ├── data/
 │   └── sample/              # Small anonymized/synthetic samples only (never real patient data)
-└── requirements.txt         # Planned Python dependencies
+└── requirements.txt         # Python dependencies
 ```
-
-Code folders (`src/`, `app/`, `tests/`, etc.) will be added once the data model and approach are
-settled at the Discovery checkpoint, rather than committed empty ahead of time.
 
 ## Team — Group 11 (PranaPulse)
 
@@ -138,6 +140,23 @@ for the checks. Thresholds in `pranapulse/signals.py` are placeholders pending c
 
 ### Optional: local model for the wording
 Install [Ollama](https://ollama.com), run `ollama pull llama3.1:8b`, keep Ollama running, then switch on **Explain with local model** in the app sidebar. Only computed facts are sent, nothing leaves the computer, every reply must pass the wording check, and the app falls back to the standard text on any failure.
+
+## Start here: set up from a fresh clone
+Use this after cloning (or re-cloning) the repository. Python 3.10 or newer is needed; Node is only needed to change the interface.
+```
+git clone https://github.com/Vraj2003v/pranachain-health-intelligence.git
+cd pranachain-health-intelligence
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python -m pytest -q tests/test_threshold.py tests/test_prototype.py tests/test_clean_reply.py tests/test_evidence_ids.py   # a few seconds
+python -m uvicorn api.main:app --port 8000
+```
+Open http://localhost:8000, create an account and press **Try demo patients**. The first account becomes the administrator.
+- The full test suite (`python -m pytest`) takes from under a minute to several minutes depending on the machine (36 seconds on a fast server; 17 minutes was recorded on 10 Nov). Run it before a pull request, not after every change.
+- The 1,000 patient workbooks are not in the repository. Put them in `data/raw/` (create the folder) to run the scripts in `scripts/` (for example `python scripts/validate_scenarios.py data/raw 900`).
+- The Streamlit prototype (`streamlit run app.py`) is the older interface. Use the React app above.
+- If a clone made before the history rewrite shows "diverged" or odd commits, delete it and clone again.
 
 ## Run the app (React interface + Python API)
 The interface is a React app (`web/`) served by a FastAPI backend (`api/`) that wraps the detection code in `pranapulse/`.
