@@ -27,8 +27,17 @@ The repository history was rewritten, so every clone made before it has to be de
 | First account | Became the administrator, as the README says. A second account was made for the patient test (see `patient-account-test.md`). |
 | `python docs/progress_log/build_log.py` | Works (needs openpyxl, which `requirements.txt` installs). The `.xlsx` is ignored by git (`*.xlsx` in `.gitignore`), so it is not committed. |
 
+## Third run: GitHub Codespace (Krish, 15 Nov)
+The Codespace was created from `main` and set itself up with the `.devcontainer` settings, so none of the README steps had to be typed.
+
+| Step | Result |
+|---|---|
+| Create codespace on main | Works. Python 3.11.18. |
+| Automatic set-up (`postCreateCommand`): `pip install`, `npm ci && npm run build` in `web/`, full `pytest` | Works, about 3 minutes in total. |
+| Full test suite (run by the set-up) | **199 passed, 213 warnings in 59.39 s.** The warnings include a `Pandas4Warning` from `pranapulse/loader.py` line 53 (the `join` in the daily loader); no test failed. |
+| App (`postAttachCommand`) | Starts by itself on port 8000 and opens in the browser at the forwarded address; the sign-in page loads. |
+
+Different from the laptop: in a Codespace there is no venv step and nothing to type, and the full suite runs during set-up. The test output is only in the creation log (**Ctrl+Shift+P → View Creation Log**), which is easy to miss. The README could say this in one line.
+
 ## Other clones
 - Harsh and Bhavya confirmed they deleted their old clones and cloned again.
-
-## Still to do by hand (needs a person)
-- Repeat the same steps in a new GitHub Codespace and note anything different.
