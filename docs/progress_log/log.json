@@ -420,8 +420,8 @@
      "week": 6,
      "task": "Test the patient account on desktop and phone; add the fresh-clone steps to the README and the overview table to the user guide; record the clean clone test; update the progress log",
      "evidence": "Branch krish-readme-guide (pull request for issues #64 and #68): README.md, docs/user-guide.md, docs/results/clean-clone-test.md, docs/results/patient-account-test.md, docs/progress_log",
-     "result": "Completed: patient account tested on desktop and phone view, 9 problems listed in docs/results/patient-account-test.md; README, user guide and clean clone notes (with a Windows run) committed. Codespace re-test still to do",
-     "next": "Codespace re-test; review Harsh's pull request when it is opened"
+     "result": "Completed: patient account tested on desktop and phone view, 9 problems listed in docs/results/patient-account-test.md; clean clone repeated on Windows and in a Codespace (199 tests passed in 59 s); README, user guide and progress log committed",
+     "next": "Review Harsh's pull request when it is opened"
     }
    ]
   }
