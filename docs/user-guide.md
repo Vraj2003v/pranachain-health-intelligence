@@ -93,3 +93,12 @@ In an area's detail, the summary above the graph changes with the measure tab (f
 
 ### All measures in this area
 Under each disease area you now see every measure that belongs to it, with the latest value, the usual range and where the value sits. A value that stays outside its range is listed here even when it did not change, so it is not a finding. A dot on a measure tab means that measure has a finding.
+
+### The overview table in each area
+Each disease card ends with a table of every measure for that area. The columns are:
+- **Measure**: the measure's name. A grey **also considered** label means the project kickoff listed this measure for the disease. It is shown for context only and does not create findings on its own.
+- **Latest**: the average of the last 90 days, with its unit.
+- **Usual range**: the range often used for that measure. It is context, not a diagnosis, and the project team has not yet confirmed these ranges with the partner.
+- **Position**: **Above**, **Below** or **Within** the usual range, **Own baseline only** when no range applies, or **Not enough data**.
+- **Changed**: **Yes, see finding** when a finding involves this measure, otherwise **No**.
+A value can sit outside its range and still say **No** under Changed. It is shown because it is outside the range, but it is not a finding, because findings look at change.
