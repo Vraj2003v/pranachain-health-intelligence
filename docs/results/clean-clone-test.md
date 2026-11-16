@@ -18,6 +18,17 @@ The repository history was rewritten, so every clone made before it has to be de
 5. The "Repository Structure" section still described an empty project. Updated to the real folders.
 6. Old clones: added a line to delete and clone again after the rewrite.
 
+## Second run: Windows laptop (Krish, 15 Nov)
+| Step | Result |
+|---|---|
+| Delete the old clone, `git clone` | Works. |
+| `python -m venv .venv`, `.venv\Scripts\activate`, `pip install -r requirements.txt` | Works with Python 3.13 (the first run used 3.11). About 4 minutes. |
+| `python -m uvicorn api.main:app --port 8000` | Starts; the page at `http://localhost:8000` loads. |
+| First account | Became the administrator, as the README says. A second account was made for the patient test (see `patient-account-test.md`). |
+| `python docs/progress_log/build_log.py` | Works (needs openpyxl, which `requirements.txt` installs). The `.xlsx` is ignored by git (`*.xlsx` in `.gitignore`), so it is not committed. |
+
+## Other clones
+- Harsh and Bhavya confirmed they deleted their old clones and cloned again.
+
 ## Still to do by hand (needs a person)
 - Repeat the same steps in a new GitHub Codespace and note anything different.
-- Confirm Harsh and Bhavya have deleted their old clones and cloned again (`git log --oneline` should match the commit list on GitHub).
