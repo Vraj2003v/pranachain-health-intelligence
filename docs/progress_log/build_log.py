@@ -53,22 +53,26 @@ for r, key, bold in [(2, "subtitle", True), (3, "team", False)]:
     c = ws.cell(r, 1, data[key]); c.font = F(bold=bold); c.alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[r].height = 18
 
-RANGE = {"1": "Sep 28 - Oct 4", "2-3": "Oct 5 - Oct 18", "4": "Oct 19 - Oct 25"}
+ENDING = {"Oct 4, 2026": "Sep 28 - Oct 4", "Oct 18, 2026": "Oct 5 - Oct 18", "Oct 25, 2026": "Oct 19 - Oct 25",
+          "Nov 1, 2026": "Oct 26 - Nov 1", "Nov 8, 2026": "Nov 2 - Nov 8", "Nov 15, 2026": "Nov 9 - Nov 15"}
+RANGE = {"1": "Sep 28 - Oct 4", "2-3": "Oct 5 - Oct 18", "4": "Oct 19 - Nov 1", "5": "Nov 2 - Nov 8", "6": "Nov 9 - Nov 15"}
 def wk(w):
     w = str(w)
-    return f"Week {w}\n{RANGE[w]}" if w in RANGE else f"Week {w}"
+    return RANGE.get(w) or RANGE.get(w.split()[0], w)
 
-heads = ["Week", "Week ending", "What we planned", "What we built / completed", "Evidence", "What changed", "Next step"]
+heads = ["Dates", "", "What we planned", "What we built / completed", "Evidence", "What changed", "Next step"]
 for i, h in enumerate(heads, 1):
     c = ws.cell(5, i, h); c.font = F(bold=True); c.fill = PatternFill("solid", fgColor=BLUE); c.border = box
     c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+ws.merge_cells(start_row=5, start_column=1, end_row=5, end_column=2)
 ws.row_dimensions[5].height = 24
 r = 6
 for t in data["team_log"]:
-    vals = [wk(t["week"]), t["ending"], t["planned"], t["built"], t["evidence"], t["changed"], t["next"]]
+    vals = [ENDING.get(t["ending"], t["ending"]), "", t["planned"], t["built"], t["evidence"], t["changed"], t["next"]]
     for i, v in enumerate(vals, 1):
         c = ws.cell(r, i, v); c.font = F(); c.border = box
         c.alignment = Alignment(horizontal="center" if i <= 2 else "left", vertical="top", wrap_text=True)
+    ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=2)
     ws.row_dimensions[r].height = est_height((t["planned"], 32), (t["built"], 56), (t["evidence"], 38), (t["changed"], 40), (t["next"], 36))
     r += 1
 
@@ -79,7 +83,7 @@ for p in data["people"]:
     c = ws.cell(r, 1, f'{p["name"]}  |  {p["role"]}'); c.font = F(bold=True, color=NAVY); c.alignment = Alignment(horizontal="left", vertical="center")
     ws.row_dimensions[r].height = 20; r += 1
     # columns: Week | My task (B:C) | Evidence (D) | Result (E) | Next task (F:G)
-    for col, h in [(1, "Week"), (2, "My task"), (4, "Evidence"), (5, "Result"), (6, "Next task")]:
+    for col, h in [(1, "Dates"), (2, "My task"), (4, "Evidence"), (5, "Result"), (6, "Next task")]:
         c = ws.cell(r, col, h); c.font = F(bold=True); c.fill = PatternFill("solid", fgColor=BLUE); c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     for a, b in [(2, 3), (6, 7)]:
         ws.merge_cells(start_row=r, start_column=a, end_row=r, end_column=b)
