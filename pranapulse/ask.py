@@ -179,6 +179,20 @@ def _numbers_ok(text: str, allowed: str) -> bool:
     return all(n.replace(",", "") in known or (n.isdigit() and 1 <= int(n) <= 10) for n in NUM.findall(text))
 
 
+ID = re.compile(r"\b[FE]\d+\b")
+
+
+def _ids_ok(text: str, allowed: str) -> bool:
+    """Every finding or evidence ID (F1, E3, ...) in the reply must be one of the IDs in the supplied facts."""
+    known = set(ID.findall(allowed))
+    return all(i in known for i in ID.findall(text))
+
+
+def reply_ok(text, allowed: str) -> bool:
+    """A model reply is used only if it has no banned wording and cites only numbers and IDs from the patient's own findings."""
+    return bool(text) and not check_language(text) and _numbers_ok(text, allowed) and _ids_ok(text, allowed)
+
+
 def _pick(results, question, n=5, area=None):
     """Keep the prompt short (long prompts are what make a CPU model slow): measures named in the question, then the biggest changes.
     Only measures that belong to the disease area being discussed are included, so an unrelated measure never reaches the model."""
@@ -209,14 +223,15 @@ def _ai(question, base, insights, results, history, area):
     talk = "\n".join(f"{h.get('who')}: {h.get('text')}" for h in list(history)[-6:])
     prompt = (f"Conversation so far:\n{talk}\n\nPatient question: {question}\n\nFacts:\n{compact}\n\n"
               f"Safe draft answer (you may reword it, keep every number):\n{base}")
-    try:
-        text = llm._generate(prompt, llm.DEFAULT_MODEL, llm.OLLAMA_URL, 90, CHAT_SYSTEM)
-    except Exception:
-        return None
-    text = clean_reply(text) if text else text
-    if not text or check_language(text) or not _numbers_ok(text, allowed):
-        return None
-    return text
+    for _ in range(2):  # one retry, then the caller falls back to the template answer
+        try:
+            text = llm._generate(prompt, llm.DEFAULT_MODEL, llm.OLLAMA_URL, 90, CHAT_SYSTEM)
+        except Exception:
+            return None
+        text = clean_reply(text) if text else text
+        if reply_ok(text, allowed):
+            return text
+    return None
 
 
 def answer(question: str, insights, area: str | None = None, use_model: bool = True, results=None, history=()):
