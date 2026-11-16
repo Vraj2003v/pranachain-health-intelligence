@@ -62,7 +62,7 @@ def pct(a, b):
     return f"{100 * a / b:.0f}%" if b else "n/a"
 
 
-THRESHOLDS = [RECENT_MIN_EFFECT, 0.8]     # the value in signals.py now, and the value under discussion
+THRESHOLDS = [RECENT_MIN_EFFECT, 1.5]     # the value in signals.py now, and the earlier stricter value for comparison
 
 
 def history_table(rows_by_thr, n):

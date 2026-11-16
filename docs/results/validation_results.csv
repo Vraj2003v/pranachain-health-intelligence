@@ -1,4 +1,4 @@
-patient,Cardiovascular / hypertension | finding at 1.5,Metabolic health | finding at 1.5,Women's health (PCOS) | finding at 1.5,Cardiovascular / hypertension | finding at 0.8,Metabolic health | finding at 0.8,Women's health (PCOS) | finding at 0.8,Cardiovascular / hypertension | related history,Metabolic health | related history,Women's health (PCOS) | related history
+patient,Cardiovascular / hypertension | finding at 0.8,Metabolic health | finding at 0.8,Women's health (PCOS) | finding at 0.8,Cardiovascular / hypertension | finding at 1.5,Metabolic health | finding at 1.5,Women's health (PCOS) | finding at 1.5,Cardiovascular / hypertension | related history,Metabolic health | related history,Women's health (PCOS) | related history
 PC0001,no,no,no,no,no,no,yes,yes,no
 PC0002,no,no,no,no,no,no,yes,yes,no
 PC0003,no,no,no,no,no,no,yes,yes,no
@@ -118,7 +118,7 @@ PC0116,no,no,no,no,no,no,yes,yes,no
 PC0117,no,no,no,no,no,no,yes,yes,no
 PC0118,no,yes,no,no,yes,no,yes,yes,no
 PC0119,no,no,no,no,no,no,yes,yes,no
-PC0120,no,no,no,yes,no,no,yes,yes,no
+PC0120,yes,no,no,no,no,no,yes,yes,no
 PC0121,no,no,no,no,no,no,no,yes,no
 PC0122,no,no,no,no,no,no,yes,yes,no
 PC0123,no,no,no,no,no,no,no,yes,no
@@ -199,7 +199,7 @@ PC0197,no,no,no,no,no,no,yes,yes,no
 PC0198,no,no,no,no,no,no,no,yes,no
 PC0199,no,no,no,no,no,no,yes,yes,no
 PC0200,no,no,no,no,no,no,no,yes,no
-PC0301,no,no,no,yes,no,no,yes,yes,no
+PC0301,yes,no,no,no,no,no,yes,yes,no
 PC0302,no,no,no,no,no,no,no,no,no
 PC0303,no,no,yes,no,no,yes,no,yes,yes
 PC0304,no,no,no,no,no,no,no,no,yes
@@ -286,7 +286,7 @@ PC0384,no,no,no,no,no,no,no,no,no
 PC0385,no,no,no,no,no,no,yes,yes,no
 PC0386,no,no,no,no,no,no,yes,yes,no
 PC0387,no,no,no,no,no,no,yes,yes,yes
-PC0388,no,no,no,yes,no,no,no,no,no
+PC0388,yes,no,no,no,no,no,no,no,no
 PC0389,no,no,no,no,no,no,no,yes,no
 PC0390,no,no,no,no,no,no,no,no,no
 PC0391,no,no,no,no,no,no,no,no,no
@@ -304,13 +304,13 @@ PC0402,no,no,no,no,no,no,yes,no,yes
 PC0403,no,no,no,no,no,no,yes,yes,no
 PC0404,no,no,no,no,no,no,yes,no,no
 PC0405,no,no,no,no,no,no,no,no,no
-PC0406,no,no,no,yes,no,no,no,no,no
+PC0406,yes,no,no,no,no,no,no,no,no
 PC0407,no,no,no,no,no,no,no,no,no
 PC0408,no,no,no,no,no,no,no,no,no
 PC0409,no,no,no,no,no,no,yes,yes,no
 PC0410,no,no,no,no,no,no,no,no,no
 PC0411,no,no,no,no,no,no,no,no,yes
-PC0412,no,no,no,yes,no,no,yes,yes,no
+PC0412,yes,no,no,no,no,no,yes,yes,no
 PC0413,no,no,no,no,no,no,no,no,no
 PC0414,no,no,no,no,no,no,no,no,no
 PC0415,no,no,no,no,no,no,no,yes,no
@@ -331,7 +331,7 @@ PC0429,no,no,no,no,no,no,yes,yes,no
 PC0430,no,no,no,no,no,no,no,yes,no
 PC0431,no,no,no,no,no,no,yes,yes,no
 PC0432,no,no,no,no,no,no,yes,no,no
-PC0433,no,yes,no,yes,yes,no,yes,yes,no
+PC0433,yes,yes,no,no,yes,no,yes,yes,no
 PC0434,no,yes,no,no,yes,no,no,yes,no
 PC0435,no,no,no,no,no,no,no,no,no
 PC0436,no,no,no,no,no,no,yes,yes,yes
@@ -424,7 +424,7 @@ PC0522,no,no,no,no,no,no,no,yes,no
 PC0523,no,no,no,no,no,no,no,yes,no
 PC0524,no,no,no,no,no,no,no,yes,no
 PC0525,no,no,no,no,no,no,no,yes,no
-PC0526,no,no,no,yes,no,no,yes,yes,no
+PC0526,yes,no,no,no,no,no,yes,yes,no
 PC0527,no,no,no,no,no,no,no,yes,no
 PC0528,no,no,no,no,no,no,no,yes,no
 PC0529,no,no,no,no,no,no,no,yes,yes
@@ -434,7 +434,7 @@ PC0532,no,no,no,no,no,no,no,yes,no
 PC0533,no,no,no,no,no,no,no,yes,no
 PC0534,no,no,no,no,no,no,no,yes,no
 PC0535,no,no,no,no,no,no,no,yes,no
-PC0536,no,no,no,yes,no,no,yes,yes,no
+PC0536,yes,no,no,no,no,no,yes,yes,no
 PC0537,no,no,no,no,no,no,no,yes,no
 PC0538,no,no,no,no,no,no,no,yes,no
 PC0539,no,no,no,no,no,no,no,yes,no
@@ -469,7 +469,7 @@ PC0567,no,no,no,no,no,no,no,yes,no
 PC0568,no,no,no,no,no,no,yes,yes,no
 PC0569,no,no,no,no,no,no,yes,yes,no
 PC0570,no,no,no,no,no,no,no,yes,no
-PC0571,no,no,no,yes,no,no,yes,yes,no
+PC0571,yes,no,no,no,no,no,yes,yes,no
 PC0572,no,no,yes,no,no,yes,no,yes,yes
 PC0573,no,no,no,no,no,no,yes,yes,no
 PC0574,no,no,no,no,no,no,yes,yes,no
@@ -477,7 +477,7 @@ PC0575,no,no,no,no,no,no,no,yes,no
 PC0576,no,no,no,no,no,no,no,yes,no
 PC0577,no,no,no,no,no,no,yes,yes,no
 PC0578,no,no,yes,no,no,yes,no,yes,yes
-PC0579,no,no,no,yes,no,no,yes,yes,no
+PC0579,yes,no,no,no,no,no,yes,yes,no
 PC0580,no,no,no,no,no,no,no,yes,no
 PC0581,no,no,no,no,no,no,no,yes,no
 PC0582,no,no,no,no,no,no,yes,yes,no
@@ -496,10 +496,10 @@ PC0594,no,no,no,no,no,no,no,yes,no
 PC0595,no,no,yes,no,no,yes,no,yes,yes
 PC0596,no,no,no,no,no,no,no,yes,no
 PC0597,no,no,no,no,no,no,no,yes,no
-PC0598,no,no,no,yes,no,no,no,yes,no
+PC0598,yes,no,no,no,no,no,no,yes,no
 PC0599,no,no,no,no,no,no,yes,yes,no
 PC0600,no,no,no,no,no,no,no,yes,no
-PC0601,no,no,no,yes,no,no,yes,yes,no
+PC0601,yes,no,no,no,no,no,yes,yes,no
 PC0602,no,no,no,no,no,no,no,no,no
 PC0603,no,no,yes,no,no,yes,no,yes,yes
 PC0604,no,no,no,no,no,no,no,no,yes
@@ -586,7 +586,7 @@ PC0684,no,no,no,no,no,no,no,no,no
 PC0685,no,no,no,no,no,no,yes,yes,no
 PC0686,no,no,no,no,no,no,yes,yes,no
 PC0687,no,no,no,no,no,no,yes,yes,yes
-PC0688,no,no,no,yes,no,no,no,no,no
+PC0688,yes,no,no,no,no,no,no,no,no
 PC0689,no,no,no,no,no,no,no,yes,no
 PC0690,no,no,no,no,no,no,no,no,no
 PC0691,no,no,no,no,no,no,no,no,no
@@ -599,7 +599,7 @@ PC0697,no,no,no,no,no,no,yes,yes,no
 PC0698,no,no,no,no,no,no,yes,yes,yes
 PC0699,no,no,no,no,no,no,yes,yes,no
 PC0700,no,no,no,no,no,no,no,no,no
-PC0701,no,no,no,yes,no,no,yes,yes,no
+PC0701,yes,no,no,no,no,no,yes,yes,no
 PC0702,no,no,no,no,no,no,no,no,no
 PC0703,no,no,yes,no,no,yes,no,yes,yes
 PC0704,no,no,no,no,no,no,no,no,yes
@@ -686,7 +686,7 @@ PC0784,no,no,no,no,no,no,no,no,no
 PC0785,no,no,no,no,no,no,yes,yes,no
 PC0786,no,no,no,no,no,no,yes,yes,no
 PC0787,no,no,no,no,no,no,yes,yes,yes
-PC0788,no,no,no,yes,no,no,no,no,no
+PC0788,yes,no,no,no,no,no,no,no,no
 PC0789,no,no,no,no,no,no,no,yes,no
 PC0790,no,no,no,no,no,no,no,no,no
 PC0791,no,no,no,no,no,no,no,no,no
@@ -730,7 +730,7 @@ PC0828,no,no,no,no,no,no,no,no,no
 PC0829,no,no,no,no,no,no,yes,no,no
 PC0830,no,no,no,no,no,no,no,yes,no
 PC0831,no,no,no,no,no,no,no,no,no
-PC0832,no,no,no,yes,no,no,no,no,no
+PC0832,yes,no,no,no,no,no,no,no,no
 PC0833,no,no,no,no,no,no,yes,no,no
 PC0834,no,no,no,no,no,no,no,no,no
 PC0835,no,yes,no,no,yes,no,no,no,no
@@ -799,7 +799,7 @@ PC0897,no,no,no,no,no,no,yes,yes,no
 PC0898,no,no,no,no,no,no,yes,yes,yes
 PC0899,no,no,no,no,no,no,yes,yes,no
 PC0900,no,no,no,no,no,no,no,no,no
-PC0901,no,no,no,yes,no,no,yes,yes,no
+PC0901,yes,no,no,no,no,no,yes,yes,no
 PC0902,no,no,no,no,no,no,no,no,no
 PC0903,no,no,yes,no,no,yes,no,yes,yes
 PC0904,no,no,no,no,no,no,no,no,yes
