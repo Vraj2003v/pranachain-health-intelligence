@@ -5,16 +5,6 @@ Run on 900 synthetic workbooks. Neither check measures clinical accuracy: the da
 ## 1. History consistency
 Share of people who get a finding in a section, split by whether their recorded history relates to that section (a history event or a medication indication that mentions the section's keywords, see `HISTORY_WORDS` in `scripts/validate_scenarios.py`). A section that reports more often for people whose history relates to it agrees with the record. A small or zero difference means the section does not separate people well and needs refinement.
 
-### Recent-change threshold 1.5 x the baseline's own variation
-
-| Section | With related history: people | With a finding | Without related history: people | With a finding |
-|---|---|---|---|---|
-| Cardiovascular / hypertension | 394 | 2 (1%) | 506 | 4 (1%) |
-| Metabolic health | 555 | 40 (7%) | 345 | 22 (6%) |
-| Women's health (PCOS) | 146 | 21 (14%) | 754 | 0 (0%) |
-
-85 of 900 people (9%) have at least one finding; 5 have a finding based on limited data.
-
 ### Recent-change threshold 0.8 x the baseline's own variation
 
 | Section | With related history: people | With a finding | Without related history: people | With a finding |
@@ -24,6 +14,16 @@ Share of people who get a finding in a section, split by whether their recorded 
 | Women's health (PCOS) | 146 | 21 (14%) | 754 | 0 (0%) |
 
 101 of 900 people (11%) have at least one finding; 5 have a finding based on limited data.
+
+### Recent-change threshold 1.5 x the baseline's own variation
+
+| Section | With related history: people | With a finding | Without related history: people | With a finding |
+|---|---|---|---|---|
+| Cardiovascular / hypertension | 394 | 2 (1%) | 506 | 4 (1%) |
+| Metabolic health | 555 | 40 (7%) | 345 | 22 (6%) |
+| Women's health (PCOS) | 146 | 21 (14%) | 754 | 0 (0%) |
+
+85 of 900 people (9%) have at least one finding; 5 have a finding based on limited data.
 
 ## 2. Known patterns (five demo patients)
 

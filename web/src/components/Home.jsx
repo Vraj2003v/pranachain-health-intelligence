@@ -6,6 +6,7 @@ import AreaChart, { defaultKey } from "./AreaChart.jsx";
 import MeasureSummary from "./MeasureSummary.jsx";
 import Overview from "./Overview.jsx";
 import Ask from "./Ask.jsx";
+import Dashboard, { when, short } from "./Dashboard.jsx";
 
 const T = (d) => Date.parse(d + "T00:00:00");
 const attClass = (l) => (l.startsWith("Worth discussing") ? "out" : l.startsWith("Worth watching") ? "in" : "none");
@@ -60,6 +61,8 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
       </div>
       <p className="muted small">Patient {detail.patient.id}, {detail.patient.age ?? "age unknown"}, {detail.patient.sex ?? "sex unknown"}. Readings from {detail.patient.start} to {detail.patient.end}.</p>
 
+      <Dashboard detail={detail} />
+
       {coach && (
         <aside className="starter" aria-label="Getting started">
           <div className="starthead"><b>Getting started</b><span className="muted small">{done.length} of {STEPS.length} done</span>
@@ -77,9 +80,10 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
               aria-expanded={on} onClick={() => { setOpen(on ? null : a.scenario); mark("area"); }}>
               <span className="ahead"><span className="aicon" aria-hidden>{a.icon}</span><b>{a.title}</b></span>
               <span className="asub">{a.sub}</span>
-              <span className={"chip " + (hit ? "warn" : "ok")}>{hit ? `${items.length} change${items.length > 1 ? "s" : ""} found` : "No clear change"}</span>
+              {(hit || !(detail.attention?.[a.scenario] && !detail.attention[a.scenario].level.startsWith("No clear"))) && <span className={"chip " + (hit ? "warn" : "ok")}>{hit ? `${items.length} change${items.length > 1 ? "s" : ""} found` : "No clear change"}</span>}
               {detail.attention?.[a.scenario] && !detail.attention[a.scenario].level.startsWith("No clear") && <span className={"chip tier " + attClass(detail.attention[a.scenario].level)} title={detail.attention[a.scenario].note}>{detail.attention[a.scenario].level}</span>}
               <span className="asum">{hit ? items[0].summary : a.calm}</span>
+              {hit && when(items[0]).last && <span className="awhen">Changed by {short(when(items[0]).last[1])}</span>}
               <Spark d={detail} area={a} />
               <span className="acta">{on ? "Hide details" : hit ? "See what changed" : "See your readings"}</span>
             </button>);
