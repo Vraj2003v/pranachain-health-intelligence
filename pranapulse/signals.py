@@ -9,7 +9,7 @@ WINDOW_DAYS = 90          # compare the first and last 90 days of the data windo
 MIN_EFFECT = 0.8          # change must exceed 0.8 x the patient's own daily variation
 MAX_TREND_P = 0.01        # and show a consistent weekly trend (Kendall tau p-value)
 RECENT_DAYS = 14          # latest readings compared with the 90 days before them (the baseline)
-RECENT_MIN_EFFECT = 1.5   # the latest readings must sit 1.5 x the baseline's own daily variation from its average
+RECENT_MIN_EFFECT = 0.8   # the latest readings must sit 0.8 x the baseline's own daily variation from its average (same size as the first-vs-last check)
 RECENT_PERSIST_SHARE = 0.75  # each of the latest two weeks must also show this share of that distance, in the same direction
 FORECAST_WEEKS = 8
 
