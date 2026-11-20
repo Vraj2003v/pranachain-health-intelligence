@@ -1,3 +1,4 @@
+import { summariseNotes } from "./notes.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Logo from "./components/Logo.jsx";
 import { api } from "./api";
@@ -26,6 +27,7 @@ export default function App() {
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
   const [failed, setFailed] = useState({});
+  const [notes, setNotes] = useState([]);
   const [focus, setFocus] = useState(null);   // measure(s) chosen by the assistant
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [q, setQ] = useState("");
@@ -50,16 +52,17 @@ export default function App() {
   const loadDemo = () => run("Adding demo patients…", () => api.demo());
 
   const upload = async (fileList) => {
-    const files = [...fileList].filter((f) => /\.xlsx$/i.test(f.name));
-    if (!files.length) { setError("Choose .xlsx patient workbooks."); return; }
-    const all = {};
-    await run("Reading workbooks…", async () => {
+    const files = [...fileList].filter((f) => /\.(xlsx|pdf|csv)$/i.test(f.name));
+    if (!files.length) { setError("Choose patient workbooks (.xlsx) or reports (.pdf, .csv, .xlsx)."); return; }
+    const all = {}, note = [];
+    await run("Reading files…", async () => {
       for (let i = 0; i < files.length; i += 10) {
-        setBusy(`Reading workbooks… ${Math.min(i + 10, files.length)} of ${files.length}`);
-        Object.assign(all, (await api.upload(files.slice(i, i + 10))).failed);
+        setBusy(`Reading files… ${Math.min(i + 10, files.length)} of ${files.length}`);
+        const r = await api.upload(files.slice(i, i + 10));
+        Object.assign(all, r.failed); note.push(...(r.notes || []));
       }
     });
-    setFailed(all);
+    setFailed(all); setNotes(note);
   };
 
   const remove = (id) => run("Deleting…", () => api.remove(id));
@@ -91,7 +94,7 @@ export default function App() {
   if (user === undefined) return <div className="muted pad">Loading…</div>;
   if (user === null) return <Auth onDone={(u) => { setUser(u); setTab(viewFor(u.role).home); setError(null); }} />;
   if (!docs.length) {
-    return <Landing user={user} onDemo={loadDemo} onUpload={upload} onSignOut={signOut} busy={busy} error={error} failed={failed} />;
+    return <Landing user={user} onDemo={loadDemo} onUpload={upload} onSignOut={signOut} busy={busy} error={error} failed={failed} notes={notes} />;
   }
 
   const view = viewFor(user.role);
@@ -137,6 +140,7 @@ export default function App() {
         </div>
         {busy && <div className="banner">{busy}</div>}
         {error && <div className="banner err" onClick={() => setError(null)}>{error}</div>}
+        {notes.length > 0 && <div className="banner" onClick={() => setNotes([])}><b>Upload notes</b> (click to close)<ul className="notes">{summariseNotes(notes).map((l, i) => <li key={i}>{l}</li>)}</ul></div>}
         {Object.keys(failed).length > 0 && (
           <div className="banner err" onClick={() => setFailed({})}>Skipped: {Object.entries(failed).map(([f, w]) => `${f} (${w})`).join("; ")}</div>)}
 
