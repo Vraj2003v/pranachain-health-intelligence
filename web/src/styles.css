@@ -24,7 +24,7 @@ button, select, input { font: inherit; color: inherit; }
 .pitem { text-align: left; background: none; border: 0; border-radius: 10px; padding: 8px 10px; cursor: pointer; display: grid; grid-template-columns: 14px 1fr; column-gap: 8px; align-items: center; }
 .pitem .sub { grid-column: 2; font-size: .75rem; color: var(--muted); }
 .pitem:hover { background: var(--kind-bg); } .pitem.on { background: var(--brand); color: #fff; } .pitem.on .sub { color: #dbe8f5; }
-.dot { width: 10px; height: 10px; border-radius: 50%; } .dot.flag { background: #e8892b; } .dot.quiet { background: #b6bfca; }
+.dot { width: 10px; height: 10px; border-radius: 50%; } .dot.flag { background: #e8892b; } .dot.idle { background: #b6bfca; }
 .railfoot { display: flex; gap: 8px; }
 
 .main { padding: 22px clamp(14px, 3vw, 36px) 40px; min-width: 0; max-width: 1180px; width: 100%; }
