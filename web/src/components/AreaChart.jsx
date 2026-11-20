@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Area, Bar, BarChart, Brush, CartesianGrid, Cell, ComposedChart, LabelList, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, Bar, BarChart, Brush, CartesianGrid, Cell, ComposedChart, LabelList, Line, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmt } from "../api";
 import { mark } from "../progress.js";
 
@@ -39,6 +39,8 @@ export default function AreaChart({ d, area, onSelect }) {
   const [dots, setDots] = useState(true);
 
   const s = d.series[key];
+  // when this measure crossed its change threshold (a finding in this area has the date)
+  const onset = d.insights.filter((i) => i.scenario === area.scenario).flatMap((i) => i.onsets || []).find((o) => o.key === key);
   const rows = useMemo(() => {
     if (!s) return [];
     const all = s.rows.map((r) => ({ ...r, t: T(r.d) }));
@@ -98,8 +100,22 @@ export default function AreaChart({ d, area, onSelect }) {
           <XAxis dataKey="t" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={tick} minTickGap={40} />
           <YAxis domain={dom} tickFormatter={(v) => fmt(v, s.decimals)} width={54} />
           <Tooltip content={<Tip unit={s.unit} dec={s.decimals} />} />
+          {s.range && (s.range.low != null || s.range.high != null) && (
+            <ReferenceArea y1={s.range.low ?? dom[0]} y2={s.range.high ?? dom[1]} fill="#2e8b57" fillOpacity={0.12} stroke="none" ifOverflow="hidden"
+              label={{ value: `Usual range ${s.range.text}`, position: "insideTopLeft", fontSize: 11, fill: "#2e8b57" }} />)}
           {s.windows && <ReferenceLine y={s.windows.meanFirst} stroke="#14919b" strokeDasharray="5 4"
-            label={{ value: `Your usual: ${fmt(s.windows.meanFirst, s.decimals)}`, position: "insideTopLeft", fontSize: 11, fill: "#14919b" }} />}
+            label={{ value: `Your usual: ${fmt(s.windows.meanFirst, s.decimals)}`, position: "insideBottomRight", fontSize: 11, fill: "#14919b" }} />}
+          {onset && rows.length > 0 && (() => {
+            const t = Date.parse(onset.date + "T00:00:00"), lo = rows[0].t, hi = Math.max(...rows.filter((r) => r.v != null || r.w != null).map((r) => r.t));
+            const x1 = Math.max(t, lo);
+            return t <= hi ? (<>
+              <ReferenceArea x1={x1} x2={hi} fill="#c8553d" fillOpacity={0.1} stroke="none" ifOverflow="hidden" />
+              <ReferenceLine y={onset.threshold} stroke="#c8553d" strokeDasharray="2 4" ifOverflow="extendDomain"
+                label={{ value: "Change threshold", position: "insideBottomRight", fontSize: 11, fill: "#c8553d" }} />
+              {t >= lo && <ReferenceLine x={t} stroke="#c8553d" strokeWidth={2} ifOverflow="visible"
+                label={{ value: `Crossed on ${new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`, position: "insideTopLeft", fontSize: 12, fontWeight: 700, fill: "#c8553d" }} />}
+            </>) : null;
+          })()}
           {proj && <Area dataKey="band" name="95% range" stroke="none" fill="#e0a21f" fillOpacity={0.18} connectNulls isAnimationActive={false} />}
           {dots && <Line dataKey="v" stroke="none" dot={{ r: 1.8, fill: "#9db8bb", strokeWidth: 0 }} activeDot={false} isAnimationActive={false} />}
           <Line dataKey="w" stroke="#14919b" strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />
@@ -111,7 +127,9 @@ export default function AreaChart({ d, area, onSelect }) {
         <ul>
           <li><b>Thick teal line:</b> your weekly average.</li>
           <li><b>Small dots:</b> each day's reading.</li>
+          <li><b>Green band:</b> the usual range for this measure, for context only.</li>
           <li><b>Dashed teal line:</b> your own usual level from your first 90 days.</li>
+          <li><b>Red line and shading:</b> the day the change crossed the threshold (the dotted red level) and stayed past it.</li>
           <li><b>Amber dashed line and shading:</b> where the trend could go over the next 8 weeks if nothing changes. It is not a prediction.</li>
           <li><b>Handles under the chart:</b> drag to zoom into any stretch of time.</li>
         </ul>

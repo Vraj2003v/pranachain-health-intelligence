@@ -558,3 +558,56 @@ h1, .hero h1, .home h1 { font-family: var(--script); font-weight: 700; letter-sp
 .awhen { font-size: .8rem; font-weight: 600; color: var(--hue); }
 .home h1 { font-size: 2.1rem; letter-spacing: -.015em; }
 .lede { color: var(--muted); }
+
+/* dates of change */
+.sw.earlier { background: color-mix(in srgb, #9aa8b6 55%, var(--panel)); }
+.bar.over { top: 4px; height: 16px; right: 0; border-radius: 0 8px 8px 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, #c8553d 55%, transparent) 0 6px, color-mix(in srgb, #c8553d 35%, transparent) 6px 12px); }
+.pin { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: #c8553d; border: 3px solid var(--panel); box-shadow: 0 0 0 2px #c8553d; }
+.tl-date { font-size: 1rem; color: #c8553d; }
+.dp-foot { margin: 10px 0 0; }
+.awhen { display: grid; gap: 3px; font-size: .82rem; color: var(--ink); background: color-mix(in srgb, #c8553d 9%, var(--panel)); border-radius: 10px; padding: 8px 10px; }
+.awl { font-size: .72rem; font-weight: 700; color: #c8553d; }
+.awrow { display: flex; align-items: center; gap: 8px; } .awrow i { width: 8px; height: 8px; border-radius: 50%; background: #c8553d; flex: none; } .awrow b { margin-left: auto; padding-left: 8px; white-space: nowrap; }
+.whenlist { background: color-mix(in srgb, #c8553d 8%, var(--panel)); border: 1px solid color-mix(in srgb, #c8553d 30%, var(--line)); border-radius: 12px; padding: 10px 14px; margin: 8px 0; }
+.whenlist ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.whenlist li { display: grid; grid-template-columns: 112px 1fr; gap: 10px; align-items: baseline; }
+.wl-date { font-weight: 700; color: #c8553d; white-space: nowrap; }
+
+/* measures table */
+.ov-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 6px 0 12px; }
+.ov-stat { display: flex; align-items: baseline; gap: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; }
+.ov-stat b { font-size: 1.6rem; line-height: 1; } .ov-stat span { color: var(--muted); font-size: .8rem; line-height: 1.25; }
+.ov-stat.warn { border-color: #d4a017; } .ov-stat.warn b { color: #b07d00; } .ov-stat.bad { border-color: #c8553d; } .ov-stat.bad b { color: #c8553d; }
+.ovtable { border-collapse: separate; border-spacing: 0 6px; width: 100%; }
+.ovtable th, .ovtable td { white-space: normal; border-bottom: 0; background: var(--panel); padding: 10px 14px; vertical-align: middle; }
+.ovtable thead th { background: none; font-size: .78rem; padding: 0 14px 2px; }
+.ovtable tbody tr > :first-child { border-radius: 12px 0 0 12px; font-weight: 600; } .ovtable tbody tr > :last-child { border-radius: 0 12px 12px 0; }
+.ovtable tbody tr { box-shadow: 0 1px 2px rgba(20,30,45,.06); }
+.ovtable tr.chg > * { background: color-mix(in srgb, #c8553d 9%, var(--panel)); }
+.ovtable tr.chg > :first-child { box-shadow: inset 5px 0 0 #c8553d; }
+.ov-val { font-size: 1.15rem; font-weight: 700; white-space: nowrap !important; } .ov-val .u { font-size: .8rem; font-weight: 400; color: var(--muted); }
+.ov-pos { display: grid; gap: 6px; min-width: 190px; } .ov-pos .chip { justify-self: start; margin: 0; } .ov-pos .chip i { font-style: normal; }
+.rb-track { position: relative; height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--muted) 18%, transparent); }
+.rb-zone { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: color-mix(in srgb, #2e8b57 45%, transparent); }
+.rb-dot { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #2e8b57; border: 3px solid var(--panel); box-shadow: 0 0 0 1.5px var(--muted); }
+.rb-dot.above, .rb-dot.below { background: #d4a017; }
+.rb-text { color: var(--muted); }
+.ov-chg { display: flex; align-items: center; gap: 10px; } .ov-chg .chip { margin: 0; }
+@media (max-width: 760px) { .ovtable thead { display: none; } .ovtable, .ovtable tbody, .ovtable tr, .ovtable td, .ovtable th { display: block; } .ovtable tbody tr { margin-bottom: 10px; border-radius: 12px; overflow: hidden; background: var(--panel); } .ovtable tbody tr > * { border-radius: 0 !important; background: transparent !important; padding: 6px 14px; } .whenlist li { grid-template-columns: 1fr; gap: 0; } }
+
+/* steady measure card */
+.quiet { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; margin: 12px 0; background: var(--panel); box-shadow: 0 1px 2px rgba(20,30,45,.06); }
+.q-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; } .q-head h3 { margin: 0 6px 0 0; } .q-head .chip { margin: 0; }
+.q-stats { display: grid; grid-template-columns: 1fr auto 1fr 1fr; gap: 10px; align-items: stretch; }
+.q-stat { display: flex; flex-direction: column; justify-content: center; background: color-mix(in srgb, var(--muted) 9%, var(--panel)); border-radius: 12px; padding: 10px 14px; }
+.q-stat b { font-size: 1.7rem; line-height: 1.1; } .q-l { color: var(--muted); font-size: .78rem; font-weight: 600; } .q-u { color: var(--muted); font-size: .85rem; }
+.q-diff { background: color-mix(in srgb, #2e8b57 12%, var(--panel)); } .q-diff b { color: #2e8b57; }
+.q-arrow { align-self: center; color: var(--muted); font-size: 1.3rem; }
+.q-range { margin-top: 14px; display: grid; gap: 6px; } .q-range .rbar { display: grid; gap: 6px; }
+.q-range .rb-track { height: 12px; border-radius: 6px; } .q-range .rb-dot { width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+.q-notes { list-style: none; margin: 14px 0 6px; padding: 0; display: grid; gap: 8px; }
+.q-notes li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: start; }
+.q-ico { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-size: .8rem; font-weight: 700; color: #fff; background: #2e8b57; } .q-ico.warn { background: #d4a017; }
+@media (max-width: 760px) { .q-stats { grid-template-columns: 1fr 1fr; } .q-arrow { display: none; } .q-diff { grid-column: 1 / -1; } }
+
+.notes { margin: 6px 0 0; padding-left: 18px; } .notes li { margin: 2px 0; }

@@ -1,7 +1,8 @@
+import { summariseNotes } from "../notes.js";
 import { useRef, useState } from "react";
 import ThemeToggle from "./ThemeToggle.jsx";
 
-export default function Landing({ user, onDemo, onUpload, onSignOut, busy, error, failed }) {
+export default function Landing({ user, onDemo, onUpload, onSignOut, busy, error, failed, notes = [] }) {
   const input = useRef();
   const [over, setOver] = useState(false);
   return (
@@ -21,15 +22,16 @@ export default function Landing({ user, onDemo, onUpload, onSignOut, busy, error
       <div className={"drop" + (over ? " over" : "")}
         onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); onUpload(e.dataTransfer.files); }}>
-        <p><b>Drop patient workbooks (.xlsx) here</b></p>
-        <p className="muted">or choose files from your device. You can select many at once.</p>
+        <p><b>Drop patient workbooks or reports here</b></p>
+        <p className="muted">Workbooks (.xlsx), or single reports (.pdf, .csv, .xlsx) added one document at a time: lab results, blood pressure and heart-rate logs, wearable exports. You can select many at once.</p>
         <div className="row">
-          <button className="btn" disabled={!!busy} onClick={() => input.current.click()}>Upload workbooks</button>
+          <button className="btn" disabled={!!busy} onClick={() => input.current.click()}>Upload files</button>
           <button className="btn ghost" disabled={!!busy} onClick={onDemo}>Try demo patients</button>
         </div>
-        <input ref={input} type="file" accept=".xlsx" multiple hidden onChange={(e) => onUpload(e.target.files)} />
+        <input ref={input} type="file" accept=".xlsx,.pdf,.csv" multiple hidden onChange={(e) => onUpload(e.target.files)} />
       </div>
       {busy && <div className="banner">{busy}</div>}
+      {notes.length > 0 && <div className="banner"><b>Upload notes</b><ul className="notes">{summariseNotes(notes).map((l, i) => <li key={i}>{l}</li>)}</ul></div>}
       {error && <div className="banner err">{error}</div>}
       {Object.keys(failed).length > 0 && <div className="banner err">Skipped: {Object.entries(failed).map(([f, w]) => `${f} (${w})`).join("; ")}</div>}
       <footer className="foot">Prototype for academic use on synthetic / anonymised data. It does not diagnose or give medical advice.</footer>

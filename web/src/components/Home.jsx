@@ -6,7 +6,7 @@ import AreaChart, { defaultKey } from "./AreaChart.jsx";
 import MeasureSummary from "./MeasureSummary.jsx";
 import Overview from "./Overview.jsx";
 import Ask from "./Ask.jsx";
-import Dashboard, { when, short } from "./Dashboard.jsx";
+import Dashboard, { onsetsOf, short } from "./Dashboard.jsx";
 
 const T = (d) => Date.parse(d + "T00:00:00");
 const attClass = (l) => (l.startsWith("Worth discussing") ? "out" : l.startsWith("Worth watching") ? "in" : "none");
@@ -33,6 +33,17 @@ function Spark({ d, area }) {
       <span className="muted small">{s.label}, weekly average</span>
     </div>);
 }
+
+// True when nothing at all was uploaded for this area (e.g. a person built only from lab reports has no daily readings or cycles).
+const LABS = { "Cardiovascular / hypertension": ["LDL cholesterol"], "Metabolic health": ["HbA1c", "Fasting glucose"], "Women's health (PCOS)": [] };
+const hasNoData = (d, a) =>
+  a.measures.every((k) => !d.series?.[k]?.rows?.some((r) => r.v != null)) &&
+  (LABS[a.scenario] || []).every((t) => !d.labs?.[t]) &&
+  (a.scenario !== "Women's health (PCOS)" || !(d.cycles || []).length);
+const noDaily = (d, a) => a.measures.length > 0 && a.measures.every((k) => !d.series?.[k]?.rows?.some((r) => r.v != null));
+const LABONLY = "No daily readings were uploaded for this area. Only the lab results in the table could be checked.";
+const calmText = (d, a) => (hasNoData(d, a) ? NODATA : noDaily(d, a) ? LABONLY : a.calm);
+const NODATA = "No readings of this kind were uploaded, so nothing could be checked here.";
 
 export default function Home({ user, canFull = true, docs, selected, detail, onPick, onFull, onTrends }) {
   const [open, setOpen] = useState(null);
@@ -74,16 +85,16 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
 
       <div className="areas-grid">
         {AREAS.map((a) => {
-          const items = by(a), hit = items.length > 0, on = open === a.scenario;
+          const items = by(a), hit = items.length > 0, on = open === a.scenario, nodata = !hit && hasNoData(detail, a);
           return (
             <button key={a.scenario} onMouseMove={glow} className={"acard" + (hit ? " hit" : "") + (on ? " on" : "")} style={{ "--hue": a.hue }}
               aria-expanded={on} onClick={() => { setOpen(on ? null : a.scenario); mark("area"); }}>
               <span className="ahead"><span className="aicon" aria-hidden>{a.icon}</span><b>{a.title}</b></span>
               <span className="asub">{a.sub}</span>
-              {(hit || !(detail.attention?.[a.scenario] && !detail.attention[a.scenario].level.startsWith("No clear"))) && <span className={"chip " + (hit ? "warn" : "ok")}>{hit ? `${items.length} change${items.length > 1 ? "s" : ""} found` : "No clear change"}</span>}
-              {detail.attention?.[a.scenario] && !detail.attention[a.scenario].level.startsWith("No clear") && <span className={"chip tier " + attClass(detail.attention[a.scenario].level)} title={detail.attention[a.scenario].note}>{detail.attention[a.scenario].level}</span>}
-              <span className="asum">{hit ? items[0].summary : a.calm}</span>
-              {hit && when(items[0]).last && <span className="awhen">Changed by {short(when(items[0]).last[1])}</span>}
+              {(hit || !(detail.attention?.[a.scenario] && !detail.attention[a.scenario].level.startsWith("No clear"))) && <span className={"chip " + (hit ? "warn" : nodata ? "quiet" : "ok")}>{hit ? `${items.length} change${items.length > 1 ? "s" : ""} found` : nodata ? "No data" : "No clear change"}</span>}
+              {!nodata && detail.attention?.[a.scenario] && !detail.attention[a.scenario].level.startsWith("No clear") && <span className={"chip tier " + attClass(detail.attention[a.scenario].level)} title={detail.attention[a.scenario].note}>{detail.attention[a.scenario].level}</span>}
+              <span className="asum">{hit ? items[0].summary : calmText(detail, a)}</span>
+              {hit && items.flatMap(onsetsOf).length > 0 && <span className="awhen"><span className="awl">Crossed the threshold</span>{items.flatMap(onsetsOf).sort((x, y) => x.t - y.t).map((o) => <span key={o.key} className="awrow"><i />{o.label}<b>{short(o.t)}</b></span>)}</span>}
               <Spark d={detail} area={a} />
               <span className="acta">{on ? "Hide details" : hit ? "See what changed" : "See your readings"}</span>
             </button>);
@@ -93,9 +104,9 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
       {area && (
         <div className="adetail" style={{ "--hue": area.hue }} key={area.scenario}>
           <h2>{area.icon} {area.title}</h2>
-          {detail.attention?.[area.scenario] && !detail.attention[area.scenario].level.startsWith("No clear") &&
+          {!hasNoData(detail, area) && detail.attention?.[area.scenario] && !detail.attention[area.scenario].level.startsWith("No clear") &&
             <p className="muted small" title={detail.attention[area.scenario].note}><b>Attention level for this area:</b> {detail.attention[area.scenario].level}</p>}
-          {by(area).length === 0 && <p className="muted">{area.calm}</p>}
+          {by(area).length === 0 && <p className="muted">{calmText(detail, area)}</p>}
           <Overview ov={detail.overview?.[area.scenario]} />
           <MeasureSummary d={detail} area={area} sel={area.measures.includes(sel) ? sel : defaultKey(detail, area)} />
           <AreaChart d={detail} area={area} onSelect={setSel} />

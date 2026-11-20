@@ -1,0 +1,15 @@
+Test Name,Result,Unit,Reference Range,Date,PatientID
+Platelets,296.0,x10^9/L,150–450,2025-09-19,PC0433
+Total cholesterol,160.3,mg/dL,<200,2025-09-19,PC0433
+WBC,7.0,x10^9/L,4.0–11.0,2025-09-19,PC0433
+HDL cholesterol,43.7,mg/dL,>40,2025-09-19,PC0433
+eGFR,76.0,mL/min/1.73m²,>60,2025-09-19,PC0433
+Creatinine,0.8,mg/dL,0.7–1.3,2025-09-19,PC0433
+LDL cholesterol,131.6,mg/dL,<100,2025-09-19,PC0433
+AST,24.9,U/L,10–40,2025-09-19,PC0433
+Fasting glucose,108.1,mg/dL,70–99,2025-09-19,PC0433
+Hemoglobin,13.0,g/dL,12.0–17.5,2025-09-19,PC0433
+Vitamin B12,470.0,pg/mL,200–900,2025-09-19,PC0433
+HbA1c,5.65,%,4.0–5.6,2025-09-19,PC0433
+Vitamin D,26.4,ng/mL,30–100,2025-09-19,PC0433
+Triglycerides,132.7,mg/dL,<150,2025-09-19,PC0433

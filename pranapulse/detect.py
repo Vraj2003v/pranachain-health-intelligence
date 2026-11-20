@@ -33,6 +33,9 @@ class SignalResult:
     decimals: int
     window_first: tuple
     window_last: tuple
+    onset: object = None        # the day the 14-day average crossed the change threshold and stayed across it
+    onset_value: float = None   # that 14-day average on the onset day
+    threshold: float = None     # the level that counts as a change (baseline plus or minus the threshold distance)
 
 
 @dataclass
@@ -52,6 +55,7 @@ class Insight:
     scenario: str = ""         # which validation scenario this belongs to
     insight_id: str = ""       # F1, F2, ... for this patient, in the order shown
     tier: str = ""             # where the latest readings sit against the usual range (see reference.py)
+    onsets: list = field(default_factory=list)   # when each measure crossed the change threshold: [{key, label, date, ...}]
 
 
 def _fmt(v, d):
@@ -64,6 +68,32 @@ def _flag(coverage, n_first, n_last):
     if coverage >= 0.60 and min(n_first, n_last) >= 45:
         return "Limited"
     return "Insufficient"
+
+
+ONSET_WINDOW = "14D"   # a day-to-day dip should not move the date, so the average over two weeks is used
+
+
+def find_onset(s, base_mean, sd, sign, min_effect, start=None):
+    """The first day the 14-day average moved min_effect x the baseline's own variation from the baseline, in the
+    direction `sign`, and stayed there to the end. A short dip back (below half the distance) restarts the search,
+    so noise does not give an early date. Returns (date, average on that day, threshold level) or None."""
+    if not sd or sd != sd:
+        return None
+    roll = s.rolling(ONSET_WINDOW, min_periods=7).mean().dropna()
+    if start is not None:
+        roll = roll[start:]
+    if roll.empty:
+        return None
+    dev = sign * (roll - base_mean) / sd
+    if dev.iloc[-1] < min_effect:
+        return None
+    low = dev[dev < 0.5 * min_effect]
+    after = dev[low.index[-1]:] if len(low) else dev
+    hit = after[after >= min_effect]
+    if hit.empty:
+        return None
+    d = hit.index[0]
+    return d, float(roll[d]), float(base_mean + sign * min_effect * sd)
 
 
 def analyse_signal(p: Patient, key: str):
@@ -88,11 +118,41 @@ def analyse_signal(p: Patient, key: str):
     p_val = stats.kendalltau(np.arange(len(wk)), wk.values)[1] if len(wk) >= 12 else 1.0
     meaningful = abs(diff) >= sig.min_abs and abs(effect) >= MIN_EFFECT and p_val <= MAX_TREND_P
     direction = "stable"
+    on = None
     if meaningful:
         direction = "worsening" if np.sign(diff) == sig.bad else "improving"
+        on = find_onset(s, mf, sd, int(np.sign(diff)), MIN_EFFECT)
     return SignalResult(key, sig.label, sig.unit, sig.sheet, coverage, n_first, n_last, mf, ml, diff, effect,
                         float(p_val), direction, _flag(coverage, n_first, n_last), sig.decimals,
-                        (start, start + w), (end - w, end))
+                        (start, start + w), (end - w, end), *(on or (None, None, None)))
+
+
+def _onsets_for(results):
+    """One entry per measure whose change has a date: when it crossed the threshold, and by how much it has moved since."""
+    out = []
+    for r in results:
+        if r.onset is None:
+            continue
+        out.append({"key": r.key, "label": r.label, "date": f"{r.onset:%Y-%m-%d}", "unit": r.unit, "decimals": r.decimals,
+                    "baseline": round(r.mean_first, 4), "at_onset": round(r.onset_value, 4), "now": round(r.mean_last, 4),
+                    "threshold": round(r.threshold, 4), "kind": "signal"})
+    return out
+
+
+def _lab_onset(p: Patient, lr, bad, min_abs):
+    """The first lab result that moved min_abs from the first result in the concerning direction and was not reversed later."""
+    rows = p.labs[p.labs.test == lr["test"]].sort_values("date")
+    base = float(rows.iloc[0].result)
+    moved = [(bad * (float(r.result) - base)) >= min_abs for r in rows.itertuples()]
+    if not moved[-1]:
+        return None
+    i = len(moved) - 1
+    while i > 0 and moved[i - 1]:
+        i -= 1
+    r = rows.iloc[i]
+    return {"key": lr["test"], "label": lr["test"], "date": f"{r.date:%Y-%m-%d}", "unit": str(r.unit), "decimals": 2 if abs(base) < 10 else 1,
+            "baseline": round(base, 4), "at_onset": round(float(r.result), 4), "now": round(float(rows.iloc[-1].result), 4),
+            "threshold": round(base + bad * min_abs, 4), "kind": "lab"}
 
 
 def analyse_lab(p: Patient, test: str, bad: int, min_abs: float):
@@ -222,7 +282,8 @@ def recent_check(p: Patient, key: str):
     if not _persists(s, r_start, end, float(base.mean()), sd, sig.bad):
         return None
     flag = "Sufficient" if len(base) >= 72 and len(rec) >= 11 else "Limited"
-    return {"sig": sig, "base": float(base.mean()), "rec": float(rec.mean()), "diff": diff, "effect": effect,
+    on = find_onset(s, float(base.mean()), sd, int(np.sign(diff)), RECENT_MIN_EFFECT, b_end)
+    return {"onset": on, "sig": sig, "base": float(base.mean()), "rec": float(rec.mean()), "diff": diff, "effect": effect,
             "n_base": len(base), "n_rec": len(rec), "flag": flag,
             "base_win": (b_start, b_end), "rec_win": (r_start, end)}
 
@@ -289,7 +350,7 @@ def detect(p: Patient):
                                     for l in lab_hits],
                                 ctx, text, _asks(p, usable, list(c["labs"]), lab_hits), usable[0].key if usable else "",
                                 f"{len(bullets)} related measures moved in the same direction over this patient's year.", bullets, closing,
-                                SCENARIO[cname]))
+                                SCENARIO[cname], onsets=_onsets_for(usable) + [o for o in (_lab_onset(p, l, c["labs"][l["test"]][0], c["labs"][l["test"]][1]) for l in lab_hits) if o]))
         used.update(r.key for r in usable)
 
     for r in results.values():
@@ -304,7 +365,8 @@ def detect(p: Patient):
             assert not check_language(text), check_language(text)
             insights.append(Insight("single", f"{r.label} has changed", r.flag, [r.key], [_evidence(r)], [], text,
                                     _asks(p, [r], []), r.key, "One measure moved well outside this patient's usual variation.",
-                                    [_bullet(r)], "This change may be worth mentioning to a healthcare provider." + _projection_sentence(p, r)))
+                                    [_bullet(r)], "This change may be worth mentioning to a healthcare provider." + _projection_sentence(p, r),
+                                    onsets=_onsets_for([r])))
 
     # latest readings against the patient's own 90-day baseline (recent deviation)
     covered = set(used) | {i.signals[0] for i in insights if i.kind == "single" and i.signals}
@@ -328,7 +390,10 @@ def detect(p: Patient):
                                   "size_vs_own_variation": f"{abs(rc['effect']):.1f}x", "trend_p": "—",
                                   **_range_fields(ref.RANGES.get(key), rc["rec"])}],
                                 [], text, [], key, "The latest readings differ from this patient's own recent baseline.", [bullet], closing,
-                                SCENARIO["cardio"] if key in ("sbp", "dbp", "rhr", "hrv") else SCENARIO["metabolic"]))
+                                SCENARIO["cardio"] if key in ("sbp", "dbp", "rhr", "hrv") else SCENARIO["metabolic"],
+                                onsets=[{"key": key, "label": sig.label, "date": f"{rc['onset'][0]:%Y-%m-%d}", "unit": sig.unit, "decimals": d,
+                                         "baseline": round(rc["base"], 4), "at_onset": round(rc["onset"][1], 4), "now": round(rc["rec"], 4),
+                                         "threshold": round(rc["onset"][2], 4), "kind": "signal"}] if rc["onset"] else []))
 
     # cycle pattern (women's health scenario)
     cy = p.cycles
@@ -342,6 +407,10 @@ def detect(p: Patient):
                     + ("History in the record: " + "; ".join(x.split(" — ")[0] for x in ctx[:2]) + ". " if ctx else "")
                     + "This pattern may be worth discussing with a healthcare provider.")
             assert not check_language(text), check_language(text)
+            odd = cy[(cy.cycle_length < 21) | (cy.cycle_length > 35)].sort_values("start")
+            cyc_on = ([{"key": "cycle", "label": "Cycle length", "date": f"{odd.iloc[0].start:%Y-%m-%d}", "unit": "days", "decimals": 0,
+                        "baseline": 28.0, "at_onset": round(float(odd.iloc[0].cycle_length), 4), "now": round(float(mean_len), 4),
+                        "threshold": 35.0, "kind": "cycle", "count": int(len(odd)), "of": int(len(cy))}] if len(odd) else [])
             insights.append(Insight("cycle", "Cycle timing is irregular", flag, [], [{
                 "signal": "Cycle length", "source": "Women Health", "first_window": f"{cy.start.min():%d %b %Y}",
                 "last_window": f"{cy.start.max():%d %b %Y}", "first_mean": f"{mean_len:.0f} days (mean)",
@@ -351,7 +420,7 @@ def detect(p: Patient):
                                 "Cycle timing varies more than usual.",
                                 [f"Cycle length averaged {mean_len:.0f} days across {len(cy)} cycles and varied by about {sd_len:.0f} days between cycles "
                                  "(usual range is roughly 21–35 days with small variation)"],
-                                "This pattern may be worth discussing with a healthcare provider."))
+                                "This pattern may be worth discussing with a healthcare provider.", onsets=cyc_on))
 
     order = {"pattern": 0, "cycle": 1, "recent": 2, "single": 3}
     insights.sort(key=lambda i: (order[i.kind], -RANK[i.flag]))
