@@ -1,6 +1,7 @@
 import { fmt } from "../api";
 import { onsetsOf, short, moved } from "./Dashboard.jsx";
 import { RangeBar } from "./Overview.jsx";
+import { enough } from "../sufficient.js";
 
 const tierClass = (t) => (t.startsWith("Outside") ? "out" : t.startsWith("Within") ? "in" : "none");
 const rangeLine = (t) => (t.position === "no range" ? "Compared with your own baseline only"
@@ -77,7 +78,7 @@ export default function MeasureSummary({ d, area, sel }) {
   const label = (i) => (i.signals.map((k) => d.series[k]?.label).filter(Boolean).join(", ") || i.title);
   return (
     <div aria-live="polite">
-      {s && (mine.length ? mine.map((i) => <Finding key={i.id} ins={i} />) : <Quiet s={s} cov={cov} />)}
+      {s && (mine.length ? mine.map((i) => <Finding key={i.id} ins={i} />) : enough(s) ? <Quiet s={s} cov={cov} /> : null)}
       {others.length > 0 && s && <p className="muted small">Also found in this area: {others.map(label).join("; ")}. Pick that measure below to see it.</p>}
       {/* findings that do not belong to any chart tab (for example lab results) always stay visible */}
       {!s && inArea.map((i) => <Finding key={i.id} ins={i} />)}

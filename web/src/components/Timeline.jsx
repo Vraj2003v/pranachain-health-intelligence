@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmt, shortDate } from "../api";
+import { usableKeys } from "../sufficient.js";
 
 const C = { dots: "#9fb6cc", line: "#1f4e79", proj: "#c55a11", band: "#c55a11" };
 const tick = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", year: "2-digit" });
@@ -27,13 +28,13 @@ function useNarrow(px = 640) {
 
 export default function Timeline({ d, initialKey }) {
   const narrow = useNarrow();
-  const withData = Object.keys(d.series).filter((k) => d.series[k].rows.some((r) => r.v != null || r.w != null));
+  const withData = usableKeys(d);
   const hasDaily = withData.length > 0;
   const keys = hasDaily ? withData : Object.keys(d.series);
   const first = (keys.includes(initialKey) && initialKey) || d.insights.find((i) => i.forecastKey)?.forecastKey || keys[0];
   const [key, setKey] = useState(first);
   const s = d.series[key];
-  const labNames = Object.keys(d.labs);
+  const labNames = Object.keys(d.labs).filter((n) => d.labs[n].points.length >= 2);
   const [lab, setLab] = useState(labNames.includes("HbA1c") ? "HbA1c" : labNames[0]);
 
   const [span, setSpan] = useState("all");      // how much of the year to show: 3 months, 6 months or all
@@ -83,38 +84,34 @@ export default function Timeline({ d, initialKey }) {
             <Legend verticalAlign={narrow ? "bottom" : "top"} height={narrow ? 48 : 30} wrapperStyle={narrow ? { fontSize: 11 } : undefined} />
             {showRange && s.range && <ReferenceArea y1={s.range.low ?? dom[0]} y2={s.range.high ?? dom[1]} fill="#2ea043" fillOpacity={0.13} ifOverflow="extendDomain"
               label={narrow ? undefined : { value: `Usual range ${s.range.text}`, position: "insideBottomRight", fontSize: 11, fill: "#2e7d32" }} />}
-            {s.windows && [["first", "Earlier", s.windows.meanFirst], ["last", "Recent", s.windows.meanLast]].map(([w, name, mean]) => (
+            {s.windows && s.windows.meanFirst != null && s.windows.meanLast != null && [["first", "Earlier", s.windows.meanFirst], ["last", "Recent", s.windows.meanLast]].map(([w, name, mean]) => (
               <ReferenceArea key={w} x1={T(s.windows[w][0])} x2={T(s.windows[w][1])} fill="#788" fillOpacity={0.1}
                 label={narrow ? undefined : { value: `${name} 90 days · avg ${fmt(mean, s.decimals)} ${s.unit}`, position: "insideTopLeft", fontSize: 11, fill: "#667" }} />))}
             {inWin.map((m) => (
               <ReferenceLine key={m.date + m.text} x={T(m.date)} stroke="#889" strokeDasharray="2 3"
                 label={narrow ? undefined : { value: m.text, angle: -90, position: "insideTopRight", fontSize: 10, fill: "#667" }} />))}
-            <Area dataKey="band" name="95% range" stroke="none" fill={C.band} fillOpacity={0.16} connectNulls isAnimationActive={false} />
+            {s.hasProjection && <Area dataKey="band" name="95% range" stroke="none" fill={C.band} fillOpacity={0.16} connectNulls isAnimationActive={false} />}
             <Line dataKey="v" name="Daily value" stroke="none" dot={{ r: 1.8, fill: C.dots, strokeWidth: 0 }} activeDot={false} isAnimationActive={false} legendType="circle" />
-            <Line dataKey="w" name="Weekly average" stroke={C.line} strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />
-            <Line dataKey="p" name="Projection" stroke={C.proj} strokeWidth={3} strokeDasharray="7 5" dot={false} connectNulls isAnimationActive={false} />
+            {all.some((r) => r.w != null) && <Line dataKey="w" name="Weekly average" stroke={C.line} strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />}
+            {s.hasProjection && <Line dataKey="p" name="Projection" stroke={C.proj} strokeWidth={3} strokeDasharray="7 5" dot={false} connectNulls isAnimationActive={false} />}
           </ComposedChart>
         </ResponsiveContainer>
-        <p className={"rangeline " + (where === "within" ? "in" : where ? "out" : "none")}>
-          {where
-            ? `Recent 90-day average ${fmt(recent, s.decimals)} ${s.unit} is ${where} the usual range (${s.range.text}). The usual range adds context; the change is still judged against your own baseline.`
-            : "There is no single usual range for this measure, so it is compared with your own baseline only."}
-        </p>
+        {where && <p className={"rangeline " + (where === "within" ? "in" : "out")}>
+          {`Recent 90-day average ${fmt(recent, s.decimals)} ${s.unit} is ${where} the usual range (${s.range.text}). The usual range adds context; the change is still judged against your own baseline.`}
+        </p>}
         {narrow && (
           <div className="small" style={{ margin: "6px 0" }}>
             {s.windows && <p className="muted small">Earlier 90 days avg {fmt(s.windows.meanFirst, s.decimals)} {s.unit} → Recent 90 days avg {fmt(s.windows.meanLast, s.decimals)} {s.unit} (shaded)</p>}
             {inWin.length > 0 && <p className="muted small">Dashed lines: {inWin.map((m) => `${m.text} (${shortDate(m.date)})`).join("; ")}</p>}
           </div>)}
         {before.length > 0 && <p className="muted small">◀ Before this window: {before.map((m) => `${m.text} (${shortDate(m.date)})`).join("; ")}</p>}
-        <p className="muted small">
-          {s.hasProjection
-            ? "The dashed line is a straight-line projection of the last 26 weeks, 8 weeks ahead, with a 95% range. It shows what happens if the recent trend simply continues; it is not a prediction of health outcomes."
-            : "Not enough weekly data to draw a projection for this signal."}
-        </p>
+        {s.hasProjection && <p className="muted small">
+          The dashed line is a straight-line projection of the last 26 weeks, 8 weeks ahead, with a 95% range. It shows what happens if the recent trend simply continues; it is not a prediction of health outcomes.
+        </p>}
       </div>
-      </>) : <p className="note">No daily readings are stored for this person yet, only lab reports. Upload vitals or wearable data (CSV, XLSX or PDF) to see daily charts here.</p>}
+      </>) : !L && d.cycles.length === 0 ? <p className="note">There is not enough data to draw charts for this person yet. Upload more reports (lab results, vitals or wearable data) to see them here.</p> : null}
 
-      {L && (
+      {L && L.points.length >= 2 && (
         <div className="chartcard">
           <div className="row between"><h3>Lab result</h3>
             <select value={lab} onChange={(e) => setLab(e.target.value)}>{labNames.map((n) => <option key={n}>{n}</option>)}</select></div>
