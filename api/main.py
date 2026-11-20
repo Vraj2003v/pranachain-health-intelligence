@@ -25,6 +25,7 @@ from pranapulse.signals import SIGNALS, WINDOW_DAYS
 
 from . import auth
 from .db import db, init
+from .reports import built_patient, is_workbook, router as reports_router, store_report, sync_documents
 
 app = FastAPI(title="PranaPulse API")
 DIST = Path(__file__).resolve().parent.parent / "web" / "dist"
@@ -189,15 +190,33 @@ def documents(user=Depends(auth.current_user)):
 
 @app.post("/api/documents")
 async def upload(files: list[UploadFile] = File(...), user=Depends(auth.current_user)):
-    added, failed = 0, {}
+    """Patient workbooks are stored as they are. Any other PDF, CSV or XLSX is one lab report: its values go into the
+    database and the person's workbook-style document is rebuilt from the stored values."""
+    added, failed, notes, touched = 0, {}, [], []
     for f in files:
-        _, why = store(user, f.filename or "workbook.xlsx", await f.read())
-        if why:
-            failed[f.filename] = why
-        else:
+        name, data = f.filename or "workbook.xlsx", await f.read()
+        if is_workbook(name, data):
+            _, why = store(user, name, data)
+            if why:
+                failed[name] = why
+            else:
+                added += 1
+            continue
+        res = store_report(user, name, data)
+        if res["status"] == "added":
             added += 1
+            touched.append(res["patient"])
+            for t in res.get("missing", []):
+                notes.append(f"{name}: {t} is blank in the report")
+            for t in res.get("unrecognised", []):
+                notes.append(f"{name}: not recognised and left out: {t}")
+            notes += [f"{name}: {c}" for c in res.get("conflicts", [])]
+            notes += [f"{name}: {c}" for c in res.get("skipped", [])]
+        else:
+            failed[name] = res["why"] if res["status"] != "conflict" else " ".join(res["conflicts"])
+    sync_documents(user, touched)
     auth.log(user, "upload", f"{added} added, {len(failed)} skipped")
-    return {"added": added, "failed": failed}
+    return {"added": added, "failed": failed, "notes": notes}
 
 
 @app.post("/api/documents/demo")
@@ -223,6 +242,10 @@ def delete_document(doc_id: int, user=Depends(auth.current_user)):
     row = owned(doc_id, user)
     with db() as con:
         con.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
+        pid = built_patient(row["filename"])
+        if pid:    # a person built from uploaded reports: remove those reports too
+            con.execute("DELETE FROM lab_reports WHERE user_id = ? AND patient_id = ?", (user["id"], pid))
+            con.execute("DELETE FROM reading_files WHERE user_id = ? AND patient_id = ?", (user["id"], pid))
     auth.log(user, "delete_document", row["filename"])
     return {"ok": True}
 
@@ -231,6 +254,8 @@ def delete_document(doc_id: int, user=Depends(auth.current_user)):
 def delete_all(user=Depends(auth.current_user)):
     with db() as con:
         n = con.execute("DELETE FROM documents WHERE user_id = ?", (user["id"],)).rowcount
+        con.execute("DELETE FROM lab_reports WHERE user_id = ?", (user["id"],))
+        con.execute("DELETE FROM reading_files WHERE user_id = ?", (user["id"],))
     auth.log(user, "delete_all_documents", f"{n} removed")
     return {"removed": n}
 
@@ -297,12 +322,12 @@ def patient_detail(doc_id: int, user=Depends(auth.current_user)):
                        for k in i.signals if k in results]
     ov = ref.overview_by_area(ins, results, p.labs, p.cycles)
     return {
-        "patient": {"id": p.patient_id, "age": num(p.profile.get("Age")), "sex": p.profile.get("Sex"), "start": day(start),
+        "patient": {"id": p.patient_id, "age": num(p.profile.get("Age")), "sex": (lambda v: None if v is None or v != v else str(v))(p.profile.get("Sex")), "start": day(start),
                     "end": day(end), "days": len(p.daily)},
         "insights": [{"id": i.insight_id, "kind": i.kind, "title": i.title, "flag": i.flag, "scenario": i.scenario, "tier": i.tier, "summary": i.summary,
                       "bullets": i.bullets, "closing": i.closing, "context": i.context, "asks": i.asks,
                       "evidence": [{k: (v if isinstance(v, str) else num(v)) for k, v in e.items()} for e in i.evidence],
-                      "forecastKey": i.forecast_key, "signals": i.signals, "tiles": tiles(i)} for i in ins],
+                      "forecastKey": i.forecast_key, "signals": i.signals, "tiles": tiles(i), "onsets": i.onsets} for i in ins],
         "overview": ov, "attention": ref.attention_by_area(ins, ov),
         "held": held, "positives": positives, "coverage": coverage, "windowDays": WINDOW_DAYS,
         "series": {k: series_block(p, results, k) for k in SIGNALS}, "markers": marks, "labs": labs,
@@ -346,6 +371,8 @@ def ask(doc_id: int, body: Ask, user=Depends(auth.current_user)):
     auth.log(user, "ask_question", row["filename"])
     return {"text": text, "source": source, "action": action, "followups": follow, "key": key}
 
+
+app.include_router(reports_router)   # lab reports uploaded one document at a time
 
 if DIST.exists():
     app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")

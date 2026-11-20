@@ -1,4 +1,6 @@
 import { fmt } from "../api";
+import { onsetsOf, short, moved } from "./Dashboard.jsx";
+import { RangeBar } from "./Overview.jsx";
 
 const tierClass = (t) => (t.startsWith("Outside") ? "out" : t.startsWith("Within") ? "in" : "none");
 const rangeLine = (t) => (t.position === "no range" ? "Compared with your own baseline only"
@@ -15,6 +17,11 @@ function Finding({ ins }) {
             <div className="v">{Number(t.value).toLocaleString(undefined, { maximumFractionDigits: t.decimals })} <span className="u">{t.unit}</span></div>
             <div className="d">{t.diff > 0 ? "up" : "down"} {Math.abs(t.diff).toLocaleString(undefined, { maximumFractionDigits: t.decimals })} compared with your first 90 days</div>
             <div className={"rng " + (t.position === "within" ? "in" : t.position === "no range" ? "none" : "out")}>{rangeLine(t)}</div></div>))}
+        </div>)}
+      {onsetsOf(ins).length > 0 && (
+        <div className="whenlist" aria-label="When each measure crossed its threshold">
+          <b>When each change began</b>
+          <ul>{onsetsOf(ins).map((o) => <li key={o.key}><span className="wl-date">{short(o.t)}</span><span><b>{o.label}</b> crossed its threshold <span className="muted">({moved(o)})</span></span></li>)}</ul>
         </div>)}
       <ul>{ins.bullets.map((b) => <li key={b}>{b}</li>)}</ul>
       {ins.context.length > 0 && <p className="ctx"><b>Connects to your history:</b> {ins.context.slice(0, 3).map((c) => c.split(" — ")[0]).join(" · ")}</p>}
@@ -34,20 +41,27 @@ function Quiet({ s, cov }) {
   const diff = w.meanLast - w.meanFirst, r = s.range;
   const pos = !r ? "no range" : r.high != null && w.meanLast > r.high ? "above" : r.low != null && w.meanLast < r.low ? "below" : "within";
   const flat = Math.abs(diff) < Math.pow(10, -dec) / 2;
+  const out = pos === "above" || pos === "below";
+  const bar = { value: w.meanLast, rng_low: r?.low ?? null, rng_high: r?.high ?? null, range: r?.text ?? "no usual range", decimals: dec, unit: s.unit, position: pos };
+  const sign = diff > 0 ? "+" : diff < 0 ? "−" : "";
   return (
-    <div className="finding">
-      <h3>{s.label}: no clear change</h3>
-      <div className="tiles">
-        <div className="tile"><div className="l">{s.label}</div>
-          <div className="v">{fmt(w.meanLast, dec)} <span className="u">{s.unit}</span></div>
-          <div className="d">{flat ? "the same as" : (diff > 0 ? "up " : "down ") + fmt(Math.abs(diff), dec) + " compared with"} your first 90 days</div>
-          <div className={"rng " + (pos === "within" ? "in" : pos === "no range" ? "none" : "out")}>
-            {rangeLine({ position: pos, range: r?.text })}</div></div>
+    <div className="quiet">
+      <div className="q-head">
+        <h3>{s.label}</h3>
+        <span className="chip ok">✓ Steady</span>
+        {out && <span className="chip tier out">{pos === "above" ? "▲ Above" : "▼ Below"} the usual range</span>}
+        {pos === "within" && <span className="chip tier in">✓ Within the usual range</span>}
       </div>
-      <ul>
-        <li>{s.label} averaged {fmt(w.meanFirst, dec)} {s.unit} in your first 90 days and {fmt(w.meanLast, dec)} {s.unit} in your last 90 days.</li>
-        <li>This difference is small next to your usual day-to-day variation, so it is not shown as a finding.</li>
-        {(pos === "above" || pos === "below") && <li>The last 90 days sit {pos} the usual range. It is counted in the overview of this area, but it is not a finding, because findings look at change. You can raise it with a healthcare provider.</li>}
+      <div className="q-stats">
+        <div className="q-stat"><span className="q-l">First 90 days</span><b>{fmt(w.meanFirst, dec)}</b><span className="q-u">{s.unit}</span></div>
+        <div className="q-arrow" aria-hidden>→</div>
+        <div className="q-stat"><span className="q-l">Last 90 days</span><b>{fmt(w.meanLast, dec)}</b><span className="q-u">{s.unit}</span></div>
+        <div className="q-stat q-diff"><span className="q-l">Change</span><b>{flat ? "None" : sign + fmt(Math.abs(diff), dec)}</b><span className="q-u">{flat ? "" : s.unit}</span></div>
+      </div>
+      {r && <div className="q-range"><span className="q-l">Where the latest value sits</span><RangeBar r={bar} /></div>}
+      <ul className="q-notes">
+        <li><span className="q-ico ok" aria-hidden>✓</span>The change is small next to your usual day-to-day variation, so it is not shown as a finding.</li>
+        {out && <li><span className="q-ico warn" aria-hidden>!</span>The last 90 days sit {pos} the usual range. It is counted in the table above, but it is not a finding, because findings look at change. You can raise it with a healthcare provider.</li>}
       </ul>
       <p className="muted small">Data: {cov?.flag === "Limited" ? "limited, some readings were missing" : cov?.flag === "Insufficient" ? "insufficient" : "sufficient"}.</p>
     </div>);
