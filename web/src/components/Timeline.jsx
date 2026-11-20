@@ -27,7 +27,9 @@ function useNarrow(px = 640) {
 
 export default function Timeline({ d, initialKey }) {
   const narrow = useNarrow();
-  const keys = Object.keys(d.series);
+  const withData = Object.keys(d.series).filter((k) => d.series[k].rows.some((r) => r.v != null || r.w != null));
+  const hasDaily = withData.length > 0;
+  const keys = hasDaily ? withData : Object.keys(d.series);
   const first = (keys.includes(initialKey) && initialKey) || d.insights.find((i) => i.forecastKey)?.forecastKey || keys[0];
   const [key, setKey] = useState(first);
   const s = d.series[key];
@@ -59,6 +61,7 @@ export default function Timeline({ d, initialKey }) {
 
   return (
     <section>
+      {hasDaily ? (<>
       <div className="pills scrollrow" role="tablist" aria-label="Measure">
         {keys.map((k) => <button key={k} role="tab" aria-selected={k === key} className={"pill" + (k === key ? " on" : "")} onClick={() => setKey(k)}>{d.series[k].label}</button>)}
       </div>
@@ -109,6 +112,7 @@ export default function Timeline({ d, initialKey }) {
             : "Not enough weekly data to draw a projection for this signal."}
         </p>
       </div>
+      </>) : <p className="note">No daily readings are stored for this person yet, only lab reports. Upload vitals or wearable data (CSV, XLSX or PDF) to see daily charts here.</p>}
 
       {L && (
         <div className="chartcard">
