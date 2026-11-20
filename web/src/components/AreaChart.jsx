@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Area, Bar, BarChart, Brush, CartesianGrid, Cell, ComposedChart, LabelList, Line, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmt } from "../api";
 import { mark } from "../progress.js";
+import { enough } from "../sufficient.js";
 
 const T = (d) => Date.parse(d + "T00:00:00");
 const tick = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", year: "2-digit" });
@@ -19,7 +20,7 @@ function Tip({ active, payload, label, unit, dec }) {
     </div>);
 }
 
-const chartKeys = (d, area) => area.measures.filter((k) => d.series[k] && d.series[k].rows.some((r) => r.w != null));
+const chartKeys = (d, area) => area.measures.filter((k) => enough(d.series[k]));
 
 // The measure shown first: the one behind the area's first projection, otherwise the first with data.
 export function defaultKey(d, area) {
@@ -51,12 +52,13 @@ export default function AreaChart({ d, area, onSelect }) {
 
   if (area.measures.length === 0) {
     const cyc = d.cycles.map((c) => ({ ...c, label: new Date(T(c.d)).toLocaleDateString(undefined, { month: "short", year: "2-digit" }) }));
+    if (cyc.length === 0) return null;
     const out = (v) => v < 21 || v > 35;
     const top = Math.max(42, ...cyc.map((c) => c.v)) + 7;
     return (
       <div className="achart">
         <h4>Length of each cycle (days)</h4>
-        {cyc.length === 0 ? <p className="muted small">No cycle records in this file.</p> : (
+        {cyc.length === 0 ? null : (
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={cyc} margin={{ top: 22, right: 28, bottom: 4, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.25} vertical={false} />
@@ -74,7 +76,7 @@ export default function AreaChart({ d, area, onSelect }) {
         <p className="muted small">Dashed lines mark the usual 21 to 35 day range. Amber bars are outside it.</p>
       </div>);
   }
-  if (!s) return <p className="muted small">No readings for this area in this file.</p>;
+  if (!s || keys.length === 0) return null;
   const dom = (() => {
     const v = rows.flatMap((r) => [r.v, r.w, r.p, ...(r.band || [])]).filter((x) => x != null);
     const lo = Math.min(...v), hi = Math.max(...v), pad = (hi - lo) * 0.08 || 1;
@@ -90,7 +92,7 @@ export default function AreaChart({ d, area, onSelect }) {
         <div className="pills" role="group" aria-label="Time range">
           {RANGES.map(([l, n]) => <button key={l} aria-pressed={range === n} className={"pill" + (range === n ? " on" : "")} onClick={() => { setRange(n); mark("chart"); }}>{l}</button>)}
         </div>
-        <label className="toggle"><input type="checkbox" checked={proj} onChange={(e) => { setProj(e.target.checked); mark("chart"); }} /> Projection</label>
+        {s.hasProjection && <label className="toggle"><input type="checkbox" checked={proj} onChange={(e) => { setProj(e.target.checked); mark("chart"); }} /> Projection</label>}
         <label className="toggle"><input type="checkbox" checked={dots} onChange={(e) => { setDots(e.target.checked); mark("chart"); }} /> Daily readings</label>
       </div>
       <h4>{s.label} ({s.unit})</h4>
@@ -103,7 +105,7 @@ export default function AreaChart({ d, area, onSelect }) {
           {s.range && (s.range.low != null || s.range.high != null) && (
             <ReferenceArea y1={s.range.low ?? dom[0]} y2={s.range.high ?? dom[1]} fill="#2e8b57" fillOpacity={0.12} stroke="none" ifOverflow="hidden"
               label={{ value: `Usual range ${s.range.text}`, position: "insideTopLeft", fontSize: 11, fill: "#2e8b57" }} />)}
-          {s.windows && <ReferenceLine y={s.windows.meanFirst} stroke="#14919b" strokeDasharray="5 4"
+          {s.windows && s.windows.meanFirst != null && <ReferenceLine y={s.windows.meanFirst} stroke="#14919b" strokeDasharray="5 4"
             label={{ value: `Your usual: ${fmt(s.windows.meanFirst, s.decimals)}`, position: "insideBottomRight", fontSize: 11, fill: "#14919b" }} />}
           {onset && rows.length > 0 && (() => {
             const t = Date.parse(onset.date + "T00:00:00"), lo = rows[0].t, hi = Math.max(...rows.filter((r) => r.v != null || r.w != null).map((r) => r.t));
@@ -116,11 +118,11 @@ export default function AreaChart({ d, area, onSelect }) {
                 label={{ value: `Crossed on ${new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`, position: "insideTopLeft", fontSize: 12, fontWeight: 700, fill: "#c8553d" }} />}
             </>) : null;
           })()}
-          {proj && <Area dataKey="band" name="95% range" stroke="none" fill="#e0a21f" fillOpacity={0.18} connectNulls isAnimationActive={false} />}
+          {proj && s.hasProjection && <Area dataKey="band" name="95% range" stroke="none" fill="#e0a21f" fillOpacity={0.18} connectNulls isAnimationActive={false} />}
           {dots && <Line dataKey="v" stroke="none" dot={{ r: 1.8, fill: "#9db8bb", strokeWidth: 0 }} activeDot={false} isAnimationActive={false} />}
           <Line dataKey="w" stroke="#14919b" strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />
-          {proj && <Line dataKey="p" stroke="#e0a21f" strokeWidth={3} strokeDasharray="7 5" dot={false} connectNulls isAnimationActive={false} />}
-          <Brush onChange={() => mark("chart")} dataKey="t" height={26} stroke="#14919b" tickFormatter={tick} travellerWidth={10} />
+          {proj && s.hasProjection && <Line dataKey="p" stroke="#e0a21f" strokeWidth={3} strokeDasharray="7 5" dot={false} connectNulls isAnimationActive={false} />}
+          {rows.length >= 14 && <Brush onChange={() => mark("chart")} dataKey="t" height={26} stroke="#14919b" tickFormatter={tick} travellerWidth={10} />}
         </ComposedChart>
       </ResponsiveContainer>
       <details className="howto"><summary>How to read this chart</summary>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Brush, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fmt } from "../api";
+import { usableKeys } from "../sufficient.js";
 
 const COLORS = ["#14919b", "#e0a21f", "#7a4fa3", "#b03a48", "#2f6fa8"];
 const T = (d) => Date.parse(d + "T00:00:00");
@@ -8,7 +9,7 @@ const tick = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", 
 const RANGES = [["3 months", 91], ["6 months", 182], ["Whole year", 9999]];
 
 export default function Explore({ d, initial }) {
-  const all = Object.keys(d.series);
+  const all = usableKeys(d);
   const [sel, setSel] = useState((initial?.length ? initial : all.slice(0, 2)).filter((k) => all.includes(k)));
   const [range, setRange] = useState(9999);
   const [mode, setMode] = useState("index");   // index = % change vs own usual, raw = real units (first measure only)
@@ -27,6 +28,7 @@ export default function Explore({ d, initial }) {
     return { rows, stats };
   }, [d, sel, range, mode]);
 
+  if (all.length === 0) return <section className="explore"><h2>Compare measures</h2><p className="note">There is not enough daily data to compare measures yet. Upload vitals or wearable readings to use this tab.</p></section>;
   return (
     <section className="explore">
       <h2>Compare measures</h2>
@@ -54,7 +56,7 @@ export default function Explore({ d, initial }) {
             <Legend verticalAlign="top" height={28} />
             {mode === "index" && <ReferenceLine y={0} stroke="#889" strokeDasharray="4 4" />}
             {sel.map((k, n) => <Line key={k} dataKey={k} name={d.series[k].label} stroke={COLORS[n % COLORS.length]} strokeWidth={2.5} dot={false} connectNulls isAnimationActive={false} />)}
-            <Brush dataKey="t" height={26} stroke="#14919b" tickFormatter={tick} travellerWidth={10} />
+            {rows.length >= 14 && <Brush dataKey="t" height={26} stroke="#14919b" tickFormatter={tick} travellerWidth={10} />}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
