@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { kb, stamp } from "../api";
+import { Reports } from "./RiskView.jsx";
 
 export default function Documents({ docs, onUpload, onDemo, onOpen, onRemove, onRemoveAll, busy }) {
   const input = useRef();
@@ -33,6 +34,7 @@ export default function Documents({ docs, onUpload, onDemo, onOpen, onRemove, on
           </tbody>
         </table>
       </div>
+      <Reports refresh={docs.length + ":" + (docs[0]?.uploaded || "")} />
       {docs.length > 300 && <p className="muted small">Showing first 300 of {docs.length}.</p>}
     </section>
   );
