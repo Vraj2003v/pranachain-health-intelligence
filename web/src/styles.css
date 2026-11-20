@@ -611,3 +611,13 @@ h1, .hero h1, .home h1 { font-family: var(--script); font-weight: 700; letter-sp
 @media (max-width: 760px) { .q-stats { grid-template-columns: 1fr 1fr; } .q-arrow { display: none; } .q-diff { grid-column: 1 / -1; } }
 
 .notes { margin: 6px 0 0; padding-left: 18px; } .notes li { margin: 2px 0; }
+
+/* single-document risk factors and screening levels */
+.riskview { display: grid; gap: 12px; }
+.risk-areas { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.risk-area { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--panel); }
+.risk-area .ra-name { font-size: .85rem; color: var(--muted); }
+.risk-area .ra-level { font-size: 1.35rem; font-weight: 700; margin: 2px 0; }
+.risk-area.in { border-color: #2e8b57; } .risk-area.mid { border-color: #d4a017; } .risk-area.out { border-color: #c8553d; } .risk-area.none { opacity: .7; }
+.riskpanel { margin: 16px 0; } .reports { margin-top: 22px; }
+.chip.tier.mid { background: rgba(212,160,23,.18); }
