@@ -113,7 +113,7 @@ export default function App() {
         <div className="plist" role="listbox" aria-label="Patients">
           {visible.slice(0, 400).map((p) => (
             <button key={p.key} className={"pitem" + (p.key === selected ? " on" : "")} onClick={() => open(p.key, needsPatient ? shown : landing)}>
-              <span className={"dot " + (p.status === "Flagged" ? "flag" : "quiet")} /> {p.id}
+              <span className={"dot " + (p.status === "Flagged" ? "flag" : "idle")} /> {p.id}
               <span className="sub">{p.status === "Flagged" ? p.scenario : "Quiet"}</span>
             </button>
           ))}
