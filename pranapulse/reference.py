@@ -136,13 +136,15 @@ def overview(scenario, insights, results, labs, cycles):
     used = {k for i in mine for k in i.signals}
     used_labs = {e["signal"] for i in mine for e in i.evidence if e.get("source") == "Lab Results"}
     rows = []
+    onset_of = {o["key"]: o for i in insights for o in i.onsets}
 
     def row(key, label, value, unit, dec, rng, changed, usable=True, context=False):
         pos = position(value, rng) if usable else None
         rows.append({"key": key, "label": label, "value": None if not usable or value is None else round(float(value), 4),
                      "unit": unit, "decimals": dec, "range": text(rng) if rng else "no usual range",
                      "position": pos or ("no range" if usable and value is not None else "no data"), "changed": bool(changed),
-                     "context": context})
+                     "context": context, "onset": onset_of.get(key, {}).get("date"), "baseline": onset_of.get(key, {}).get("baseline"),
+                     "rng_low": rng.low if rng else None, "rng_high": rng.high if rng else None})
 
     for k in area.signals:
         r = results.get(k)
