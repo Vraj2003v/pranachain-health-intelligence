@@ -25,8 +25,8 @@ export function RangeBar({ r }) {
 
 // All of one area's own measures together: latest value, usual range, and the date a change began.
 export default function Overview({ ov }) {
-  if (!ov || ov.rows.length === 0) return null;
-  const rows = [...ov.rows].sort((x, y) => (y.changed - x.changed) || (x.context - y.context));
+  if (!ov || ov.rows.filter((r) => r.value != null).length === 0) return null;
+  const rows = ov.rows.filter((r) => r.value != null).sort((x, y) => (y.changed - x.changed) || (x.context - y.context));
   return (
     <section className="overview" aria-label="All measures in this area">
       <div className="ov-sum">
