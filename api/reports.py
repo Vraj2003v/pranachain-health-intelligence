@@ -14,6 +14,7 @@ from pranapulse.detect import detect
 from pranapulse.loader import Patient
 from pranapulse.readings import MEASURES, VITALS, WEARABLE, kind, parse_readings
 from pranapulse.reports import ReportError, parse_report, quality
+from pranapulse.risk import READING_RULES, assess
 
 from . import auth
 from .db import db
@@ -320,4 +321,52 @@ def _store_readings(user, filename: str, data: bytes, sha: str):
            "missing": [], "conflicts": conflicts, "unrecognised": rep.unrecognised, "skipped": rep.skipped + rep.combined, "kind": "readings"}
     if conflicts and added == 0:
         out["status"] = "conflict"
+    return out
+
+
+@router.get("/api/reports/{kind}/{report_id}/risk")
+def report_risk(kind: str, report_id: int, user=Depends(auth.current_user)):
+    """Risk factors and the screening level from ONE uploaded document."""
+    with db() as con:
+        if kind == "lab":
+            head = con.execute("SELECT id, patient_id, collected AS period, filename FROM lab_reports WHERE id = ? AND user_id = ?",
+                               (report_id, user["id"])).fetchone()
+            if not head:
+                raise HTTPException(404, "Report not found")
+            labs = [dict(r) for r in con.execute("SELECT test, value, unit, ref_low, ref_high FROM lab_values WHERE report_id = ?", (report_id,))]
+            readings = []
+        elif kind == "readings":
+            head = con.execute("SELECT id, patient_id, first_day || ' to ' || last_day AS period, filename FROM reading_files "
+                               "WHERE id = ? AND user_id = ?", (report_id, user["id"])).fetchone()
+            if not head:
+                raise HTTPException(404, "Report not found")
+            labs = []
+            readings = [dict(r) for r in con.execute(
+                "SELECT measure, AVG(value) AS value, COUNT(*) AS days FROM daily_values WHERE file_id = ? GROUP BY measure", (report_id,))]
+        else:
+            raise HTTPException(404, "Report not found")
+    out = assess(labs, readings)
+    out["document"] = {"kind": kind, **dict(head)}
+    return out
+
+
+@router.get("/api/patients/{patient_id}/risk")
+def patient_risk(patient_id: str, user=Depends(auth.current_user)):
+    """Screening level from this person's latest lab results and their last 90 days of readings, all documents together."""
+    with db() as con:
+        labs = [dict(r) for r in con.execute(
+            "SELECT test, value, unit, ref_low, ref_high, MAX(collected) AS collected FROM lab_values "
+            "WHERE user_id = ? AND patient_id = ? GROUP BY test", (user["id"], patient_id))]
+        last = con.execute("SELECT MAX(day) AS d FROM daily_values WHERE user_id = ? AND patient_id = ?", (user["id"], patient_id)).fetchone()["d"]
+        readings = []
+        if last:
+            marks = ",".join("?" * len(READING_RULES))
+            readings = [dict(r) for r in con.execute(
+                f"SELECT measure, AVG(value) AS value, COUNT(*) AS days FROM daily_values WHERE user_id = ? AND patient_id = ? "
+                f"AND day > date(?, '-90 day') AND measure IN ({marks}) GROUP BY measure HAVING COUNT(*) >= 7",
+                (user["id"], patient_id, last, *READING_RULES))]
+    if not labs and not readings:
+        raise HTTPException(404, "No uploaded documents for this person")
+    out = assess(labs, readings)
+    out["document"] = {"kind": "patient", "patient_id": patient_id}
     return out

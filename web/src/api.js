@@ -26,6 +26,9 @@ export const api = {
   detail: (id) => fetch(`/api/documents/${id}/detail`).then(j),
   explain: (i, id) => fetch(`/api/documents/${id}/explain/${i}`, { method: "POST" }).then(j),
   ask: (id, question, area, history = []) => post(`/api/documents/${id}/ask`, { question, area, history }),
+  reports: () => fetch("/api/reports").then(j),
+  reportRisk: (kind, id) => fetch(`/api/reports/${kind}/${id}/risk`).then(j),
+  patientRisk: (pid) => fetch(`/api/patients/${encodeURIComponent(pid)}/risk`).then(j),
   audit: () => fetch("/api/audit").then(j),
   health: () => fetch("/api/health").then(j),
 };
