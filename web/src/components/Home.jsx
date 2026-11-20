@@ -1,3 +1,4 @@
+import { enough } from "../sufficient.js";
 import { useEffect, useState } from "react";
 import { STEPS, getSteps, mark } from "../progress.js";
 import { Line, LineChart, ReferenceLine, ResponsiveContainer, Bar, BarChart } from "recharts";
@@ -20,7 +21,7 @@ function Spark({ d, area }) {
     return c.length ? <ResponsiveContainer width="100%" height={54}><BarChart data={c}><Bar dataKey="v" fill={area.hue} radius={2} isAnimationActive={false} /></BarChart></ResponsiveContainer> : null;
   }
   const wanted = d.insights.find((i) => i.scenario === area.scenario && i.forecastKey)?.forecastKey;
-  const key = wanted || area.measures.find((k) => d.series[k]?.rows.some((r) => r.w != null));
+  const key = wanted || area.measures.find((k) => enough(d.series[k]));
   const s = key && d.series[key];
   if (!s) return null;
   const data = s.rows.filter((r) => r.w != null).map((r) => ({ t: T(r.d), w: r.w }));
@@ -37,10 +38,10 @@ function Spark({ d, area }) {
 // True when nothing at all was uploaded for this area (e.g. a person built only from lab reports has no daily readings or cycles).
 const LABS = { "Cardiovascular / hypertension": ["LDL cholesterol"], "Metabolic health": ["HbA1c", "Fasting glucose"], "Women's health (PCOS)": [] };
 const hasNoData = (d, a) =>
-  a.measures.every((k) => !d.series?.[k]?.rows?.some((r) => r.v != null)) &&
+  a.measures.every((k) => !enough(d.series?.[k])) &&
   (LABS[a.scenario] || []).every((t) => !d.labs?.[t]) &&
   (a.scenario !== "Women's health (PCOS)" || !(d.cycles || []).length);
-const noDaily = (d, a) => a.measures.length > 0 && a.measures.every((k) => !d.series?.[k]?.rows?.some((r) => r.v != null));
+const noDaily = (d, a) => a.measures.length > 0 && a.measures.every((k) => !enough(d.series?.[k]));
 const LABONLY = "No daily readings were uploaded for this area. Only the lab results in the table could be checked.";
 const calmText = (d, a) => (hasNoData(d, a) ? NODATA : noDaily(d, a) ? LABONLY : a.calm);
 const NODATA = "No readings of this kind were uploaded, so nothing could be checked here.";

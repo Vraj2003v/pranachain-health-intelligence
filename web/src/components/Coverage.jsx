@@ -1,11 +1,13 @@
 import { fmt } from "../api";
 
 export default function Coverage({ d }) {
+  const rows = d.coverage.filter((r) => (r.coverage ?? 0) > 0);
+  if (rows.length === 0) return <section><p className="note">There is not enough data to report on yet. Upload reports to see data quality here.</p></section>;
   return (
     <section>
       <div className="tablewrap"><table>
         <thead><tr><th>Signal</th><th>Source sheet</th><th>Days with data</th><th>Earlier {d.windowDays} days</th><th>Recent {d.windowDays} days</th><th>Change</th><th>Result</th><th>Data flag</th></tr></thead>
-        <tbody>{d.coverage.map((r) => (
+        <tbody>{rows.map((r) => (
           <tr key={r.signal}><td><b>{r.signal}</b></td><td>{r.sheet}</td><td>{Math.round((r.coverage ?? 0) * 100)}%</td><td>{r.nFirst}</td><td>{r.nLast}</td>
             <td>{r.change == null ? "—" : `${r.change > 0 ? "+" : ""}${fmt(r.change, r.decimals)} ${r.unit}`}</td>
             <td>{r.direction[0].toUpperCase() + r.direction.slice(1)}</td>
