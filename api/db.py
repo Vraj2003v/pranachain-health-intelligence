@@ -45,6 +45,17 @@ CREATE TABLE IF NOT EXISTS daily_values (
   id INTEGER PRIMARY KEY, file_id INTEGER NOT NULL REFERENCES reading_files(id) ON DELETE CASCADE,
   user_id INTEGER NOT NULL, patient_id TEXT NOT NULL, day TEXT NOT NULL, measure TEXT NOT NULL, value REAL NOT NULL,
   UNIQUE(user_id, patient_id, day, measure));
+CREATE TABLE IF NOT EXISTS context_files (
+  id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  patient_id TEXT NOT NULL, kind TEXT NOT NULL, filename TEXT NOT NULL, sha256 TEXT NOT NULL, size INTEGER NOT NULL,
+  doc_date TEXT, age REAL, sex TEXT, note TEXT, ocr INTEGER NOT NULL DEFAULT 0, added INTEGER NOT NULL DEFAULT 0,
+  uploaded_at TEXT NOT NULL DEFAULT (datetime('now')), UNIQUE(user_id, sha256));
+CREATE TABLE IF NOT EXISTS context_items (
+  id INTEGER PRIMARY KEY, file_id INTEGER NOT NULL REFERENCES context_files(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL, patient_id TEXT NOT NULL, kind TEXT NOT NULL, date TEXT NOT NULL, name TEXT NOT NULL,
+  detail TEXT, status TEXT, end_date TEXT, value REAL, extra TEXT,
+  UNIQUE(user_id, patient_id, kind, date, name));
+CREATE INDEX IF NOT EXISTS idx_context_patient ON context_items(user_id, patient_id);
 CREATE INDEX IF NOT EXISTS idx_daily_patient ON daily_values(user_id, patient_id);
 CREATE INDEX IF NOT EXISTS idx_docs_user ON documents(user_id);
 """

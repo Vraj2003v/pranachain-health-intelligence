@@ -117,6 +117,7 @@ class Readings:
     combined: list = field(default_factory=list)        # "Steps: 3 days had several readings; added together"
     age: float | None = None
     sex: str | None = None
+    ocr: bool = False
 
     @property
     def dates(self):
@@ -259,11 +260,8 @@ def _columns(heads, unrec):
     return cols
 
 
-def _parse_pdf(data):
-    pages = _pdf_pages(data)
+def _parse_pages(pages):
     text = "\n".join(pages)
-    if len(text.strip()) < 20:
-        raise ReportError("The PDF has no readable text (it may be a scan). Scans need OCR, which is not supported yet.")
     pid = re.search(r"Patient\s*ID\s*[:\-]?\s*([A-Za-z0-9_\-]+)", text)
     if not pid:
         raise ReportError("No Patient ID found in the report.")
@@ -305,16 +303,17 @@ def _parse_pdf(data):
 
 
 def parse_readings(filename: str, data: bytes) -> Readings:
-    name = filename.lower()
+    from . import intake
+    e = intake.ext(filename)
     try:
-        if name.endswith(".pdf"):
-            rep = _parse_pdf(data)
-        elif name.endswith(".csv"):
-            rep = _from_table(pd.read_csv(io.BytesIO(data)))
-        elif name.endswith((".xlsx", ".xlsm")):
-            rep = _from_table(pd.read_excel(io.BytesIO(data)))
+        if e in intake.TEXT_EXT or e in intake.IMAGE_EXT:
+            pages, ocr = intake.text_pages(filename, data)
+            rep = _parse_pages(pages)
+            rep.ocr = ocr
+        elif e in intake.TABLE_EXT:
+            rep = _from_table(intake.table_of(filename, data))
         else:
-            raise ReportError("Use a PDF, CSV or XLSX report.")
+            raise ReportError("Use a PDF, image, Word, text, CSV, Excel or JSON file.")
     except ReportError:
         raise
     except Exception as exc:
@@ -325,17 +324,22 @@ def parse_readings(filename: str, data: bytes) -> Readings:
     return rep
 
 
+def _kind_of_text(text):
+    if re.search(r"Test\s+Result\s+Unit", text):
+        return "lab"
+    return "readings" if _pdf_header(text) else "lab"
+
+
 def kind(filename: str, data: bytes) -> str:
     """'readings' when the document is a table of daily readings, otherwise 'lab' (which gives its own plain-language errors)."""
-    name = filename.lower()
+    from . import intake
+    e = intake.ext(filename)
     try:
-        if name.endswith(".pdf"):
-            text = _pdf_text(data)
-            if re.search(r"Test\s+Result\s+Unit", text):
-                return "lab"
-            return "readings" if _pdf_header(text) else "lab"
-        if name.endswith((".csv", ".xlsx", ".xlsm")):
-            df = pd.read_csv(io.BytesIO(data), nrows=50) if name.endswith(".csv") else pd.read_excel(io.BytesIO(data), nrows=50)
+        if e in intake.TEXT_EXT or e in intake.IMAGE_EXT:
+            pages, _ = intake.text_pages(filename, data)
+            return _kind_of_text("\n".join(pages))
+        if e in intake.TABLE_EXT:
+            df = intake.table_of(filename, data).head(50)
             cols = {_key(c): c for c in df.columns}
             has_date = any(c in cols for c in DATE_COLS)
             if has_date and any(c in cols for c in METRIC_COLS) and any(c in cols for c in VALUE_COLS):

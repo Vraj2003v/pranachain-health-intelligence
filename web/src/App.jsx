@@ -52,8 +52,8 @@ export default function App() {
   const loadDemo = () => run("Adding demo patients…", () => api.demo());
 
   const upload = async (fileList) => {
-    const files = [...fileList].filter((f) => /\.(xlsx|pdf|csv)$/i.test(f.name));
-    if (!files.length) { setError("Choose patient workbooks (.xlsx) or reports (.pdf, .csv, .xlsx)."); return; }
+    const files = [...fileList].filter((f) => /\.(xlsx|xlsm|xls|csv|json|pdf|docx|txt|png|jpe?g|tiff?|bmp|webp)$/i.test(f.name));
+    if (!files.length) { setError("Choose patient workbooks or documents: PDF, Word, Excel, CSV, JSON, text, or a scan or photo."); return; }
     const all = {}, note = [];
     await run("Reading files…", async () => {
       for (let i = 0; i < files.length; i += 10) {

@@ -10,10 +10,11 @@ import math
 import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
+from pranapulse.context import classify, parse_context
 from pranapulse.detect import detect
 from pranapulse.loader import Patient
-from pranapulse.readings import MEASURES, VITALS, WEARABLE, kind, parse_readings
-from pranapulse.reports import ReportError, parse_report, quality
+from pranapulse.readings import MEASURES, VITALS, WEARABLE, Readings, _accumulate, kind, parse_readings
+from pranapulse.reports import Report, ReportError, parse_report, quality
 from pranapulse.record import contents, summarise
 
 from . import auth
@@ -67,11 +68,15 @@ def _store_lab(user, filename: str, data: bytes):
         rep = parse_report(filename, data)
     except ReportError as exc:
         return {"status": "rejected", "why": str(exc)}
+    return _insert_lab(user, rep, filename, sha, len(data))
+
+
+def _insert_lab(user, rep, filename: str, sha: str, size: int):
     added, same, conflicts, missing = 0, 0, [], []
     with db() as con:
         cur = con.execute(
             "INSERT INTO lab_reports(user_id, patient_id, collected, filename, sha256, size, age, sex) VALUES (?,?,?,?,?,?,?,?)",
-            (user["id"], rep.patient_id, rep.collected, filename[:200], sha, len(data), rep.age, rep.sex))
+            (user["id"], rep.patient_id, rep.collected, filename[:200], sha, size, rep.age, rep.sex))
         rid = cur.lastrowid
         for r in rep.rows:
             old = con.execute("SELECT id, value FROM lab_values WHERE user_id = ? AND patient_id = ? AND collected = ? AND test = ?",
@@ -97,7 +102,7 @@ def _store_lab(user, filename: str, data: bytes):
             return {"status": "duplicate", "patient": rep.patient_id, "date": rep.collected,
                     "why": "the results for this person and date are already stored; nothing was added twice"}
     out = {"status": "added", "patient": rep.patient_id, "date": rep.collected, "added": added, "already_stored": same,
-           "missing": missing, "conflicts": conflicts, "unrecognised": rep.unrecognised}
+           "missing": missing, "conflicts": conflicts, "unrecognised": rep.unrecognised, "ocr": bool(rep.ocr)}
     if conflicts:
         out["status"] = "conflict" if added == 0 else "added"
     return out
@@ -129,10 +134,15 @@ def workbook_from_database(user, patient_id: str):
         vit.to_excel(w, sheet_name="Vitals Daily", index=False)
         wea.to_excel(w, sheet_name="Wearable Daily", index=False)
         (labs if len(labs) else empty(["Date", "Test Name", "Result", "Unit", "Reference Range"])).to_excel(w, sheet_name="Lab Results", index=False)
-        empty(["Date", "Encounter / Type", "Finding / Event", "Status", "Notes"]).to_excel(w, sheet_name="Medical History", index=False)
-        empty(["Medication ID", "Medication", "Dose", "Frequency", "Route", "Start Date", "End Date", "Status", "Indication",
-               "Tolerance / Adverse Effect", "Change Rationale"]).to_excel(w, sheet_name="Medication History", index=False)
-        empty(["Cycle", "Start Date", "Cycle Length", "Bleeding Days", "Symptoms", "Severity"]).to_excel(w, sheet_name="Women Health", index=False)
+        pd.DataFrame({"Date": p.history.date.dt.strftime("%Y-%m-%d"), "Encounter / Type": "Uploaded record", "Finding / Event": p.history.event,
+                      "Status": p.history.status, "Notes": ""}).to_excel(w, sheet_name="Medical History", index=False)
+        m = p.meds
+        pd.DataFrame({"Medication ID": [f"M{i + 1}" for i in range(len(m))], "Medication": m.medication, "Dose": m.get("dose", ""), "Frequency": "", "Route": "",
+                      "Start Date": m.start.dt.strftime("%Y-%m-%d"), "End Date": m.end.dt.strftime("%Y-%m-%d"), "Status": m.status, "Indication": m.indication,
+                      "Tolerance / Adverse Effect": "", "Change Rationale": ""}).to_excel(w, sheet_name="Medication History", index=False)
+        c = p.cycles
+        pd.DataFrame({"Cycle": range(1, len(c) + 1), "Start Date": c.start.dt.strftime("%Y-%m-%d"), "Cycle Length": c.cycle_length,
+                      "Bleeding Days": "", "Symptoms": "", "Severity": ""}).to_excel(w, sheet_name="Women Health", index=False)
     return out.getvalue()
 
 
@@ -196,6 +206,9 @@ def list_reports(user=Depends(auth.current_user)):
         files += [dict(r, kind="readings") for r in con.execute(
             "SELECT id, patient_id, first_day || ' to ' || last_day AS collected, filename, size, added, uploaded_at FROM reading_files "
             "WHERE user_id = ? ORDER BY first_day, id", (user["id"],))]
+        files += [dict(r, kind="context") for r in con.execute(
+            "SELECT id, patient_id, COALESCE(doc_date, '') AS collected, filename, size, added, uploaded_at, kind AS what FROM context_files "
+            "WHERE user_id = ? AND added > 0 ORDER BY id", (user["id"],))]
     return {"patients": _patients(user), "reports": files}
 
 
@@ -222,6 +235,12 @@ def patient_from_database(user, patient_id: str):
                            "ORDER BY collected DESC LIMIT 1", (user["id"], patient_id)).fetchone() or \
             con.execute("SELECT age, sex FROM reading_files WHERE user_id = ? AND patient_id = ? AND (age IS NOT NULL OR sex IS NOT NULL) "
                         "ORDER BY id DESC LIMIT 1", (user["id"], patient_id)).fetchone()
+        items = [dict(r) for r in con.execute(
+            "SELECT kind, date, name, detail, status, end_date, value, extra FROM context_items WHERE user_id = ? AND patient_id = ? ORDER BY date",
+            (user["id"], patient_id))]
+        if meta is None or (meta["age"] is None and meta["sex"] is None):
+            meta = con.execute("SELECT age, sex FROM context_files WHERE user_id = ? AND patient_id = ? AND (age IS NOT NULL OR sex IS NOT NULL) "
+                               "ORDER BY id DESC LIMIT 1", (user["id"], patient_id)).fetchone() or meta
     if not vals and not daily_rows:
         return None
     cols = ["date", "test", "result", "unit", "ref_low", "ref_high"]
@@ -241,9 +260,15 @@ def patient_from_database(user, patient_id: str):
     else:
         daily = pd.DataFrame(index=pd.DatetimeIndex([], name="Date"), columns=names, dtype=float)
     profile = {"Patient ID": patient_id, "Age": meta["age"] if meta else None, "Sex": meta["sex"] if meta else None}
-    empty_hist = pd.DataFrame({"date": pd.to_datetime([]), "event": [], "status": []})
-    empty_meds = pd.DataFrame({"medication": [], "indication": [], "start": pd.to_datetime([]), "end": pd.to_datetime([]), "status": []})
-    empty_cyc = pd.DataFrame({"start": pd.to_datetime([]), "cycle_length": []})
+    of = lambda k: [i for i in items if i["kind"] == k]
+    hist = of("history")
+    empty_hist = pd.DataFrame({"date": pd.to_datetime([h["date"] for h in hist]), "event": [h["name"] for h in hist], "status": [h["status"] for h in hist]})
+    meds_ = of("medication")
+    empty_meds = pd.DataFrame({"medication": [m["name"] for m in meds_], "indication": [m["detail"] or "" for m in meds_],
+                               "start": pd.to_datetime([m["date"] for m in meds_]), "end": pd.to_datetime([m["end_date"] for m in meds_]),
+                               "status": [m["status"] for m in meds_], "dose": [m["extra"] or "" for m in meds_]})
+    cyc_ = of("cycle")
+    empty_cyc = pd.DataFrame({"start": pd.to_datetime([c["date"] for c in cyc_]), "cycle_length": [float(c["value"]) for c in cyc_]})
     return Patient(patient_id, profile, daily, labs, empty_hist, empty_meds, empty_cyc)
 
 
@@ -282,8 +307,11 @@ def store_report(user, filename: str, data: bytes):
     sha = hashlib.sha256(data).hexdigest()
     with db() as con:
         if (con.execute("SELECT 1 FROM lab_reports WHERE user_id = ? AND sha256 = ?", (user["id"], sha)).fetchone()
-                or con.execute("SELECT 1 FROM reading_files WHERE user_id = ? AND sha256 = ?", (user["id"], sha)).fetchone()):
+                or con.execute("SELECT 1 FROM reading_files WHERE user_id = ? AND sha256 = ?", (user["id"], sha)).fetchone()
+                or con.execute("SELECT 1 FROM context_files WHERE user_id = ? AND sha256 = ?", (user["id"], sha)).fetchone()):
             return {"status": "duplicate", "why": "this exact file was already uploaded"}
+    if classify(filename, data):
+        return _store_context(user, filename, data, sha)
     if kind(filename, data) == "readings":
         return _store_readings(user, filename, data, sha)
     return _store_lab(user, filename, data)
@@ -294,12 +322,16 @@ def _store_readings(user, filename: str, data: bytes, sha: str):
         rep = parse_readings(filename, data)
     except ReportError as exc:
         return {"status": "rejected", "why": str(exc)}
+    return _insert_readings(user, rep, filename, sha, len(data))
+
+
+def _insert_readings(user, rep, filename: str, sha: str, size: int):
     dates = rep.dates
     added, same, conflicts = 0, 0, []
     with db() as con:
         cur = con.execute(
             "INSERT INTO reading_files(user_id, patient_id, first_day, last_day, filename, sha256, size, age, sex) VALUES (?,?,?,?,?,?,?,?,?)",
-            (user["id"], rep.patient_id, dates[0], dates[-1], filename[:200], sha, len(data), rep.age, rep.sex))
+            (user["id"], rep.patient_id, dates[0], dates[-1], filename[:200], sha, size, rep.age, rep.sex))
         fid = cur.lastrowid
         for (day, measure), v in sorted(rep.days.items()):
             old = con.execute("SELECT value FROM daily_values WHERE user_id = ? AND patient_id = ? AND day = ? AND measure = ?",
@@ -318,10 +350,75 @@ def _store_readings(user, filename: str, data: bytes, sha: str):
             return {"status": "duplicate", "patient": rep.patient_id, "date": dates[0],
                     "why": "the readings for this person and these days are already stored; nothing was added twice"}
     out = {"status": "added", "patient": rep.patient_id, "date": f"{dates[0]} to {dates[-1]}", "added": added, "already_stored": same,
-           "missing": [], "conflicts": conflicts, "unrecognised": rep.unrecognised, "skipped": rep.skipped + rep.combined, "kind": "readings"}
+           "missing": [], "conflicts": conflicts, "unrecognised": rep.unrecognised, "skipped": rep.skipped + rep.combined, "kind": "readings", "ocr": bool(rep.ocr)}
     if conflicts and added == 0:
         out["status"] = "conflict"
     return out
+
+
+PLURAL = {"medication": "medication", "history": "diagnosis/finding", "cycle": "cycle"}
+
+
+def _store_context(user, filename: str, data: bytes, sha: str):
+    """Medications, diagnoses and earlier findings, cycle log, clinical notes and FHIR bundles."""
+    try:
+        ctx = parse_context(filename, data)
+    except ReportError as exc:
+        return {"status": "rejected", "why": str(exc)}
+    uid, pid = user["id"], ctx.patient_id
+    added = 0
+    counts = {}
+    extra = {}
+    with db() as con:
+        cur = con.execute(
+            "INSERT INTO context_files(user_id, patient_id, kind, filename, sha256, size, doc_date, age, sex, note, ocr) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (uid, pid, ctx.kind, filename[:200], sha, len(data), ctx.date, ctx.age, ctx.sex, ctx.note or None, int(ctx.ocr)))
+        fid = cur.lastrowid
+
+        def put(kind_, date, name, detail, status, end, value, ex=""):
+            nonlocal added
+            n = con.execute("INSERT OR IGNORE INTO context_items(file_id, user_id, patient_id, kind, date, name, detail, status, end_date, value, extra) "
+                            "VALUES (?,?,?,?,?,?,?,?,?,?,?)", (fid, uid, pid, kind_, date, name[:200], detail, status, end, value, ex)).rowcount
+            added += n
+            counts[kind_] = counts.get(kind_, 0) + n
+        for m in ctx.meds:
+            put("medication", m["start"], m["name"], m["indication"], m["status"], m["end"], None, m.get("dose", ""))
+        for h in ctx.history:
+            put("history", h["date"], h["event"], "", h["status"], None, None)
+        for c in ctx.cycles:
+            put("cycle", c["start"], "Cycle", "", "", None, c["length"])
+        if ctx.note:
+            added += 1
+            counts["note"] = 1
+    lab_added = 0
+    if ctx.labs:                                           # FHIR: one lab report per collection date
+        by_day = {}
+        for day, row in ctx.labs:
+            by_day.setdefault(day, []).append(row)
+        for day, rows in sorted(by_day.items()):
+            r = _insert_lab(user, Report(pid, day, rows, ctx.age, ctx.sex), filename, f"{sha}:{day}", len(data))
+            lab_added += r.get("added", 0)
+        counts["lab"] = lab_added
+    read_added = 0
+    if ctx.readings:
+        rd = Readings(pid, {}, [], [], [], ctx.age, ctx.sex)
+        rd.days, rd.combined = _accumulate(ctx.readings, rd.unrecognised, rd.skipped)
+        r = _insert_readings(user, rd, filename, f"{sha}:readings", len(data))
+        read_added = r.get("added", 0)
+        counts["readings"] = read_added
+    total = added + lab_added + read_added
+    with db() as con:
+        con.execute("UPDATE context_files SET added = ? WHERE id = ?", (added, fid))
+        if added == 0:
+            con.execute("DELETE FROM context_files WHERE id = ?", (fid,))
+            if total == 0:
+                return {"status": "duplicate", "patient": pid, "date": ctx.date or "",
+                        "why": "everything in this document is already stored; nothing was added twice"}
+        if ctx.kind == "fhir" and added == 0:     # keep a marker so the same FHIR file is recognised next time
+            con.execute("INSERT INTO context_files(user_id, patient_id, kind, filename, sha256, size, added) VALUES (?,?,?,?,?,?,?)",
+                        (uid, pid, "fhir", filename[:200], sha, len(data), 0))
+    return {"status": "added", "patient": pid, "date": ctx.date or "", "added": total, "kind": ctx.kind, "counts": counts,
+            "missing": [], "conflicts": [], "unrecognised": [], "skipped": ctx.skipped, "ocr": bool(ctx.ocr)}
 
 
 @router.get("/api/reports/{kind}/{report_id}/contents")
@@ -344,6 +441,17 @@ def report_contents(kind: str, report_id: int, user=Depends(auth.current_user)):
             rows = contents(readings=[dict(r, unit=(MEASURES.get(r["measure"]) or ("", ""))[1]) for r in con.execute(
                 "SELECT measure, COUNT(*) AS days, MIN(day) AS first_day, MAX(day) AS last_day, AVG(value) AS mean, MIN(value) AS low, MAX(value) AS high "
                 "FROM daily_values WHERE file_id = ? GROUP BY measure", (report_id,))])
+        elif kind == "context":
+            head = con.execute("SELECT id, patient_id, COALESCE(doc_date, '') AS period, filename, note, ocr FROM context_files WHERE id = ? AND user_id = ?",
+                               (report_id, user["id"])).fetchone()
+            if not head:
+                raise HTTPException(404, "Report not found")
+            rows = [{"kind": r["kind"], "date": r["date"], "name": r["name"], "detail": r["detail"] or "", "status": r["status"] or "",
+                     "end": r["end_date"] or "", "value": r["value"], "dose": r["extra"] or ""} for r in con.execute(
+                "SELECT kind, date, name, detail, status, end_date, value, extra FROM context_items WHERE file_id = ? ORDER BY date", (report_id,))]
+            if head["note"]:
+                rows.append({"kind": "note", "date": head["period"], "name": "Clinical note", "detail": head["note"][:3000], "status": "", "end": "", "value": None, "dose": ""})
+            head = {k: head[k] for k in ("id", "patient_id", "period", "filename", "ocr")}
         else:
             raise HTTPException(404, "Report not found")
     return {"document": {"kind": kind, **dict(head)}, "rows": rows}
@@ -360,6 +468,28 @@ def patient_record(patient_id: str, user=Depends(auth.current_user)):
             "WHERE user_id = ? AND patient_id = ? GROUP BY measure", (user["id"], patient_id))]
         reports = con.execute("SELECT COUNT(*) AS n FROM lab_reports WHERE user_id = ? AND patient_id = ?", (user["id"], patient_id)).fetchone()["n"]
         files = con.execute("SELECT COUNT(*) AS n FROM reading_files WHERE user_id = ? AND patient_id = ?", (user["id"], patient_id)).fetchone()["n"]
-    if not labs and not readings:
+        context = [dict(r) for r in con.execute(
+            "SELECT kind, date, name, detail, status, end_date, value FROM context_items WHERE user_id = ? AND patient_id = ? ORDER BY date", (user["id"], patient_id))]
+        notes = con.execute("SELECT COUNT(*) AS n FROM context_files WHERE user_id = ? AND patient_id = ? AND note IS NOT NULL AND note != ''",
+                            (user["id"], patient_id)).fetchone()["n"]
+        docs = con.execute("SELECT COUNT(*) AS n FROM context_files WHERE user_id = ? AND patient_id = ? AND added > 0", (user["id"], patient_id)).fetchone()["n"]
+    if not labs and not readings and not context:
         raise HTTPException(404, "No uploaded documents for this person")
-    return summarise(labs, readings, reports, files)
+    p = patient_from_database(user, patient_id)
+    sex = p.profile.get("Sex") if p is not None else None
+    return summarise(labs, readings, reports, files, context, notes, docs, sex if sex == sex else None)
+
+
+@router.delete("/api/reports/{kind}/{report_id}")
+def delete_any_report(kind: str, report_id: int, user=Depends(auth.current_user)):
+    table = {"lab": "lab_reports", "readings": "reading_files", "context": "context_files"}.get(kind)
+    if not table:
+        raise HTTPException(404, "Report not found")
+    with db() as con:
+        row = con.execute(f"SELECT filename, patient_id FROM {table} WHERE id = ? AND user_id = ?", (report_id, user["id"])).fetchone()
+        if not row:
+            raise HTTPException(404, "Report not found")
+        con.execute(f"DELETE FROM {table} WHERE id = ?", (report_id,))
+    sync_documents(user, [row["patient_id"]])
+    auth.log(user, "delete_report", row["filename"])
+    return {"ok": True}
