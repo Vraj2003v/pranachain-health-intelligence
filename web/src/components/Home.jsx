@@ -1,5 +1,5 @@
 import { enough } from "../sufficient.js";
-import { PatientRisk } from "./RiskView.jsx";
+import { PatientRecord } from "./RecordView.jsx";
 import { useEffect, useState } from "react";
 import { STEPS, getSteps, mark } from "../progress.js";
 import { Line, LineChart, ReferenceLine, ResponsiveContainer, Bar, BarChart } from "recharts";
@@ -75,7 +75,7 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
       <p className="muted small">Patient {detail.patient.id}, {detail.patient.age ?? "age unknown"}, {detail.patient.sex ?? "sex unknown"}. Readings from {detail.patient.start} to {detail.patient.end}.</p>
 
       <Dashboard detail={detail} />
-      <PatientRisk id={detail.patient.id} />
+      <PatientRecord id={detail.patient.id} />
 
       {coach && (
         <aside className="starter" aria-label="Getting started">
