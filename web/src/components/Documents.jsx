@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { kb, stamp } from "../api";
-import { Reports } from "./RiskView.jsx";
+import { Reports } from "./RecordView.jsx";
 
 export default function Documents({ docs, onUpload, onDemo, onOpen, onRemove, onRemoveAll, busy }) {
   const input = useRef();
