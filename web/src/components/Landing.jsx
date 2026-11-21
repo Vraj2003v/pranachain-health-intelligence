@@ -23,12 +23,12 @@ export default function Landing({ user, onDemo, onUpload, onSignOut, busy, error
         onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); onUpload(e.dataTransfer.files); }}>
         <p><b>Drop patient workbooks or reports here</b></p>
-        <p className="muted">Workbooks (.xlsx), or single reports (.pdf, .csv, .xlsx) added one document at a time: lab results, blood pressure and heart-rate logs, wearable exports. You can select many at once.</p>
+        <p className="muted">Patient workbooks, or single documents added one at a time: lab reports, blood pressure and heart-rate logs, wearable exports, medication lists, diagnoses, cycle logs and clinical notes. Formats: PDF, Word, Excel, CSV, JSON (including FHIR), text, and scans or photos. You can select many at once.</p>
         <div className="row">
           <button className="btn" disabled={!!busy} onClick={() => input.current.click()}>Upload files</button>
           <button className="btn ghost" disabled={!!busy} onClick={onDemo}>Try demo patients</button>
         </div>
-        <input ref={input} type="file" accept=".xlsx,.pdf,.csv" multiple hidden onChange={(e) => onUpload(e.target.files)} />
+        <input ref={input} type="file" accept=".xlsx,.xls,.xlsm,.csv,.json,.pdf,.docx,.txt,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp" multiple hidden onChange={(e) => onUpload(e.target.files)} />
       </div>
       {busy && <div className="banner">{busy}</div>}
       {notes.length > 0 && <div className="banner"><b>Upload notes</b><ul className="notes">{summariseNotes(notes).map((l, i) => <li key={i}>{l}</li>)}</ul></div>}

@@ -8,9 +8,9 @@ see what was extracted and what is still missing.
 from .reference import RANGES
 
 MISSING_NOTE = {
-    "medications": "Medication history is not part of the uploaded record yet.",
-    "history": "Previous diagnoses and clinical findings are not part of the uploaded record yet.",
-    "cycles": "Cycle data is not part of the uploaded record yet, so the women's health (PCOS) scenario cannot run on uploads.",
+    "medications": "Medications have not been added.",
+    "history": "Previous diagnoses and clinical findings have not been added.",
+    "cycles": "A cycle log has not been added, so the women's health (PCOS) pattern cannot be checked.",
 }
 
 
@@ -35,13 +35,28 @@ def contents(labs=(), readings=()):
     return rows
 
 
-def summarise(labs=(), readings=(), reports=0, files=0):
-    """The combined record for one person: which tests and measures it holds, over what period, and what is missing."""
+def summarise(labs=(), readings=(), reports=0, files=0, context=(), notes=0, documents=0, sex=None):
+    """The combined record for one person: which tests and measures it holds, over what period, and what is still missing.
+    context: rows of medications, history and cycle items (kind, date, name, detail, status, end_date, value)."""
     tests = {}
     for r in labs:
         t = tests.setdefault(r["test"], {"name": r["test"], "unit": r.get("unit") or "", "results": 0, "first": r["collected"], "last": r["collected"]})
         t["results"] += 1
         t["first"], t["last"] = min(t["first"], r["collected"]), max(t["last"], r["collected"])
     measures = [{"name": r["measure"], "days": r["days"], "first": r["first_day"], "last": r["last_day"], "unit": r.get("unit") or ""} for r in readings]
-    return {"lab_reports": reports, "reading_files": files, "tests": sorted(tests.values(), key=lambda t: t["name"]),
-            "measures": sorted(measures, key=lambda m: m["name"]), "missing": list(MISSING_NOTE.values())}
+    medications = [{"name": c["name"], "detail": c.get("detail") or "", "start": c["date"], "end": c.get("end_date") or "", "status": c.get("status") or ""}
+                   for c in context if c["kind"] == "medication"]
+    history = [{"name": c["name"], "date": c["date"], "status": c.get("status") or ""} for c in context if c["kind"] == "history"]
+    cycles = sorted(c["date"] for c in context if c["kind"] == "cycle")
+    missing = []
+    if not medications:
+        missing.append(MISSING_NOTE["medications"])
+    if not history:
+        missing.append(MISSING_NOTE["history"])
+    if not cycles and sex != "Male":
+        missing.append(MISSING_NOTE["cycles"])
+    return {"lab_reports": reports, "reading_files": files, "documents": documents,
+            "tests": sorted(tests.values(), key=lambda t: t["name"]), "measures": sorted(measures, key=lambda m: m["name"]),
+            "medications": medications, "history": history,
+            "cycles": {"count": len(cycles), "first": cycles[0] if cycles else "", "last": cycles[-1] if cycles else ""},
+            "notes": notes, "missing": missing}
