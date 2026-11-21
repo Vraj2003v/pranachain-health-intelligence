@@ -14,7 +14,7 @@ from pranapulse.detect import detect
 from pranapulse.loader import Patient
 from pranapulse.readings import MEASURES, VITALS, WEARABLE, kind, parse_readings
 from pranapulse.reports import ReportError, parse_report, quality
-from pranapulse.risk import READING_RULES, assess
+from pranapulse.record import contents, summarise
 
 from . import auth
 from .db import db
@@ -324,49 +324,42 @@ def _store_readings(user, filename: str, data: bytes, sha: str):
     return out
 
 
-@router.get("/api/reports/{kind}/{report_id}/risk")
-def report_risk(kind: str, report_id: int, user=Depends(auth.current_user)):
-    """Risk factors and the screening level from ONE uploaded document."""
+@router.get("/api/reports/{kind}/{report_id}/contents")
+def report_contents(kind: str, report_id: int, user=Depends(auth.current_user)):
+    """The values ONE uploaded document added to the person's record. No score: analysis runs on the combined record."""
     with db() as con:
         if kind == "lab":
             head = con.execute("SELECT id, patient_id, collected AS period, filename FROM lab_reports WHERE id = ? AND user_id = ?",
                                (report_id, user["id"])).fetchone()
             if not head:
                 raise HTTPException(404, "Report not found")
-            labs = [dict(r) for r in con.execute("SELECT test, value, unit, ref_low, ref_high FROM lab_values WHERE report_id = ?", (report_id,))]
-            readings = []
+            labs = [dict(r, collected=head["period"]) for r in con.execute(
+                "SELECT test, value, unit, ref_low, ref_high FROM lab_values WHERE report_id = ?", (report_id,))]
+            rows = contents(labs=labs)
         elif kind == "readings":
             head = con.execute("SELECT id, patient_id, first_day || ' to ' || last_day AS period, filename FROM reading_files "
                                "WHERE id = ? AND user_id = ?", (report_id, user["id"])).fetchone()
             if not head:
                 raise HTTPException(404, "Report not found")
-            labs = []
-            readings = [dict(r) for r in con.execute(
-                "SELECT measure, AVG(value) AS value, COUNT(*) AS days FROM daily_values WHERE file_id = ? GROUP BY measure", (report_id,))]
+            rows = contents(readings=[dict(r, unit=(MEASURES.get(r["measure"]) or ("", ""))[1]) for r in con.execute(
+                "SELECT measure, COUNT(*) AS days, MIN(day) AS first_day, MAX(day) AS last_day, AVG(value) AS mean, MIN(value) AS low, MAX(value) AS high "
+                "FROM daily_values WHERE file_id = ? GROUP BY measure", (report_id,))])
         else:
             raise HTTPException(404, "Report not found")
-    out = assess(labs, readings)
-    out["document"] = {"kind": kind, **dict(head)}
-    return out
+    return {"document": {"kind": kind, **dict(head)}, "rows": rows}
 
 
-@router.get("/api/patients/{patient_id}/risk")
-def patient_risk(patient_id: str, user=Depends(auth.current_user)):
-    """Screening level from this person's latest lab results and their last 90 days of readings, all documents together."""
+@router.get("/api/patients/{patient_id}/record")
+def patient_record(patient_id: str, user=Depends(auth.current_user)):
+    """The combined record built from every document uploaded for this person."""
     with db() as con:
         labs = [dict(r) for r in con.execute(
-            "SELECT test, value, unit, ref_low, ref_high, MAX(collected) AS collected FROM lab_values "
-            "WHERE user_id = ? AND patient_id = ? GROUP BY test", (user["id"], patient_id))]
-        last = con.execute("SELECT MAX(day) AS d FROM daily_values WHERE user_id = ? AND patient_id = ?", (user["id"], patient_id)).fetchone()["d"]
-        readings = []
-        if last:
-            marks = ",".join("?" * len(READING_RULES))
-            readings = [dict(r) for r in con.execute(
-                f"SELECT measure, AVG(value) AS value, COUNT(*) AS days FROM daily_values WHERE user_id = ? AND patient_id = ? "
-                f"AND day > date(?, '-90 day') AND measure IN ({marks}) GROUP BY measure HAVING COUNT(*) >= 7",
-                (user["id"], patient_id, last, *READING_RULES))]
+            "SELECT test, unit, collected FROM lab_values WHERE user_id = ? AND patient_id = ?", (user["id"], patient_id))]
+        readings = [dict(r, unit=(MEASURES.get(r["measure"]) or ("", ""))[1]) for r in con.execute(
+            "SELECT measure, COUNT(*) AS days, MIN(day) AS first_day, MAX(day) AS last_day FROM daily_values "
+            "WHERE user_id = ? AND patient_id = ? GROUP BY measure", (user["id"], patient_id))]
+        reports = con.execute("SELECT COUNT(*) AS n FROM lab_reports WHERE user_id = ? AND patient_id = ?", (user["id"], patient_id)).fetchone()["n"]
+        files = con.execute("SELECT COUNT(*) AS n FROM reading_files WHERE user_id = ? AND patient_id = ?", (user["id"], patient_id)).fetchone()["n"]
     if not labs and not readings:
         raise HTTPException(404, "No uploaded documents for this person")
-    out = assess(labs, readings)
-    out["document"] = {"kind": "patient", "patient_id": patient_id}
-    return out
+    return summarise(labs, readings, reports, files)
