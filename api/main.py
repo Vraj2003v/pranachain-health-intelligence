@@ -212,6 +212,8 @@ async def upload(files: list[UploadFile] = File(...), user=Depends(auth.current_
                 notes.append(f"{name}: not recognised and left out: {t}")
             notes += [f"{name}: {c}" for c in res.get("conflicts", [])]
             notes += [f"{name}: {c}" for c in res.get("skipped", [])]
+            if res.get("ocr"):
+                notes.append(f"{name}: read from a scan or photo with OCR. Please check the values against the original.")
         else:
             failed[name] = res["why"] if res["status"] != "conflict" else " ".join(res["conflicts"])
     sync_documents(user, touched)
