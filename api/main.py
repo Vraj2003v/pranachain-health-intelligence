@@ -366,8 +366,10 @@ def ask(doc_id: int, body: Ask, user=Depends(auth.current_user)):
     if not q:
         raise HTTPException(400, "Type a question first.")
     hist = [{"who": str(h.get("who", ""))[:6], "text": str(h.get("text", ""))[:400], "key": h.get("key")} for h in body.history[-8:]]
-    _, ins, _, results = analysed(doc_id, row["sha256"])
-    text, source, action, follow, key = ask_mod.answer(q, ins, body.area, results=results, history=hist)
+    p, ins, _, results = analysed(doc_id, row["sha256"])
+    age, sex = num(p.profile.get("Age")), p.profile.get("Sex")
+    profile = {"age": age, "sex": None if sex is None or sex != sex else str(sex)}
+    text, source, action, follow, key = ask_mod.answer(q, ins, body.area, results=results, history=hist, profile=profile)
     auth.log(user, "ask_question", row["filename"])
     return {"text": text, "source": source, "action": action, "followups": follow, "key": key}
 
