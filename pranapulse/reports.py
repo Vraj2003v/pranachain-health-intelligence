@@ -3,7 +3,7 @@
 A report is one document for one person on one collection date. Different labs write the same test
 differently ("Hemoglobin A1c", "A1C"; mmol/mol or %), so every row is mapped to the standard test name
 and unit that the rest of PranaPulse uses. Nothing here guesses: a row that cannot be read is reported,
-not invented. Scanned images need OCR and are not supported yet.
+not invented. Scans and photos are read with OCR when it is installed.
 """
 import io
 import re
@@ -75,6 +75,7 @@ class Report:
     age: float | None = None
     sex: str | None = None
     unrecognised: list[str] = field(default_factory=list)
+    ocr: bool = False             # read from a scan or photo: values should be checked by the person
 
 
 def canonical(name: str):
@@ -154,15 +155,7 @@ def _parse_table(df):
     return Report(pids[0].strip(), dates[0], rows, unrecognised=unrec)
 
 
-def _parse_pdf(data: bytes):
-    try:
-        from pypdf import PdfReader
-        pages = PdfReader(io.BytesIO(data)).pages
-        text = "\n".join((pg.extract_text(extraction_mode="layout") or "") for pg in pages)
-    except Exception as exc:
-        raise ReportError(f"Could not read the PDF ({str(exc)[:80]}).")
-    if len(text.strip()) < 20:
-        raise ReportError("The PDF has no readable text (it may be a scan). Scans need OCR, which is not supported yet.")
+def _parse_text(text: str):
     pid = re.search(r"Patient\s*ID\s*[:\-]?\s*([A-Za-z0-9_\-]+)", text)
     date = re.search(r"(?:Collection|Collected|Sample)\s*date\s*[:\-]?\s*(\d{4}-\d{2}-\d{2})", text, re.I) or DATE.search(text)
     if not pid:
@@ -200,16 +193,17 @@ def _parse_pdf(data: bytes):
 
 
 def parse_report(filename: str, data: bytes) -> Report:
-    name = filename.lower()
+    from . import intake
+    e = intake.ext(filename)
     try:
-        if name.endswith(".pdf"):
-            rep = _parse_pdf(data)
-        elif name.endswith(".csv"):
-            rep = _parse_table(pd.read_csv(io.BytesIO(data)))
-        elif name.endswith((".xlsx", ".xlsm")):
-            rep = _parse_table(pd.read_excel(io.BytesIO(data)))
+        if e in intake.TEXT_EXT or e in intake.IMAGE_EXT:
+            pages, ocr = intake.text_pages(filename, data)
+            rep = _parse_text("\n".join(pages))
+            rep.ocr = ocr
+        elif e in intake.TABLE_EXT:
+            rep = _parse_table(intake.table_of(filename, data))
         else:
-            raise ReportError("Use a PDF, CSV or XLSX lab report.")
+            raise ReportError("Use a PDF, image, Word, text, CSV, Excel or JSON file.")
     except ReportError:
         raise
     except Exception as exc:

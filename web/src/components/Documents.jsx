@@ -14,7 +14,7 @@ export default function Documents({ docs, onUpload, onDemo, onOpen, onRemove, on
           <button className="btn ghost small" disabled={!!busy} onClick={onDemo}>Add demo patients</button>
           <button className="btn ghost small" disabled={!docs.length} onClick={() => confirm("Delete all your uploaded documents?") && onRemoveAll()}>Delete all</button>
         </div>
-        <input ref={input} type="file" accept=".xlsx,.pdf,.csv" multiple hidden onChange={(e) => { onUpload(e.target.files); e.target.value = ""; }} />
+        <input ref={input} type="file" accept=".xlsx,.xls,.xlsm,.csv,.json,.pdf,.docx,.txt,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp" multiple hidden onChange={(e) => { onUpload(e.target.files); e.target.value = ""; }} />
       </div>
       <div className="tablewrap">
         <table>

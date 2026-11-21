@@ -19,7 +19,7 @@ def test_summarise_combines_documents_and_lists_what_is_missing():
     s = summarise(labs, [{"measure": "Systolic BP", "days": 30, "first_day": "2025-10-01", "last_day": "2025-10-30", "unit": "mmHg"}], reports=2, files=1)
     t = s["tests"][0]
     assert (t["results"], t["first"], t["last"]) == (2, "2025-09-10", "2026-03-10")
-    assert s["measures"][0]["days"] == 30 and any("Medication" in m for m in s["missing"]) and any("Cycle" in m for m in s["missing"])
+    assert s["measures"][0]["days"] == 30 and any("Medication" in m for m in s["missing"]) and any("cycle log" in m for m in s["missing"])
 
 
 def _client(tmp_path, monkeypatch):
