@@ -31,6 +31,26 @@ AREA_WORDS = [
 ]
 
 
+PROFILE_SEX = re.compile(r"\b(male|female|man|woman|boy|girl|gender|sex)\b", re.I)
+PROFILE_AGE = re.compile(r"\b(age|aged|old|born)\b", re.I)
+
+
+def answer_profile(question: str, profile):
+    """Plain facts from the patient's record (sex, age). Answered directly: the findings do not hold them and a model must not guess."""
+    sex_q, age_q = PROFILE_SEX.search(question), PROFILE_AGE.search(question)
+    if not (sex_q or age_q) or not isinstance(profile, dict):
+        return None
+    bits = []
+    if sex_q:
+        sex = profile.get("sex")
+        sex = sex if isinstance(sex, str) and re.fullmatch(r"[A-Za-z ]{1,20}", sex.strip()) else None   # plain word from the record only
+        bits.append(f"This record lists the patient as {str(sex).lower()}." if sex else "Sex is not recorded for this patient.")
+    if age_q:
+        age = profile.get("age")
+        bits.append(f"The record lists the patient's age as {int(age)}." if age is not None and age == age else "Age is not recorded for this patient.")
+    return " ".join(bits)
+
+
 def infer_area(question: str, area=None):
     """The disease area a question is about: the one the person is looking at, else the one the words point to."""
     if area:
@@ -82,8 +102,8 @@ def answer_template(question: str, insights, area: str | None = None) -> str:
         i = items[0]
         pts = "; ".join(i.bullets[:3])
         return (f"{i.title}. {pts}. These readings moved further from your own usual pattern than normal day-to-day variation." + CLOSE)
-    return ("I can explain why something was flagged, what the baseline is, how much data stands behind it, "
-            "and what the projection shows. Try one of the suggested questions." + CLOSE)
+    return ("I can only answer from this patient's findings, so I don't have that information. I can explain why something was flagged, "
+            "what the baseline is, how much data stands behind it, and what the projection shows. Try one of the suggested questions." + CLOSE)
 
 
 MEASURES = {
@@ -234,9 +254,12 @@ def _ai(question, base, insights, results, history, area):
     return None
 
 
-def answer(question: str, insights, area: str | None = None, use_model: bool = True, results=None, history=()):
+def answer(question: str, insights, area: str | None = None, use_model: bool = True, results=None, history=(), profile=None):
     """Returns (text, source, action, followups, key). The model only ever rewords a checked draft."""
     action, follow, key = None, FOLLOW["default"], None
+    fact = answer_profile(question, profile)
+    if fact:   # a plain statement from the record, not a statement about health, so the health-wording check does not apply
+        return fact, "patient record", action, follow, key
     area = infer_area(question, area)
     hit = answer_data(question, insights, results, history) if results and not SAFETY.search(question) else None
     if hit:
