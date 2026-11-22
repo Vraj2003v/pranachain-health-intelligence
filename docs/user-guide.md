@@ -88,6 +88,12 @@ These work as described for patients, for whichever patient is selected in the s
 ### Attention level
 Each disease area shows a short level: **No clear change**, **Worth watching** or **Worth discussing with a healthcare provider**. It is a simple rule on the findings shown (how far the readings sit from the usual range, and how much data is behind them). It does not name a condition and is not a measure of likelihood.
 
+### Uploaded documents: add, check and remove
+Under **Files**, each uploaded document is listed with its type. **What it added** shows the values it contributed. **Remove** deletes that document and what it added, after a confirmation, and the patient record is rebuilt from what remains. Files that could not be added are listed by name with the reason, and files already in the record are only counted.
+
+### Asking about the record
+Besides questions about findings, you can ask the assistant what medications the patient is on, or about previous diagnoses. It answers from the combined record and says so plainly when the record holds none.
+
 ### The summary follows the measure you pick
 In an area's detail, the summary above the graph changes with the measure tab (for example Systolic BP, then Diastolic BP). A measure with a finding shows that finding. A measure without one shows its latest value, the change against your first 90 days, and where it sits against the usual range. Other findings in the same area are listed under it.
 
