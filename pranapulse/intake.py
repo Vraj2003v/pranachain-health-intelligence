@@ -30,6 +30,7 @@ def _ocr_image(img) -> str:
         import pytesseract
         text = pytesseract.image_to_string(img.convert("L"), config="--psm 6")
         text = re.sub(r"(?<=\d),(?=\d{1,2}\b)", ".", text)         # a decimal comma read from a scan
+        text = re.sub(r"(?<=\d)\.(?=\s|$)", "", text)               # a stray full stop after a number ("107.")
         return "\n".join(l for l in text.splitlines() if l.strip())    # OCR adds blank lines between table rows
     except ImportError:
         raise ReportError(OCR_MISSING)
