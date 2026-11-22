@@ -1,4 +1,5 @@
 import { summariseNotes } from "./notes.js";
+import Skipped from "./components/Skipped.jsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Logo from "./components/Logo.jsx";
 import { api } from "./api";
@@ -141,8 +142,7 @@ export default function App() {
         {busy && <div className="banner">{busy}</div>}
         {error && <div className="banner err" onClick={() => setError(null)}>{error}</div>}
         {notes.length > 0 && <div className="banner" onClick={() => setNotes([])}><b>Upload notes</b> (click to close)<ul className="notes">{summariseNotes(notes).map((l, i) => <li key={i}>{l}</li>)}</ul></div>}
-        {Object.keys(failed).length > 0 && (
-          <div className="banner err" onClick={() => setFailed({})}>Skipped: {Object.entries(failed).map(([f, w]) => `${f} (${w})`).join("; ")}</div>)}
+        <Skipped failed={failed} onClose={() => setFailed({})} />
 
         {detail && needsPatient && shown !== "summary" && (
           <header className="hero">
@@ -156,7 +156,7 @@ export default function App() {
         </nav>
 
         {shown === "cohort" && <Cohort patients={docs} onOpen={open} />}
-        {shown === "documents" && <Documents docs={docs} onUpload={upload} onDemo={loadDemo} onOpen={open} onRemove={remove} onRemoveAll={removeAll} busy={busy} />}
+        {shown === "documents" && <Documents docs={docs} onUpload={upload} onDemo={loadDemo} onOpen={open} onRemove={remove} onRemoveAll={removeAll} onReportRemoved={() => refresh().catch(fail)} busy={busy} />}
         {shown === "audit" && <Audit />}
         {needsPatient && !detail && <div className="muted pad">Loading patient…</div>}
         {shown === "summary" && <Home user={user} canFull={view.tabs.includes("insights")} docs={docs} selected={selected} detail={detail} onPick={(k) => open(k, landing)} onFull={() => setTab("insights")} onTrends={() => setTab("timeline")} />}
