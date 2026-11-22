@@ -1,3 +1,4 @@
+import Skipped from "./Skipped.jsx";
 import { summariseNotes } from "../notes.js";
 import { useRef, useState } from "react";
 import ThemeToggle from "./ThemeToggle.jsx";
@@ -33,7 +34,7 @@ export default function Landing({ user, onDemo, onUpload, onSignOut, busy, error
       {busy && <div className="banner">{busy}</div>}
       {notes.length > 0 && <div className="banner"><b>Upload notes</b><ul className="notes">{summariseNotes(notes).map((l, i) => <li key={i}>{l}</li>)}</ul></div>}
       {error && <div className="banner err">{error}</div>}
-      {Object.keys(failed).length > 0 && <div className="banner err">Skipped: {Object.entries(failed).map(([f, w]) => `${f} (${w})`).join("; ")}</div>}
+      <Skipped failed={failed} />
       <footer className="foot">Prototype for academic use on synthetic / anonymised data. It does not diagnose or give medical advice.</footer>
     </div>
   );
