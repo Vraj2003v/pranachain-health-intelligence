@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { kb, stamp } from "../api";
 import { Reports } from "./RecordView.jsx";
 
-export default function Documents({ docs, onUpload, onDemo, onOpen, onRemove, onRemoveAll, busy }) {
+export default function Documents({ docs, onUpload, onDemo, onOpen, onRemove, onRemoveAll, onReportRemoved, busy }) {
   const input = useRef();
   return (
     <section>
@@ -34,7 +34,7 @@ export default function Documents({ docs, onUpload, onDemo, onOpen, onRemove, on
           </tbody>
         </table>
       </div>
-      <Reports refresh={docs.length + ":" + (docs[0]?.uploaded || "")} />
+      <Reports refresh={docs.length + ":" + (docs[0]?.uploaded || "")} onChanged={onReportRemoved} />
       {docs.length > 300 && <p className="muted small">Showing first 300 of {docs.length}.</p>}
     </section>
   );

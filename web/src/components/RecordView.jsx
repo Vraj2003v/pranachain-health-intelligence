@@ -60,12 +60,19 @@ export function PatientRecord({ id }) {
 }
 
 // The list of individual uploaded documents; each shows what it added to the record.
-export function Reports({ refresh }) {
+export function Reports({ refresh, onChanged }) {
   const [list, setList] = useState(null);
+  const [ask, setAsk] = useState(null);      // the document whose removal is being confirmed
+  const [reload, setReload] = useState(0);
   const [open, setOpen] = useState(null);
   const [c, setC] = useState(null);
   const [err, setErr] = useState("");
-  useEffect(() => { api.reports().then((x) => setList(x.reports)).catch(() => setList([])); }, [refresh]);
+  useEffect(() => { api.reports().then((x) => setList(x.reports)).catch(() => setList([])); }, [refresh, reload]);
+  const remove = async (rep) => {
+    setErr("");
+    try { await api.removeReport(rep.kind, rep.id); setAsk(null); setOpen(null); setReload((n) => n + 1); onChanged && onChanged(); }
+    catch (e) { setErr(e.message); }
+  };
   const show = (rep) => {
     const k = rep.kind + rep.id;
     if (open === k) { setOpen(null); return; }
@@ -77,13 +84,16 @@ export function Reports({ refresh }) {
     <section className="reports">
       <h3 className="h">Uploaded documents</h3>
       <p className="muted small">Each document is read when it is uploaded and its values are added to the person's record. Open one to see what it added.</p>
+      {err && !open && <p className="note">{err}</p>}
       <div className="tablewrap"><table>
         <thead><tr><th>Report</th><th>Patient</th><th>Type</th><th>Date</th><th></th></tr></thead>
         <tbody>{list.slice(0, 300).map((rep) => {
           const k = rep.kind + rep.id;
           return [
             <tr key={k}><td><b>{rep.filename}</b></td><td>{rep.patient_id}</td><td>{rep.kind === "lab" ? "Lab results" : rep.kind === "readings" ? "Daily readings" : ({ medications: "Medications", history: "Diagnoses and findings", cycles: "Cycle log", clinical: "Clinical document", fhir: "FHIR record" })[rep.what] || "Record"}</td><td>{rep.collected}</td>
-              <td className="actionscell"><button className="btn ghost small" aria-expanded={open === k} onClick={() => show(rep)}>{open === k ? "Hide" : "What it added"}</button></td></tr>,
+              <td className="actionscell"><button className="btn ghost small" aria-expanded={open === k} onClick={() => show(rep)}>{open === k ? "Hide" : "What it added"}</button>{" "}
+                {ask === k ? <span>Remove this document and what it added? <button className="btn small" onClick={() => remove(rep)}>Yes, remove</button> <button className="btn ghost small" onClick={() => setAsk(null)}>Keep</button></span>
+                  : <button className="btn ghost small" onClick={() => setAsk(k)}>Remove</button>}</td></tr>,
             open === k && <tr key={k + "r"}><td colSpan={5}>{err ? <p className="note">{err}</p> : c ? <Contents c={c} /> : <p className="muted small">Reading the report…</p>}</td></tr>,
           ];
         })}</tbody>
