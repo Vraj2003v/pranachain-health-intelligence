@@ -11,6 +11,23 @@ const tierClass = (t) => (t.startsWith("Outside") ? "out" : t.startsWith("Within
 const rangeLine = (t) => (t.position === "no range" ? "Compared with your own baseline only"
   : t.position === "within" ? `Within the usual range (${t.range})` : `${t.position === "above" ? "Above" : "Below"} the usual range (${t.range})`);
 
+const dayText = (d) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+
+// The same finding in plain steps, built only from what the finding already carries.
+function HowFound({ ins }) {
+  const moved = ins.evidence.filter((e) => e.signal !== "Cycle length");
+  const steps = [
+    ins.kind === "cycle" ? "The dates of this person's cycles were used to work out how long each cycle was and how much it varied."
+      : "Each measure was compared with this same person's earlier readings, not with a population average.",
+    ...moved.map((e) => `${e.signal}: ${e.first_mean} earlier, ${e.last_mean} recently (${e.first_window} to ${e.last_window}).`),
+    ...(ins.onsets || []).filter((o) => o.kind !== "cycle").map((o) => `${o.label} first stayed past its threshold on ${dayText(o.date)}.`),
+    ins.kind === "pattern" ? `${ins.evidence.length} related measures moved in the same direction, so they are shown together as one pattern.` : null,
+    ins.context.length > 0 ? `History in the record that connects to this: ${ins.context.slice(0, 3).map((c) => c.split(" — ")[0]).join("; ")}.` : null,
+    ins.flag === "Limited" ? "Some expected data was missing, so this is marked as limited data." : null,
+  ].filter(Boolean);
+  return <ol className="how">{steps.map((t) => <li key={t}>{t}</li>)}</ol>;
+}
+
 function Card({ pkey, i, ins, onTimeline }) {
   const [text, setText] = useState(null);
   const [note, setNote] = useState(null);
@@ -53,6 +70,7 @@ function Card({ pkey, i, ins, onTimeline }) {
         <button className="btn ghost small" disabled={busy} onClick={explain}>{busy ? "Rewriting…" : "Explain with local model"}</button>
       </div>
       <details><summary>Why was this flagged? Supporting evidence</summary>
+        <HowFound ins={ins} />
         <div className="tablewrap"><table><thead><tr>{EVID.map(([, l]) => <th key={l}>{l}</th>)}</tr></thead>
           <tbody>{ins.evidence.map((e, n) => <tr key={n}>{EVID.map(([k]) => <td key={k}>{e[k] ?? "—"}</td>)}</tr>)}</tbody></table></div>
       </details>
