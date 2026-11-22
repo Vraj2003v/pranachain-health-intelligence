@@ -248,6 +248,7 @@ def delete_document(doc_id: int, user=Depends(auth.current_user)):
         if pid:    # a person built from uploaded reports: remove those reports too
             con.execute("DELETE FROM lab_reports WHERE user_id = ? AND patient_id = ?", (user["id"], pid))
             con.execute("DELETE FROM reading_files WHERE user_id = ? AND patient_id = ?", (user["id"], pid))
+            con.execute("DELETE FROM context_files WHERE user_id = ? AND patient_id = ?", (user["id"], pid))
     auth.log(user, "delete_document", row["filename"])
     return {"ok": True}
 
@@ -258,6 +259,7 @@ def delete_all(user=Depends(auth.current_user)):
         n = con.execute("DELETE FROM documents WHERE user_id = ?", (user["id"],)).rowcount
         con.execute("DELETE FROM lab_reports WHERE user_id = ?", (user["id"],))
         con.execute("DELETE FROM reading_files WHERE user_id = ?", (user["id"],))
+        con.execute("DELETE FROM context_files WHERE user_id = ?", (user["id"],))
     auth.log(user, "delete_all_documents", f"{n} removed")
     return {"removed": n}
 
