@@ -1,12 +1,13 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { applySize, applyTheme, getSize, getTheme } from "./theme.js";
 import "./styles.css";
 
 applyTheme(getTheme());
 applySize(getSize());
-createRoot(document.getElementById("root")).render(<App />);
+createRoot(document.getElementById("root")).render(<ErrorBoundary><App /></ErrorBoundary>);
 
 // Light follows the pointer: the glass edge highlight and the colour field react to it.
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
