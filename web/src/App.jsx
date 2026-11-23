@@ -111,6 +111,7 @@ export default function App() {
 
   return (
     <div className={"shell" + (view.rail ? (folded ? " folded" : "") : " slim")}>
+      <a className="skiplink" href="#main">Skip to content</a>
       <aside className="rail">
         <div className="brandrow"><div className="brand"><Logo text={!folded} /></div>{!folded && <Tools />}
           {view.rail && <button type="button" className="iconbtn foldbtn" onClick={fold} aria-label={folded ? "Expand sidebar" : "Collapse sidebar"} title={folded ? "Expand sidebar" : "Collapse sidebar"}>{folded ? "›" : "‹"}</button>}</div>
@@ -137,7 +138,7 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="main">
+      <main className="main" id="main" tabIndex={-1}>
         <Steps current={step} />
         <div className="mobile-pick">
           <Tools />
