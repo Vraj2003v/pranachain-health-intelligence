@@ -28,7 +28,7 @@ function HowFound({ ins }) {
   return <ol className="how">{steps.map((t) => <li key={t}>{t}</li>)}</ol>;
 }
 
-function Card({ pkey, i, ins, onTimeline }) {
+function Card({ pkey, i, ins, onTimeline, onExplain }) {
   const [text, setText] = useState(null);
   const [note, setNote] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -69,7 +69,7 @@ function Card({ pkey, i, ins, onTimeline }) {
         {ins.forecastKey && <button className="btn small" onClick={onTimeline}>See trend line and projection</button>}
         <button className="btn ghost small" disabled={busy} onClick={explain}>{busy ? "Rewriting…" : "Explain with local model"}</button>
       </div>
-      <details><summary>Why was this flagged? Supporting evidence</summary>
+      <details onToggle={(e) => onExplain && onExplain(e.currentTarget.open)}><summary>Why was this flagged? Supporting evidence</summary>
         <HowFound ins={ins} />
         <div className="tablewrap"><table><thead><tr>{EVID.map(([, l]) => <th key={l}>{l}</th>)}</tr></thead>
           <tbody>{ins.evidence.map((e, n) => <tr key={n}>{EVID.map(([k]) => <td key={k}>{e[k] ?? "—"}</td>)}</tr>)}</tbody></table></div>
@@ -92,7 +92,7 @@ const SECTIONS = [
     why: "Irregular cycle timing can relate to hormonal conditions, so it is worth discussing with a healthcare provider alongside the patient's history." },
 ];
 
-export default function Insights({ pkey, d, onTimeline }) {
+export default function Insights({ pkey, d, onTimeline, onExplain }) {
   const indexed = d.insights.map((ins, i) => ({ ins, i }));
   const jump = (id) => document.getElementById(id)?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   const other = indexed.filter(({ ins }) => !SECTIONS.some((s) => s.scenario === ins.scenario));
@@ -118,10 +118,10 @@ export default function Insights({ pkey, d, onTimeline }) {
             {d.attention?.[sec.scenario] && <p className="small"><span className={"chip tier " + attClass(d.attention[sec.scenario].level)}>{d.attention[sec.scenario].level}</span> <span className="muted">{d.attention[sec.scenario].reason} {d.attention[sec.scenario].note}</span></p>}
             {items.length > 0 && <p className="impact"><b>Why it may matter:</b> {sec.why}</p>}
             {items.length === 0 && <p className="muted small">Nothing in this area moved beyond this patient's own usual range.</p>}
-            {items.map(({ ins, i }) => <Card key={i} pkey={pkey} i={i} ins={ins} onTimeline={onTimeline} />)}
+            {items.map(({ ins, i }) => <Card key={i} pkey={pkey} i={i} ins={ins} onTimeline={onTimeline} onExplain={onExplain} />)}
           </div>);
       })}
-      {other.map(({ ins, i }) => <Card key={i} pkey={pkey} i={i} ins={ins} onTimeline={onTimeline} />)}
+      {other.map(({ ins, i }) => <Card key={i} pkey={pkey} i={i} ins={ins} onTimeline={onTimeline} onExplain={onExplain} />)}
       {d.held.length > 0 && <details className="card"><summary>Held back (not shown as insights)</summary><ul>{d.held.map((h) => <li key={h}>{h}</li>)}</ul></details>}
       {d.positives.length > 0 && <details className="card"><summary>Positive changes</summary><ul>{d.positives.map((h) => <li key={h}>{h}</li>)}</ul></details>}
     </section>
