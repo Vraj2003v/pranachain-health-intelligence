@@ -94,8 +94,7 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
               aria-expanded={on} onClick={() => { setOpen(on ? null : a.scenario); mark("area"); }}>
               <span className="ahead"><span className="aicon" aria-hidden>{a.icon}</span><b>{a.title}</b></span>
               <span className="asub">{a.sub}</span>
-              {(hit || !(detail.attention?.[a.scenario] && !detail.attention[a.scenario].level.startsWith("No clear"))) && <span className={"chip " + (hit ? "warn" : nodata ? "quiet" : "ok")}>{hit ? `${items.length} change${items.length > 1 ? "s" : ""} found` : nodata ? "No data" : "No clear change"}</span>}
-              {!nodata && detail.attention?.[a.scenario] && !detail.attention[a.scenario].level.startsWith("No clear") && <span className={"chip tier " + attClass(detail.attention[a.scenario].level)} title={detail.attention[a.scenario].note}>{detail.attention[a.scenario].level}</span>}
+              <span className={"chip " + (hit ? "warn" : nodata ? "quiet" : "ok")}>{hit ? `${items.length} change${items.length > 1 ? "s" : ""} found` : nodata ? "No data" : "No clear change"}</span>
               <span className="asum">{hit ? items[0].summary : calmText(detail, a)}</span>
               {hit && items.flatMap(onsetsOf).length > 0 && <span className="awhen"><span className="awl">Crossed the threshold</span>{items.flatMap(onsetsOf).sort((x, y) => x.t - y.t).map((o) => <span key={o.key} className="awrow"><i />{o.label}<b>{short(o.t)}</b></span>)}</span>}
               <Spark d={detail} area={a} />
@@ -107,8 +106,6 @@ export default function Home({ user, canFull = true, docs, selected, detail, onP
       {area && (
         <div className="adetail" style={{ "--hue": area.hue }} key={area.scenario}>
           <h2>{area.icon} {area.title}</h2>
-          {!hasNoData(detail, area) && detail.attention?.[area.scenario] && !detail.attention[area.scenario].level.startsWith("No clear") &&
-            <p className="muted small" title={detail.attention[area.scenario].note}><b>Attention level for this area:</b> {detail.attention[area.scenario].level}</p>}
           {by(area).length === 0 && <p className="muted">{calmText(detail, area)}</p>}
           <Overview ov={detail.overview?.[area.scenario]} />
           <MeasureSummary d={detail} area={area} sel={area.measures.includes(sel) ? sel : defaultKey(detail, area)} />

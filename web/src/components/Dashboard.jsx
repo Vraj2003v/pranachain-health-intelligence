@@ -37,8 +37,6 @@ export default function Dashboard({ detail }) {
   const start = Date.parse(detail.patient.start), end = Date.parse(detail.patient.end);
   const days = Math.max(1, Math.round((end - start) / 864e5));
   const areasHit = AREAS.filter((a) => ins.some((i) => i.scenario === a.scenario)).length;
-  const levels = Object.values(detail.attention || {}).map((a) => a.level);
-  const top = levels.sort((a, b) => rank(b) - rank(a))[0] || "No clear change";
   const limited = ins.filter((i) => i.flag === "Limited").length;
   const pos = (t) => `${Math.min(100, Math.max(0, ((t - start) / (end - start)) * 100))}%`;
 
@@ -55,7 +53,6 @@ export default function Dashboard({ detail }) {
     <div className="dash">
       <div className="dkpis">
         <Kpi label="Changes found" value={rows.length + undated.length} note={rows.length ? `${rows.length} measure${rows.length > 1 ? "s" : ""} crossed their threshold, in ${areasHit} of 3 areas` : "nothing beyond the usual range"} tone={rows.length ? "warn" : "ok"} />
-        <Kpi label="Attention level" value={top.replace(" with a healthcare provider", "")} note="a rule on the findings, not a diagnosis" tone={rank(top) === 3 ? "warn" : rank(top) === 2 ? "mid" : "ok"} />
         <Kpi label={first ? "First change began" : "Latest reading"} value={short(first ? first.o.t : end)} note={first ? `${first.o.label}. Latest reading ${short(end)}` : `${days} days of readings`} tone={first ? "warn" : ""} />
         <Kpi label="Data quality" value={limited ? `${limited} limited` : "Sufficient"} note={limited ? "some expected data was missing" : "enough data behind every finding"} tone={limited ? "mid" : "ok"} />
       </div>
