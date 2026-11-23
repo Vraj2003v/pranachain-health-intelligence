@@ -352,6 +352,17 @@ def explain(doc_id: int, index: int, user=Depends(auth.current_user)):
     return {"text": text, "source": source}
 
 
+def _finite(value):
+    """Replace NaN and infinite numbers with None so a reply can always be written as JSON."""
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {k: _finite(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_finite(v) for v in value]
+    return value
+
+
 class Ask(BaseModel):
     question: str
     area: str | None = None
@@ -398,7 +409,7 @@ def ask(doc_id: int, body: Ask, user=Depends(auth.current_user)):
     trace: dict = {}
     text, source, action, follow, key = ask_mod.answer(q, ins, body.area, results=results, history=hist, profile=profile, trace=trace)
     auth.log(user, "ask_question", row["filename"])
-    return {"text": text, "source": source, "action": action, "followups": follow, "key": key, "trace": trace}
+    return _finite({"text": text, "source": source, "action": action, "followups": follow, "key": key, "trace": trace})
 
 
 app.include_router(reports_router)   # lab reports uploaded one document at a time
