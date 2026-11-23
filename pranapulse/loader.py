@@ -37,6 +37,9 @@ class Patient:
     meds: pd.DataFrame             # medication, indication, start, end, status
     cycles: pd.DataFrame           # start, cycle_length
     notes: list = field(default_factory=list)
+    # Context only (issue #95): shown beside the findings, never used by detect().
+    encounters: pd.DataFrame = field(default_factory=lambda: pd.DataFrame(columns=["date", "encounter", "note"]))
+    adherence: pd.DataFrame = field(default_factory=lambda: pd.DataFrame(columns=["month", "medication", "adherence", "missed", "source"]))
 
     @property
     def window(self):
@@ -76,4 +79,26 @@ def load_patient(source) -> Patient:
     wh = wh[pd.to_numeric(wh["Cycle Length"], errors="coerce").notna()]
     cycles = pd.DataFrame({"start": to_dates(wh["Start Date"]), "cycle_length": wh["Cycle Length"].astype(float)})
 
-    return Patient(str(profile.get("Patient ID", "unknown")), profile, daily, labs, history, meds, cycles)
+    p = Patient(str(profile.get("Patient ID", "unknown")), profile, daily, labs, history, meds, cycles)
+    p.encounters, p.adherence = read_context(sheets, mm)
+    return p
+
+
+def read_context(sheets, med_rows):
+    """Clinical notes and medication adherence, if the workbook has those sheets. Missing sheet or column gives an empty table."""
+    enc = sheets.get("Encounters & Notes")
+    if enc is not None and {"Date", "Encounter", "Clinical Note"} <= set(enc.columns):
+        encounters = pd.DataFrame({"date": to_dates(enc["Date"]), "encounter": enc["Encounter"], "note": enc["Clinical Note"]}).sort_values("date")
+    else:
+        encounters = pd.DataFrame(columns=["date", "encounter", "note"])
+    ad = sheets.get("Medication Adherence")
+    if ad is not None and {"Month", "Medication ID", "Estimated Adherence %"} <= set(ad.columns):
+        names = dict(zip(med_rows["Medication ID"], med_rows["Medication"])) if "Medication ID" in med_rows else {}
+        adherence = pd.DataFrame({
+            "month": to_dates(ad["Month"]), "medication": [names.get(i, str(i)) for i in ad["Medication ID"]],
+            "adherence": pd.to_numeric(ad["Estimated Adherence %"], errors="coerce"),
+            "missed": pd.to_numeric(ad.get("Approx Missed Doses"), errors="coerce"), "source": ad.get("Source"),
+        }).sort_values(["month", "medication"])
+    else:
+        adherence = pd.DataFrame(columns=["month", "medication", "adherence", "missed", "source"])
+    return encounters, adherence
