@@ -626,3 +626,18 @@ h1, .hero h1, .home h1 { font-family: var(--script); font-weight: 700; letter-sp
 .flow .num { font-size: .75rem; opacity: .8; }
 @media (max-width: 520px) { .flow li { flex-direction: column; gap: 0; font-size: .7rem; padding: 4px 2px; border-radius: 10px; } }
 .limits { font-size: .88rem; opacity: .85; border-left: 3px solid currentColor; padding: 4px 10px; margin: 8px 0; }
+
+/* Skip link, error screen and "How this answer was made" */
+.skiplink { position: absolute; left: 12px; top: -48px; z-index: 100; background: var(--card, #fff); color: inherit; padding: 8px 14px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.25); }
+.skiplink:focus { top: 12px; }
+.main:focus { outline: none; }
+.errscreen { max-width: 520px; margin: 14vh auto; padding: 0 20px; text-align: center; }
+.errscreen h1 { font-size: 1.4rem; margin-bottom: 8px; }
+.howmade { margin-top: 8px; font-size: .8rem; }
+.howmade summary { cursor: pointer; color: var(--muted); }
+.howmade .attempt { margin-top: 6px; padding: 6px 8px; border-left: 3px solid var(--muted); }
+.howmade .quote { font-style: italic; margin: 4px 0; }
+.howmade .checks { list-style: none; margin: 4px 0 0; padding: 0; }
+.howmade .checks li::before { display: inline-block; width: 1.2em; font-weight: 700; }
+.howmade .checks .pass::before { content: "\2713"; color: #2e7d32; }
+.howmade .checks .fail::before { content: "\2717"; color: #c62828; }
