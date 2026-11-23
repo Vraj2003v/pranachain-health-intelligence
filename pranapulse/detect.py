@@ -59,6 +59,7 @@ class Insight:
     tier: str = ""             # where the latest readings sit against the usual range (see reference.py)
     onsets: list = field(default_factory=list)   # when each measure crossed the change threshold: [{key, label, date, ...}]
     limits: str = ""           # what this finding cannot tell (reading counts, data flag, no condition named); see limits_line
+    labs_out: dict = field(default_factory=dict)  # pattern only: its lab results outside the range printed on the report; see labs_out_of_range
 
 
 def _fmt(v, d):
@@ -188,6 +189,24 @@ def _context(p: Patient, keywords, tests):
             ref = f", reference {r.ref_low:g}–{r.ref_high:g}" if r.ref_low == r.ref_low and r.ref_high == r.ref_high else ""
             out.append(f"Latest {t}: {r.result:g} {r.unit} on {r.date:%d %b %Y}{ref} — Lab Results sheet")
     return out
+
+
+def labs_out_of_range(p: Patient, tests):
+    """How many of a pattern's lab results sit outside the range printed on the report. Results without a printed range are not counted."""
+    items, checked = [], 0
+    for t in tests:
+        for _, r in p.labs[p.labs.test == t].sort_values("date").iterrows():
+            pos = ref.position(float(r.result), ref.lab_range(r.ref_low, r.ref_high, r.unit))
+            if pos is None:
+                continue
+            checked += 1
+            if pos != "within":
+                items.append({"test": t, "date": f"{r.date:%d %b %Y}", "value": f"{r.result:g} {r.unit}", "position": pos,
+                              "range": ref.text(ref.lab_range(r.ref_low, r.ref_high, r.unit))})
+    if not checked:
+        return {}
+    return {"out": len(items), "checked": checked, "items": items,
+            "text": f"{len(items)} of {checked} lab results for this pattern are outside the range printed on the report."}
 
 
 def _bullet(r: SignalResult):
@@ -354,6 +373,7 @@ def detect(p: Patient):
                                 ctx, text, _asks(p, usable, list(c["labs"]), lab_hits), usable[0].key if usable else "",
                                 f"{len(bullets)} related measures moved in the same direction over this patient's year.", bullets, closing,
                                 SCENARIO[cname], onsets=_onsets_for(usable) + [o for o in (_lab_onset(p, l, c["labs"][l["test"]][0], c["labs"][l["test"]][1]) for l in lab_hits) if o]))
+        insights[-1].labs_out = labs_out_of_range(p, list(c["labs"]))
         used.update(r.key for r in usable)
 
     for r in results.values():
