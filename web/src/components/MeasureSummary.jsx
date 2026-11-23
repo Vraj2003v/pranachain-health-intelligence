@@ -27,6 +27,9 @@ function Finding({ ins }) {
       <ul>{ins.bullets.map((b) => <li key={b}>{b}</li>)}</ul>
       {ins.context.length > 0 && <p className="ctx"><b>Connects to your history:</b> {ins.context.slice(0, 3).map((c) => c.split(" — ")[0]).join(" · ")}</p>}
       <p className="muted small">Data: {ins.flag === "Limited" ? "limited, some readings were missing" : "sufficient"}.</p>
+      {ins.labsOut?.checked > 0 && (
+        <p className="ctx"><b>Labs out of range:</b> {ins.labsOut.out} of {ins.labsOut.checked}
+          {ins.labsOut.items.length > 0 && <> ({ins.labsOut.items.map((l) => `${l.test} ${l.value} on ${l.date}, ${l.position} ${l.range}`).join("; ")})</>}</p>)}
       {ins.limits && <p className="limits"><b>Limits:</b> {ins.limits}</p>}
     </div>);
 }

@@ -329,7 +329,7 @@ def patient_detail(doc_id: int, user=Depends(auth.current_user)):
         "patient": {"id": p.patient_id, "age": num(p.profile.get("Age")), "sex": (lambda v: None if v is None or v != v else str(v))(p.profile.get("Sex")), "start": day(start),
                     "end": day(end), "days": len(p.daily)},
         "insights": [{"id": i.insight_id, "kind": i.kind, "title": i.title, "flag": i.flag, "scenario": i.scenario, "tier": i.tier, "summary": i.summary,
-                      "bullets": i.bullets, "closing": i.closing, "limits": i.limits, "context": i.context, "asks": i.asks,
+                      "bullets": i.bullets, "closing": i.closing, "limits": i.limits, "labsOut": i.labs_out, "context": i.context, "asks": i.asks,
                       "evidence": [{k: (v if isinstance(v, str) else num(v)) for k, v in e.items()} for e in i.evidence],
                       "forecastKey": i.forecast_key, "signals": i.signals, "tiles": tiles(i), "onsets": i.onsets} for i in ins],
         "overview": ov, "attention": ref.attention_by_area(ins, ov),

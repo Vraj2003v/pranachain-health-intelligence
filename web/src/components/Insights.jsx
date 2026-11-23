@@ -65,6 +65,9 @@ function Card({ pkey, i, ins, onTimeline, onExplain }) {
       {ins.context.length > 0 && (
         <p className="ctx"><b>Connects to:</b> {ins.context.slice(0, 3).map((c) => c.split(" — ")[0]).join(" · ")}</p>)}
       {ins.closing && <div className="note">{ins.closing}</div>}
+      {ins.labsOut?.checked > 0 && (
+        <p className="ctx"><b>Labs out of range:</b> {ins.labsOut.out} of {ins.labsOut.checked}
+          {ins.labsOut.items.length > 0 && <> ({ins.labsOut.items.map((l) => `${l.test} ${l.value} on ${l.date}, ${l.position} ${l.range}`).join("; ")})</>}</p>)}
       {ins.limits && <p className="limits"><b>Limits:</b> {ins.limits}</p>}
       <div className="actions">
         {ins.forecastKey && <button className="btn small" onClick={onTimeline}>See trend line and projection</button>}
