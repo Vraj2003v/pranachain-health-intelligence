@@ -5,6 +5,36 @@ import { mark } from "../progress.js";
 const CHIPS = ["What changed the most?", "Why was this flagged?", "How is my weight?", "Compare weight and steps",
   "What does the baseline mean?", "What is the usual range?", "Does this mean I have a condition?"];
 
+const CHECK = { wording: "Wording rules", numbers: "Every number is from your findings", ids: "Every finding ID exists" };
+
+// "How this answer was made": the route taken, what the model was given, what it replied, and which checks it passed.
+function HowMade({ trace }) {
+  const given = trace.given;
+  return (
+    <details className="howmade">
+      <summary>How this answer was made</summary>
+      <p>{trace.why}</p>
+      {given && (
+        <>
+          <p className="muted small">The model ({trace.model}) was given only computed facts: {given.findings?.length || 0} finding(s) and {given.readings?.length || 0} reading(s). No name, no raw rows, no dates.</p>
+          {(trace.attempts || []).map((a, i) => (
+            <div key={i} className="attempt">
+              <b>Model reply {i + 1}{a.used ? " (used)" : ""}</b>
+              {a.error ? <p>{a.error}</p> : (
+                <>
+                  <p className="quote">{a.reply}</p>
+                  <ul className="checks">
+                    {Object.keys(CHECK).map((k) => <li key={k} className={a[k] ? "pass" : "fail"}>{a[k] ? "Passed" : "Failed"}: {CHECK[k]}</li>)}
+                  </ul>
+                </>
+              )}
+            </div>))}
+        </>
+      )}
+    </details>
+  );
+}
+
 export default function Ask({ pkey, area, title = "Ask about your results", onAction, compact = false, bar = false, open = true, setOpen = () => {} }) {
   const [msgs, setMsgs] = useState([]);
   const [text, setText] = useState("");
@@ -24,7 +54,7 @@ export default function Ask({ pkey, area, title = "Ask about your results", onAc
     try {
       const r = await api.ask(pkey, q, area, history);
       setMsgs((m) => [...m, { who: "bot", text: r.text, key: r.key, action: r.action, follow: r.followups,
-        note: r.source === "local model" ? "Wording by local model, checked against the wording rules" : null }]);
+        note: r.source === "local model" ? "Wording by local model, checked against the wording rules" : null, trace: r.trace }]);
     } catch (e) {
       setMsgs((m) => [...m, { who: "bot", text: e.message, error: true }]);
     } finally { setBusy(false); }
@@ -42,6 +72,7 @@ export default function Ask({ pkey, area, title = "Ask about your results", onAc
             {m.text}
             {m.action && onAction && <button type="button" className="actbtn" onClick={() => onAction(m.action)}>{m.action.label}</button>}
             {m.note && <span className="bnote">{m.note}</span>}
+            {m.trace?.why && <HowMade trace={m.trace} />}
           </div>))}
         {busy && <div className="bubble bot typing" aria-label="Writing an answer"><i /><i /><i /></div>}
         <div ref={end} />
