@@ -395,9 +395,10 @@ def ask(doc_id: int, body: Ask, user=Depends(auth.current_user)):
     p, ins, _, results = analysed(doc_id, row["sha256"])
     age, sex = num(p.profile.get("Age")), p.profile.get("Sex")
     profile = {"age": age, "sex": None if sex is None or sex != sex else str(sex), **record_lists(p)}
-    text, source, action, follow, key = ask_mod.answer(q, ins, body.area, results=results, history=hist, profile=profile)
+    trace: dict = {}
+    text, source, action, follow, key = ask_mod.answer(q, ins, body.area, results=results, history=hist, profile=profile, trace=trace)
     auth.log(user, "ask_question", row["filename"])
-    return {"text": text, "source": source, "action": action, "followups": follow, "key": key}
+    return {"text": text, "source": source, "action": action, "followups": follow, "key": key, "trace": trace}
 
 
 app.include_router(reports_router)   # lab reports uploaded one document at a time
