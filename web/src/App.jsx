@@ -1,5 +1,6 @@
 import { summariseNotes } from "./notes.js";
 import Skipped from "./components/Skipped.jsx";
+import Steps from "./components/Steps.jsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Logo from "./components/Logo.jsx";
 import { api } from "./api";
@@ -32,6 +33,8 @@ export default function App() {
   const [focus, setFocus] = useState(null);   // measure(s) chosen by the assistant
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [q, setQ] = useState("");
+  const [askOpen, setAskOpen] = useState(false);       // the assistant is open: step Ask
+  const [explainOpen, setExplainOpen] = useState(false); // "Why was this flagged" is open: step Explain
 
   const fail = (e) => { if (e.status === 401) { setUser(null); setDocs([]); } else setError(e.message); };
 
@@ -44,6 +47,7 @@ export default function App() {
   }, []);
 
   useEffect(() => { if (user) refresh().catch(fail); }, [user, refresh]);
+  useEffect(() => { setExplainOpen(false); }, [tab, selected]);
 
   const run = async (label, fn) => {
     setError(null); setBusy(label);
@@ -95,12 +99,14 @@ export default function App() {
   if (user === undefined) return <div className="muted pad">Loading…</div>;
   if (user === null) return <Auth onDone={(u) => { setUser(u); setTab(viewFor(u.role).home); setError(null); }} />;
   if (!docs.length) {
-    return <Landing user={user} onDemo={loadDemo} onUpload={upload} onSignOut={signOut} busy={busy} error={error} failed={failed} notes={notes} />;
+    return <><Steps current="Connect" /><Landing user={user} onDemo={loadDemo} onUpload={upload} onSignOut={signOut} busy={busy} error={error} failed={failed} notes={notes} /></>;
   }
 
   const view = viewFor(user.role);
   const TABS = view.tabList;
   const shown = view.tabs.includes(tab) ? tab : view.home;
+  // Which of the five steps the screen belongs to: files = Connect, findings = Detect, an open "Why was this flagged" = Explain, the assistant = Ask, everything else = Understand.
+  const step = askOpen ? "Ask" : shown === "documents" ? "Connect" : shown === "insights" ? (explainOpen ? "Explain" : "Detect") : "Understand";
   const needsPatient = ["summary", "ask", "insights", "timeline", "explore", "coverage"].includes(shown);
 
   return (
@@ -132,6 +138,7 @@ export default function App() {
       </aside>
 
       <main className="main">
+        <Steps current={step} />
         <div className="mobile-pick">
           <Tools />
           {view.rail && <select value={selected || ""} onChange={(e) => open(e.target.value, needsPatient ? shown : landing)}>
@@ -160,12 +167,12 @@ export default function App() {
         {shown === "audit" && <Audit />}
         {needsPatient && !detail && <div className="muted pad">Loading patient…</div>}
         {shown === "summary" && <Home user={user} canFull={view.tabs.includes("insights")} docs={docs} selected={selected} detail={detail} onPick={(k) => open(k, landing)} onFull={() => setTab("insights")} onTrends={() => setTab("timeline")} />}
-        {shown === "insights" && detail && <Insights pkey={selected} d={detail} onTimeline={() => setTab("timeline")} />}
+        {shown === "insights" && detail && <Insights pkey={selected} d={detail} onTimeline={() => setTab("timeline")} onExplain={setExplainOpen} />}
         {shown === "timeline" && detail && <Timeline key={focus?.key || "t"} d={detail} initialKey={focus?.key} />}
         {shown === "explore" && detail && <Explore key={(focus?.keys || []).join()} d={detail} initial={focus?.keys} />}
         {shown === "coverage" && detail && <Coverage d={detail} />}
 
-        <ChatDock pkey={selected} onAction={act} />
+        <ChatDock pkey={selected} onAction={act} onOpenChange={setAskOpen} />
         <footer className="foot">Prototype for academic use on synthetic / anonymised data. It highlights patterns that may be worth discussing with a healthcare provider. It does not diagnose or give medical advice.</footer>
       </main>
     </div>
