@@ -27,6 +27,7 @@ function Finding({ ins }) {
       <ul>{ins.bullets.map((b) => <li key={b}>{b}</li>)}</ul>
       {ins.context.length > 0 && <p className="ctx"><b>Connects to your history:</b> {ins.context.slice(0, 3).map((c) => c.split(" — ")[0]).join(" · ")}</p>}
       <p className="muted small">Data: {ins.flag === "Limited" ? "limited, some readings were missing" : "sufficient"}.</p>
+      {ins.limits && <p className="limits"><b>Limits:</b> {ins.limits}</p>}
     </div>);
 }
 
