@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import Ask from "./Ask.jsx";
 
 // Round glass button in the corner. Tapping it pops the assistant open; Escape or the close button dismisses it.
-export default function ChatDock({ pkey, onAction }) {
+export default function ChatDock({ pkey, onAction, onOpenChange }) {
   const [open, setOpen] = useState(false);
+  useEffect(() => { onOpenChange && onOpenChange(open); }, [open]);
   useEffect(() => {
     if (!open) return;
     const k = (e) => e.key === "Escape" && setOpen(false);
