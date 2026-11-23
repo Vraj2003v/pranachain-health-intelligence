@@ -65,6 +65,7 @@ function Card({ pkey, i, ins, onTimeline, onExplain }) {
       {ins.context.length > 0 && (
         <p className="ctx"><b>Connects to:</b> {ins.context.slice(0, 3).map((c) => c.split(" — ")[0]).join(" · ")}</p>)}
       {ins.closing && <div className="note">{ins.closing}</div>}
+      {ins.limits && <p className="limits"><b>Limits:</b> {ins.limits}</p>}
       <div className="actions">
         {ins.forecastKey && <button className="btn small" onClick={onTimeline}>See trend line and projection</button>}
         <button className="btn ghost small" disabled={busy} onClick={explain}>{busy ? "Rewriting…" : "Explain with local model"}</button>

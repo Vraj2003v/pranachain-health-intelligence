@@ -1,6 +1,8 @@
 """Detect meaningful changes against each patient's own baseline and link them to clinical history."""
 from dataclasses import dataclass, field
 
+import re
+
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -56,6 +58,7 @@ class Insight:
     insight_id: str = ""       # F1, F2, ... for this patient, in the order shown
     tier: str = ""             # where the latest readings sit against the usual range (see reference.py)
     onsets: list = field(default_factory=list)   # when each measure crossed the change threshold: [{key, label, date, ...}]
+    limits: str = ""           # what this finding cannot tell (reading counts, data flag, no condition named); see limits_line
 
 
 def _fmt(v, d):
@@ -433,7 +436,35 @@ def detect(p: Patient):
     for ins in insights:
         ins.tier = ref.tier([e.get("range_position") if e.get("range_position") != "no range" else None for e in ins.evidence])
     number_evidence(insights)
+    for ins in insights:
+        ins.limits = limits_line(ins)
     return insights, held, results
+
+
+def _count_text(days):
+    """The evidence table's reading count, said plainly."""
+    m = re.fullmatch(r"(\d+) of (\d+) \(first\), (\d+) of \d+ \(last\)", days or "")
+    if m:
+        return f"{m[1]} of {m[2]} days in both windows" if m[1] == m[3] else f"{m[1]} of {m[2]} days earlier, {m[3]} of {m[2]} recently"
+    m = re.fullmatch(r"(\d+) baseline, (\d+) recent", days or "")
+    if m:
+        return f"{m[1]} baseline and {m[2]} recent days"
+    return days or "count not recorded"
+
+
+def limits_line(ins):
+    """What a finding cannot tell, built only from data it already holds: the reading counts and the data flag."""
+    based = "; ".join(f"{e['signal']} ({_count_text(e.get('days_with_data'))})" for e in ins.evidence)
+    parts = [f"Based on {based}." if based else "Based on the readings in this record."]
+    parts.append("Some expected readings were missing, so this could change as more data arrives."
+                 if ins.flag == "Limited" else "There were enough readings for each measure.")
+    parts.append({"recent": f"It looks only at the latest {RECENT_DAYS} days against the {WINDOW_DAYS} days before them.",
+                  "cycle": "It uses cycle start dates only."}.get(ins.kind,
+                 "It compares this person's earlier and recent readings and cannot say what caused the change."))
+    parts.append("It does not name or rule out any condition; only a healthcare provider can say what it may mean.")
+    text = " ".join(parts)
+    assert not check_language(text), check_language(text)
+    return text
 
 
 def disease_input_problems(insights):
