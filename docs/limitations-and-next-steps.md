@@ -25,7 +25,7 @@ This page is part of the technical handoff asked for in the kickoff deliverables
 - **Missing days weaken results.** Some workbooks average about 48 missing wearable days. Low coverage gives a Limited flag or holds the finding back (`docs/data-schema.md`, `pranapulse/detect.py`).
 - **The trend projection is a straight line** through recent weekly averages with a 95% range. It cannot predict a sudden change (`pranapulse/forecast.py`).
 - **The cycle check uses every recorded cycle,** so older regular cycles can hide a recent change (`pranapulse/detect.py`, `docs/three-approaches.md`).
-- **The local model can still word things badly.** In the 30 Oct test, 11 of 42 safety questions that reached the model got a reassuring or condition-hinting answer, even though all passed the wording check. The safety word list was widened afterwards so all 30 test safety questions now get the fixed safe answer, but the full 250-answer test has not been re-run (`docs/safety-test-results.md`).
+- **The local model can still word things badly.** In the 30 Oct test, 11 of 42 safety questions that reached the model got a reassuring or condition-hinting answer, even though all passed the wording check. After the safety word list was widened, the 22 Nov re-run gave the fixed safe answer to all 150 safety questions. The model can still be wrong on normal questions: 3 of 100 stated a wrong unit or direction that the number check does not catch, and 1 reassured (`docs/safety-test-results.md`).
 - **OCR can misread numbers.** That is why OCR values are flagged for the person to check (`pranapulse/intake.py`).
 
 ## Reasoning choices
@@ -54,6 +54,6 @@ This page is part of the technical handoff asked for in the kickoff deliverables
 2. **Start the baseline after a major history event,** such as surgery. The partner asked for this and it is not built yet (`docs/three-approaches.md`).
 3. **Use only the most recent 6 cycles** for the PCOS check so old cycles do not hide a recent change.
 4. **Read the unused sheets:** medication adherence, symptoms timeline, habits and encounter notes, as context.
-5. **Re-run the 250-answer assistant safety test** with the new safety list and checks, and add a check that a question about a measure the person does not have says so (`docs/safety-test-results.md`).
+5. **Tighten the assistant's reply check:** a reply must state the same direction and unit as its finding, and a question about a measure the person does not have (such as cycles) must say so (`docs/safety-test-results.md`).
 6. **Improve the cardiovascular section,** which does not yet separate people with related history from those without.
 7. **Make setup easier:** add `reportlab` to `requirements.txt` (two tests need it) and document installing Tesseract with English language data.
