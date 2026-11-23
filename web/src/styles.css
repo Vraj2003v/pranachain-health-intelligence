@@ -620,11 +620,6 @@ h1, .hero h1, .home h1 { font-family: var(--script); font-weight: 700; letter-sp
 
 .how { margin: 6px 0 10px; padding-left: 20px; } .how li { margin: 3px 0; max-width: 70ch; }
 
-.flow { margin: 0 0 12px; } .flow ol { list-style: none; display: flex; gap: 4px; margin: 0; padding: 0; }
-.flow li { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 4px; border-radius: 999px; font-size: .85rem; color: var(--muted); background: var(--quiet-bg); }
-.flow li.on { background: var(--brand); color: #fff; font-weight: 600; }
-.flow .num { font-size: .75rem; opacity: .8; }
-@media (max-width: 520px) { .flow li { flex-direction: column; gap: 0; font-size: .7rem; padding: 4px 2px; border-radius: 10px; } }
 .limits { font-size: .88rem; opacity: .85; border-left: 3px solid currentColor; padding: 4px 10px; margin: 8px 0; }
 
 /* Skip link, error screen and "How this answer was made" */
