@@ -332,7 +332,7 @@ def patient_detail(doc_id: int, user=Depends(auth.current_user)):
                       "bullets": i.bullets, "closing": i.closing, "limits": i.limits, "labsOut": i.labs_out, "context": i.context, "asks": i.asks,
                       "evidence": [{k: (v if isinstance(v, str) else num(v)) for k, v in e.items()} for e in i.evidence],
                       "forecastKey": i.forecast_key, "signals": i.signals, "tiles": tiles(i), "onsets": i.onsets} for i in ins],
-        "overview": ov, "attention": ref.attention_by_area(ins, ov),
+        "recordContext": record_context(p), "overview": ov, "attention": ref.attention_by_area(ins, ov),
         "held": held, "positives": positives, "coverage": coverage, "windowDays": WINDOW_DAYS,
         "series": {k: series_block(p, results, k) for k in SIGNALS}, "markers": marks, "labs": labs,
         "cycles": [{"d": day(r.start), "v": num(r.cycle_length)} for r in p.cycles.itertuples()],
@@ -373,6 +373,16 @@ def record_lists(p):
     meds = [{"name": txt(r.medication), "detail": txt(r.indication), "start": day(r.start), "status": txt(r.status)} for r in p.meds.itertuples()]
     hist = [{"name": txt(r.event), "date": day(r.date), "status": txt(r.status)} for r in p.history.itertuples()]
     return {"medications": meds, "history": hist}
+
+
+def record_context(p):
+    """Clinical notes and estimated medication adherence from the workbook. Shown as background only; detection never reads them."""
+    def txt(v):
+        return "" if v is None or v != v else str(v)
+    notes = [{"date": day(r.date), "encounter": txt(r.encounter), "note": txt(r.note)} for r in p.encounters.itertuples()]
+    adherence = [{"month": (day(r.month) or "")[:7], "medication": txt(r.medication), "adherence": num(r.adherence), "missed": num(r.missed), "source": txt(r.source)}
+                 for r in p.adherence.itertuples()]
+    return {"notes": notes, "adherence": adherence}
 
 
 @app.post("/api/documents/{doc_id}/ask")
