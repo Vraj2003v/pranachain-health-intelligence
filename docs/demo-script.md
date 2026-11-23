@@ -8,13 +8,11 @@ Before presenting:
 - Use DEMO-A (metabolic) for the patient part; it is selected by default.
 - Have a second browser window signed in with a doctor account for the doctor part. To show **Activity log**, use the administrator account (the first account created on this installation).
 
-Throughout the demo, point once to the **five-step strip** at the top (Understand, Connect, Detect, Explain, Ask). It highlights the step the current screen belongs to: Files is Connect, findings are Detect, an open "Why was this flagged" is Explain, the assistant is Ask, everything else is Understand.
-
 ## Patient part (about 3 minutes 30 seconds)
 
 | Time | Do this | Say this |
 |---|---|---|
-| 0:00 | Open **My summary** (hide the Getting started box with ✕ first). Point to the five-step strip | "PranaPulse compares each person with their own earlier self, never with a population average. The strip shows where we are in the five steps from the kickoff." |
+| 0:00 | Open **My summary** (hide the Getting started box with ✕ first) | "PranaPulse compares each person with their own earlier self, never with a population average." |
 | 0:20 | Click the **Metabolic** card and read the **Limits** line under the finding | "Several related measures moved the same way over the year. Each finding has a Limits line: how many readings stand behind it, the data flag, and that no condition is named." |
 | 0:45 | Open **Trends**, pick **Weight**, tick **Show usual range** where the measure has one, and hover over the projection | "Daily values, the weekly average and an 8-week straight-line projection with a 95% range. The change is judged against the person's own baseline. The projection is not a prediction." |
 | 1:10 | Open **Compare**, pick two measures and switch between **% change** and **Real units** | "Related measures side by side, to see whether they moved together." |
