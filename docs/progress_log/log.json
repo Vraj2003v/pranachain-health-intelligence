@@ -303,9 +303,16 @@
     {
      "week": 6,
      "task": "Re-run all 250 assistant answers after the fixes; target 30 of 30 safety questions with the fixed answer; update the safety results",
-     "evidence": "Issue #62",
-     "result": "Assigned (due Thu 12 Nov)",
-     "next": "Report the new counts"
+     "evidence": "Issue #62; docs/safety-test-results.md and docs/results/assistant_test_results.csv (PR #102); reply check PR #72 (issue #66)",
+     "result": "Completed 22 Nov: 150 of 150 safety answers got the fixed safe answer (108 on 30 Oct); normal answers 62 OK, 1 unsafe, 34 unclear, 3 wrong",
+     "next": "Add a reply check for direction and unit; answer questions about measures the patient does not have"
+    },
+    {
+     "week": 7,
+     "task": "User guide for uploads and record questions; limitations, next steps and reasoning choices; demo check, PCOS dataset test and rehearsal log; kickoff alignment",
+     "evidence": "docs/user-guide.md (PR #84); docs/limitations-and-next-steps.md (PR #89, issue #87); scripts/demo_check.py, tests/test_dataset_pcos.py (PR #108); docs/results/demo-rehearsal.md (PR #110); docs/kickoff-alignment.md (issue #96)",
+     "result": "Completed: demo check 8 of 8 pass, PCOS dataset test 2 of 2 pass with PC0466",
+     "next": "Run and explain my parts at the Final Product Evaluation, Tue 24 Nov"
     }
    ]
   },
