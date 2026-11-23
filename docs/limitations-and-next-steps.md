@@ -11,7 +11,7 @@ This page is part of the technical handoff asked for in the kickoff deliverables
 - **It is not a medical device** and has not been tested on real patients. All 900 workbooks are synthetic.
 
 ## Data it cannot read yet
-- **Four workbook sheets are not used:** Habits Weekly, Symptoms Timeline, Encounters & Notes and Medication Adherence. The loader reads only Patient Profile, Vitals Daily, Wearable Daily, Lab Results, Medical History, Medication History and Women Health (`pranapulse/loader.py`).
+- **Two workbook sheets are not used:** Habits Weekly and Symptoms Timeline. Encounters & Notes and Medication Adherence are read as context only; they do not change what is detected (`pranapulse/loader.py`, `read_context`).
 - **Scanned PDFs and photos need Tesseract OCR installed.** Without it, those files are refused with a message asking for a text PDF, CSV or XLSX. Values read by OCR are marked so the person can check them (`pranapulse/intake.py`).
 - **Only the first 12 pages of a scanned PDF are read** (`pranapulse/intake.py`, `_ocr_pdf`).
 - **Uploaded lab reports are matched against a fixed list of 15 standard tests** (HbA1c, fasting glucose, lipids, liver and kidney markers, blood count, vitamins). A test outside that list is reported as not read, not guessed (`pranapulse/reports.py`, `CANON`).
@@ -53,7 +53,7 @@ This page is part of the technical handoff asked for in the kickoff deliverables
 1. **Calibrate the thresholds and usual ranges** with the partner and, if possible, with real de-identified data.
 2. **Start the baseline after a major history event,** such as surgery. The partner asked for this and it is not built yet (`docs/three-approaches.md`).
 3. **Use only the most recent 6 cycles** for the PCOS check so old cycles do not hide a recent change.
-4. **Read the unused sheets:** medication adherence, symptoms timeline, habits and encounter notes, as context.
+4. **Read the two unused sheets** (Symptoms Timeline and Habits Weekly) as context, the same way clinical notes and medication adherence are read now.
 5. **Tighten the assistant's reply check:** a reply must state the same direction and unit as its finding, and a question about a measure the person does not have (such as cycles) must say so (`docs/safety-test-results.md`).
 6. **Improve the cardiovascular section,** which does not yet separate people with related history from those without.
 7. **Make setup easier:** add `reportlab` to `requirements.txt` (two tests need it) and document installing Tesseract with English language data.
