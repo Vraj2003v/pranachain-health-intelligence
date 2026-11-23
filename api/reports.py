@@ -295,7 +295,7 @@ def from_reports(patient_id: str, user=Depends(auth.current_user)):
         "history": history,
         "quality": quality([(d, f) for d, f in reps], allvals, []),
         "insights": [{"id": i.insight_id, "kind": i.kind, "title": i.title, "flag": i.flag, "scenario": i.scenario, "summary": i.summary,
-                      "bullets": i.bullets, "closing": i.closing, "limits": i.limits, "onsets": i.onsets} for i in ins],
+                      "bullets": i.bullets, "closing": i.closing, "limits": i.limits, "labsOut": i.labs_out, "onsets": i.onsets} for i in ins],
         "held": held, "source": "database",
     }
 
