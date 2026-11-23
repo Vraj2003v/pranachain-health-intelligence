@@ -363,6 +363,18 @@ def suggestions(user=Depends(auth.current_user)):
     return {"questions": ask_mod.SUGGESTED}
 
 
+def record_lists(p):
+    """Medications and earlier diagnoses from the patient's record, as plain values for the assistant."""
+    def day(v):
+        return "" if v is None or v != v or not hasattr(v, "strftime") else v.strftime("%Y-%m-%d")
+
+    def txt(v):
+        return "" if v is None or v != v else str(v)
+    meds = [{"name": txt(r.medication), "detail": txt(r.indication), "start": day(r.start), "status": txt(r.status)} for r in p.meds.itertuples()]
+    hist = [{"name": txt(r.event), "date": day(r.date), "status": txt(r.status)} for r in p.history.itertuples()]
+    return {"medications": meds, "history": hist}
+
+
 @app.post("/api/documents/{doc_id}/ask")
 def ask(doc_id: int, body: Ask, user=Depends(auth.current_user)):
     row = owned(doc_id, user)
@@ -372,7 +384,7 @@ def ask(doc_id: int, body: Ask, user=Depends(auth.current_user)):
     hist = [{"who": str(h.get("who", ""))[:6], "text": str(h.get("text", ""))[:400], "key": h.get("key")} for h in body.history[-8:]]
     p, ins, _, results = analysed(doc_id, row["sha256"])
     age, sex = num(p.profile.get("Age")), p.profile.get("Sex")
-    profile = {"age": age, "sex": None if sex is None or sex != sex else str(sex)}
+    profile = {"age": age, "sex": None if sex is None or sex != sex else str(sex), **record_lists(p)}
     text, source, action, follow, key = ask_mod.answer(q, ins, body.area, results=results, history=hist, profile=profile)
     auth.log(user, "ask_question", row["filename"])
     return {"text": text, "source": source, "action": action, "followups": follow, "key": key}

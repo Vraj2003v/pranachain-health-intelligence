@@ -33,12 +33,43 @@ AREA_WORDS = [
 
 PROFILE_SEX = re.compile(r"\b(male|female|man|woman|boy|girl|gender|sex)\b", re.I)
 PROFILE_AGE = re.compile(r"\b(age|aged|old|born)\b", re.I)
+PROFILE_MEDS = re.compile(r"\b(medications?|medicines?|drugs?|prescri\w+)\b", re.I)
+PROFILE_DX = re.compile(r"\b(diagnos\w+|medical history|previous findings?|past findings?)\b", re.I)
+
+
+def _plain(text, n=60):
+    """A short plain-text label from the record: letters, numbers and common punctuation only."""
+    return re.sub(r"[^A-Za-z0-9 .,()/%+\-]", "", str(text or "")).strip()[:n]
+
+
+def _meds_line(meds):
+    if not meds:
+        return "No medications are recorded for this patient."
+    parts = []
+    for m in meds[:10]:
+        name, why, since = _plain(m.get("name")), _plain(m.get("detail")), _plain(m.get("start"), 10)
+        extra = ", ".join(x for x in ([f"for {why}"] if why else []) + ([f"since {since}"] if since else []) + ([_plain(m.get("status"), 20).lower()] if m.get("status") else []))
+        parts.append(f"{name} ({extra})" if extra else name)
+    more = f", and {len(meds) - 10} more" if len(meds) > 10 else ""
+    return "The record lists these medications: " + "; ".join(parts) + more + "."
+
+
+def _dx_line(history):
+    if not history:
+        return "No previous diagnoses or findings are recorded for this patient."
+    parts = []
+    for h in history[:10]:
+        date, status = _plain(h.get("date"), 10), _plain(h.get("status"), 20).lower()
+        parts.append(f"{_plain(h.get('name'))} ({', '.join(x for x in (date, status) if x)})" if (date or status) else _plain(h.get("name")))
+    more = f", and {len(history) - 10} more" if len(history) > 10 else ""
+    return "The record lists these diagnoses and findings: " + "; ".join(parts) + more + "."
 
 
 def answer_profile(question: str, profile):
-    """Plain facts from the patient's record (sex, age). Answered directly: the findings do not hold them and a model must not guess."""
+    """Plain facts from the patient's record (sex, age, medications, diagnoses). Answered directly: the findings do not hold them and a model must not guess."""
     sex_q, age_q = PROFILE_SEX.search(question), PROFILE_AGE.search(question)
-    if not (sex_q or age_q) or not isinstance(profile, dict):
+    meds_q, dx_q = PROFILE_MEDS.search(question), PROFILE_DX.search(question)
+    if not (sex_q or age_q or meds_q or dx_q) or not isinstance(profile, dict):
         return None
     bits = []
     if sex_q:
@@ -48,6 +79,10 @@ def answer_profile(question: str, profile):
     if age_q:
         age = profile.get("age")
         bits.append(f"The record lists the patient's age as {int(age)}." if age is not None and age == age else "Age is not recorded for this patient.")
+    if meds_q:
+        bits.append(_meds_line(profile.get("medications") or []))
+    if dx_q:
+        bits.append(_dx_line(profile.get("history") or []))
     return " ".join(bits)
 
 
