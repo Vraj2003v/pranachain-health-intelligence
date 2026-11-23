@@ -7,7 +7,7 @@ Test counts and commands are kept in one place: [week-5-tasks-and-tests.md](week
 | Document | What it covers |
 |---|---|
 | [../README.md](../README.md) | Overview, setup, how to start the app |
-| [user-guide.md](user-guide.md) | Using the app: areas, measure tabs, overview, attention level, assistant |
+| [user-guide.md](user-guide.md) | Using the app: areas, measure tabs, overview, assistant |
 | [demo-script.md](demo-script.md) | Timed demo script for the evaluation |
 
 ## 2. Design

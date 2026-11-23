@@ -85,8 +85,8 @@ These work as described for patients, for whichever patient is selected in the s
 - This is a prototype for academic use on synthetic or anonymised data.
 
 
-### Attention level
-Each disease area shows a short level: **No clear change**, **Worth watching** or **Worth discussing with a healthcare provider**. It is a simple rule on the findings shown (how far the readings sit from the usual range, and how much data is behind them). It does not name a condition and is not a measure of likelihood.
+### No levels or scores
+The app does not give risk levels or scores. Each disease area shows the changes found, with the values, dates and observations behind them. Whether a change matters is for a healthcare provider to judge.
 
 ### Uploaded documents: add, check and remove
 Under **Files**, each uploaded document is listed with its type. **What it added** shows the values it contributed. **Remove** deletes that document and what it added, after a confirmation, and the patient record is rebuilt from what remains. Files that could not be added are listed by name with the reason, and files already in the record are only counted.

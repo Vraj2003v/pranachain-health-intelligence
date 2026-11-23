@@ -119,7 +119,6 @@ export default function Insights({ pkey, d, onTimeline, onExplain }) {
               <span className={"chip " + (items.length ? "warn" : "ok")}>{items.length ? `Changes found (${items.length})` : "No clear change"}</span>
             </div>
             <p className="muted small"><b>What we look at:</b> {sec.watches}</p>
-            {d.attention?.[sec.scenario] && <p className="small"><span className={"chip tier " + attClass(d.attention[sec.scenario].level)}>{d.attention[sec.scenario].level}</span> <span className="muted">{d.attention[sec.scenario].reason} {d.attention[sec.scenario].note}</span></p>}
             {items.length > 0 && <p className="impact"><b>Why it may matter:</b> {sec.why}</p>}
             {items.length === 0 && <p className="muted small">Nothing in this area moved beyond this patient's own usual range.</p>}
             {items.map(({ ins, i }) => <Card key={i} pkey={pkey} i={i} ins={ins} onTimeline={onTimeline} onExplain={onExplain} />)}
