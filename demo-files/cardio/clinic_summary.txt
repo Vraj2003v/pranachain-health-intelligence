@@ -1,0 +1,15 @@
+Clinic summary
+Patient ID: PC8101
+Age: 58
+Sex: Male
+Visit date: 2026-06-22
+
+Diagnoses:
+- Hypertension (2021-05-03)
+- High cholesterol (2024-02-14)
+
+Medications:
+- Amlodipine 5 mg daily for hypertension since 2021-06-01
+
+Notes:
+Home blood pressure has been creeping up since the spring.
