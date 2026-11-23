@@ -243,9 +243,15 @@ def _ids_ok(text: str, allowed: str) -> bool:
     return all(i in known for i in ID.findall(text))
 
 
+def reply_checks(text, allowed: str) -> dict:
+    """The three checks every model reply must pass, one by one, so the app can show which passed."""
+    text = text or ""
+    return {"wording": bool(text) and not check_language(text), "numbers": _numbers_ok(text, allowed), "ids": _ids_ok(text, allowed)}
+
+
 def reply_ok(text, allowed: str) -> bool:
     """A model reply is used only if it has no banned wording and cites only numbers and IDs from the patient's own findings."""
-    return bool(text) and not check_language(text) and _numbers_ok(text, allowed) and _ids_ok(text, allowed)
+    return bool(text) and all(reply_checks(text, allowed).values())
 
 
 def _pick(results, question, n=5, area=None):
@@ -268,7 +274,7 @@ def _reading(r):
             "usual_range": ref.text(rng), "last_90_days_vs_range": ref.position(r.mean_last, rng) or "no range"}
 
 
-def _ai(question, base, insights, results, history, area):
+def _ai(question, base, insights, results, history, area, trace=None):
     facts = {"disease_area": area or "not specified",
              "findings": [llm.facts(i) for i in _area(insights, area)[:3]],
              "readings": [_reading(r) for r in _pick(results, question, area=area)],
@@ -278,22 +284,36 @@ def _ai(question, base, insights, results, history, area):
     talk = "\n".join(f"{h.get('who')}: {h.get('text')}" for h in list(history)[-6:])
     prompt = (f"Conversation so far:\n{talk}\n\nPatient question: {question}\n\nFacts:\n{compact}\n\n"
               f"Safe draft answer (you may reword it, keep every number):\n{base}")
+    if trace is not None:   # what the model is given: computed facts only, no name, no raw rows, no dates
+        trace.update({"model": llm.DEFAULT_MODEL, "given": facts, "draft": base, "attempts": []})
     for _ in range(2):  # one retry, then the caller falls back to the template answer
         try:
             text = llm._generate(prompt, llm.DEFAULT_MODEL, llm.OLLAMA_URL, 90, CHAT_SYSTEM)
         except Exception:
+            if trace is not None:
+                trace["attempts"].append({"error": "The local model did not answer."})
             return None
         text = clean_reply(text) if text else text
-        if reply_ok(text, allowed):
+        checks = reply_checks(text, allowed)
+        if trace is not None:
+            trace["attempts"].append({"reply": text, **checks, "used": all(checks.values())})
+        if text and all(checks.values()):
             return text
     return None
 
 
-def answer(question: str, insights, area: str | None = None, use_model: bool = True, results=None, history=(), profile=None):
-    """Returns (text, source, action, followups, key). The model only ever rewords a checked draft."""
+def _route(trace, source, why):
+    if trace is not None:
+        trace.update({"source": source, "why": why})
+
+
+def answer(question: str, insights, area: str | None = None, use_model: bool = True, results=None, history=(), profile=None, trace=None):
+    """Returns (text, source, action, followups, key). The model only ever rewords a checked draft.
+    If a dict is passed as `trace`, it is filled with how the answer was made (route, what the model was given, each reply and its checks)."""
     action, follow, key = None, FOLLOW["default"], None
     fact = answer_profile(question, profile)
     if fact:   # a plain statement from the record, not a statement about health, so the health-wording check does not apply
+        _route(trace, "patient record", "Answered straight from the patient record. The model was not used.")
         return fact, "patient record", action, follow, key
     area = infer_area(question, area)
     hit = answer_data(question, insights, results, history) if results and not SAFETY.search(question) else None
@@ -303,10 +323,18 @@ def answer(question: str, insights, area: str | None = None, use_model: bool = T
     else:
         base = answer_template(question, insights, area)
         assert not check_language(base), check_language(base)
-    if use_model and not SAFETY.search(question) and llm.available():
-        text = _ai(question, base, insights, results, history, area)
+    if SAFETY.search(question):
+        _route(trace, "template", "Safety question: a fixed answer is shown and the model was not used.")
+    elif not use_model:
+        _route(trace, "template", "The model switch is off, so the standard wording is shown.")
+    elif not llm.available():
+        _route(trace, "template", "The local model is not running, so the standard wording is shown.")
+    else:
+        text = _ai(question, base, insights, results, history, area, trace)
         if text:
+            _route(trace, "local model", "The model reworded a checked draft and its reply passed all three checks.")
             return text, "local model", action, follow, key
+        _route(trace, "template", "The model reply did not pass the checks (twice), so the standard wording is shown.")
     return base, "template", action, follow, key
 
 LEAD_IN = re.compile(
