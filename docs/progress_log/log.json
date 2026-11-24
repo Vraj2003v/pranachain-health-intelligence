@@ -432,10 +432,10 @@
     },
     {
      "week": 7,
-     "task": "Merge the record-answers pack and the cardio demo pack; add the Limits line to each finding (issue #85); show labs out of range inside each pattern and read the clinical notes and medication adherence sheets as context only (issue #95); add reportlab to requirements",
-     "evidence": "Pull requests #93, #97, #99, #100 and #103, each merged by Krish-1710 as a squash commit with a one-line message: api/main.py, pranapulse/ask.py, pranapulse/detect.py, pranapulse/loader.py, requirements.txt, demo-files/cardio, scripts/make_cardio_demo.py, web/src/components, tests/test_ask_record.py, test_cardio_demo.py, test_limits.py, test_labs_out.py, test_record_context.py",
-     "result": "Completed: 23 new tests added (6 record answers, 4 cardio demo, 5 Limits line, 4 labs out of range, 4 notes and adherence); each test file run before its push; full suite on Krish's laptop for PR #100: 274 passed, 3 skipped. Notes and adherence do not change detection (test compares findings with and without the two sheets).",
-     "next": "Be ready to explain the code at the Final Product Evaluation (Tue 24 Nov)"
+     "task": "Merge the record-answers pack and the cardio demo pack; add the Limits line to each finding (issue #85); show labs out of range inside each pattern and read the clinical notes and medication adherence sheets as context only (issue #95); add reportlab to requirements; record how each assistant answer was made (AI trace)",
+     "evidence": "Pull requests #93, #97, #99, #100, #103, #104 and #109, each merged by Krish-1710 as a squash commit with a one-line message: api/main.py, pranapulse/ask.py, pranapulse/detect.py, pranapulse/loader.py, requirements.txt, demo-files/cardio, scripts/make_cardio_demo.py, web/src/components, tests/test_ask_record.py, test_cardio_demo.py, test_limits.py, test_labs_out.py, test_record_context.py, test_ask_trace.py",
+     "result": "Completed: 27 new tests added (6 record answers, 4 cardio demo, 5 Limits line, 4 labs out of range, 4 notes and adherence, 4 AI trace); each test file run before its push; full suite on Krish's laptop for PR #100: 274 passed, 3 skipped; after re-cloning main, tests/test_json_safe.py and tests/test_ask_trace.py: 6 passed. Notes and adherence do not change detection (test compares findings with and without the two sheets).",
+     "next": "Clean clone test of the final main (issue #105); be ready to explain each pull request at the Final Product Evaluation (Tue 24 Nov)"
     }
    ]
   }
