@@ -4,6 +4,7 @@ Answers are built from the computed findings only. Every answer must pass check_
 local model may rephrase it, but a reply that fails the check is dropped for the template answer.
 """
 import json
+import math
 import re
 
 from . import llm
@@ -84,6 +85,42 @@ def answer_profile(question: str, profile):
     if dx_q:
         bits.append(_dx_line(profile.get("history") or []))
     return " ".join(bits)
+
+
+RANGE_Q = re.compile(r"\brange\b|\breference\b", re.I)
+
+
+def answer_range(question: str, area, results, profile):
+    """The usual range for the measures this record actually has (lab results with their printed range, and readings
+    that have a usual adult range), limited to the area being viewed. None when there is nothing to list."""
+    if not RANGE_Q.search(question):
+        return None
+    q = question.lower()
+    labs = (profile or {}).get("labs") or []
+    allowed = set(ref.AREAS[area].labs) if area in ref.AREAS else None
+    named = [x for x in labs if x["test"].lower() in q]
+    if not named and _mentioned(q):
+        return None                                     # a reading was named: the per-measure answer handles it
+    if not named:
+        absent = sorted({t for a in ref.AREAS.values() for t in a.labs if t.lower() in q})
+        if absent:                                      # a lab was named that this record does not have
+            return f"{', '.join(absent)} is not in this record, so there is no usual range to show for it."
+    rows = []
+    for x in named or [x for x in labs if allowed is None or x["test"] in allowed]:
+        rng = ref.lab_range(x["low"] if x["low"] is not None else float("nan"), x["high"] if x["high"] is not None else float("nan"), x["unit"])
+        if rng is None:
+            continue
+        pos = ref.position(x["value"], rng)
+        rows.append(f"{x['test']} {ref.text(rng)} (latest {x['value']:g}, {pos} it)")
+    if not named:
+        keys = ref.AREAS[area].signals if area in ref.AREAS else list((results or {}).keys())
+        for k in keys:
+            r, rng = (results or {}).get(k), ref.RANGES.get(k)
+            if r is not None and rng is not None and math.isfinite(r.mean_last):   # skip a measure with no readings
+                rows.append(f"{r.label} {ref.text(rng)} (last {WINDOW_DAYS} days {r.mean_last:,.{r.decimals}f}, {ref.position(r.mean_last, rng)} it)")
+    if not rows:
+        return None
+    return "Usual range for what is in this record: " + "; ".join(rows) + ". Your own baseline stays the main comparison."
 
 
 def infer_area(question: str, area=None):
@@ -316,6 +353,10 @@ def answer(question: str, insights, area: str | None = None, use_model: bool = T
         _route(trace, "patient record", "Answered straight from the patient record. The model was not used.")
         return fact, "patient record", action, follow, key
     area = infer_area(question, area)
+    if not SAFETY.search(question):
+        rng_text = answer_range(question, area, results, profile)
+        if rng_text:      # built only from this record's own values, so it is not reworded by the model
+            return rng_text, "patient record", action, follow, key
     hit = answer_data(question, insights, results, history) if results and not SAFETY.search(question) else None
     if hit:
         base, action, follow, key = hit
