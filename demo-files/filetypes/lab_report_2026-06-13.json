@@ -1,0 +1,26 @@
+[
+ {
+  "Patient ID": "PC8102",
+  "Date": "2026-06-13",
+  "Test": "LDL cholesterol",
+  "Result": 149.0,
+  "Unit": "mg/dL",
+  "Reference Range": "0-100"
+ },
+ {
+  "Patient ID": "PC8102",
+  "Date": "2026-06-13",
+  "Test": "Fasting glucose",
+  "Result": 115.0,
+  "Unit": "mg/dL",
+  "Reference Range": "70-99"
+ },
+ {
+  "Patient ID": "PC8102",
+  "Date": "2026-06-13",
+  "Test": "HbA1c",
+  "Result": 6.0,
+  "Unit": "%",
+  "Reference Range": "4.0-5.6"
+ }
+]
