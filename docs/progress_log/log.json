@@ -361,6 +361,13 @@
      "evidence": "PR #60; docs/README.md; issues #61 to #64",
      "result": "Completed, merged",
      "next": "Persistence rule, larger minimum change for steps, threshold re-test (issue #61, due Thu 12 Nov)"
+    },
+    {
+     "week": 7,
+     "task": "Persistence rule and a larger minimum change for steps; recent-change threshold 0.8 and a dashboard with change dates; one patient record built from several uploads; lab report and daily reading uploads; risk factors from a single document; sections with too little data hidden; assistant answers from the record; more file formats; scan reading fix; document deletion fix; removed the five-step strip; fixed a server error when an assistant reply held a NaN",
+     "evidence": "Pull requests #69, #73 to #83, #118 and #119: pranapulse/detect.py, pranapulse/intake.py, pranapulse/ask.py, api/main.py, web/src/components, tests/test_json_safe.py",
+     "result": "Completed, merged",
+     "next": "Final Product Evaluation (Tue 24 Nov) and the pitch competition (Mon 30 Nov)"
     }
    ]
   },
