@@ -1,0 +1,4 @@
+Patient ID,Date,Test,Result,Unit,Reference Range
+PC8102,2026-04-11,LDL cholesterol,134.0,mg/dL,0-100
+PC8102,2026-04-11,Fasting glucose,107.0,mg/dL,70-99
+PC8102,2026-04-11,HbA1c,5.8,%,4.0-5.6

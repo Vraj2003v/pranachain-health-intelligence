@@ -1,0 +1,10 @@
+Laboratory report
+Patient ID: PC8102
+Age: 52
+Sex: Female
+Collection date: 2026-03-14
+
+Test Result Unit Reference Range
+LDL cholesterol 127 mg/dL 0-100
+Fasting glucose 103 mg/dL 70-99
+HbA1c 5.7 % 4.0-5.6
