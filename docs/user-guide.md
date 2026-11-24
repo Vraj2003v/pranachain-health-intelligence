@@ -12,7 +12,7 @@ Choose **Create account**, enter your name, email and password, and pick who you
 Your role decides which tabs you see. The very first account created on a new installation becomes the administrator, whichever role is picked. Next time, choose **Sign in**.
 
 ### Add readings
-On the welcome screen, choose **Upload workbooks** (.xlsx), or **Try demo patients** to explore with example data. You can add or delete files later from the **My files** tab (**Files** for doctors). Your files are only visible to your own account.
+On the welcome screen, choose **Upload files** (workbooks, CSV, PDF, Word, text or photos of reports), or **Try demo patients** to explore with example data. You can add or delete files later from the **My files** tab (**Files** for doctors). Your files are only visible to your own account.
 
 ### Find your way around
 - **Tabs** across the top switch between pages.
@@ -30,10 +30,10 @@ On a phone, the sidebar becomes a drop-down for picking a workbook, with the **?
 Your tabs are **My summary**, **Trends**, **Compare** and **My files**. The assistant is the round 💬 button in the corner on every screen.
 
 ### 1. My summary
-Shows three disease areas, named plainly: **Cardiovascular**, **Metabolic** and **Women's health**. Each card lists the measures it looks at (a disease area only uses its own measures) and says **No clear change**, or how many changes were found (for example **1 change found**), with a plain sentence about what moved. Click a card to read more, or choose **Open all trends**. A **Getting started** checklist appears the first time; hide it with ✕.
+Shows three disease areas, named plainly: **Cardiovascular**, **Metabolic** and **Women's health**. Each card lists the measures it looks at (a disease area only uses its own measures) and says **No clear change**, **No data**, or how many changes were found (for example **1 change found**), with a plain sentence about what moved. Each finding has a **Limits** line: how much data stands behind it and what it does not claim. Click a card to read more, or choose **Open all trends**. A **Getting started** checklist appears the first time; hide it with ✕.
 
 ### 2. The assistant (💬 button)
-Press the 💬 button. Ask things like "Why was this flagged?" "How is my weight?" or "What is the usual range?". Answers come from your own readings and only from the measures of the disease area you are asking about, and the assistant can open the matching chart for you. Questions about diagnosis, medicines or treatment are not answered; ask a healthcare provider instead.
+Press the 💬 button. Ask things like "Why was this flagged?" "How is my weight?" or "What is the usual range?". Answers come from your own readings and only from the measures of the disease area you are asking about, and the assistant can open the matching chart for you. "What is the usual range?" lists the usual range for the lab results and readings in your record for that area, with your latest value and whether it is above, below or within it; a lab that is not in the record is said to be missing. Under each answer, **How this answer was made** shows the route taken and, when the local model was used, what it was given, its reply and the checks it passed. Questions about diagnosis, medicines or treatment are not answered; ask a healthcare provider instead.
 
 ### 3. Trends
 Pick a measure to see daily values, the weekly average and, where there is enough data, a straight-line **projection** 8 weeks ahead with a shaded **95% range**. Events from your history are marked on the chart. Lab results (such as HbA1c, fasting glucose and LDL cholesterol) and cycle length have their own charts. Hover over (or tap) the chart to see exact values. Choose **3 months**, **6 months** or **Full year** above the chart. For measures with a usual adult range (blood pressure, resting heart rate, sleep) a green band shows it, and a line under the chart says whether the recent average is within it; tick or untick **Show usual range**. Weight, steps and HRV have no single usual range, so they are compared with your own baseline only. The projection shows what happens if the recent trend continues; it is not a prediction.
@@ -60,9 +60,6 @@ Doctors start on **All patients** and also have **Patient summary**, **Trends**,
 ### Patient summary
 The same three-area view a patient sees, for the selected patient. **See the full evidence** jumps to **Full findings**.
 
-### Full findings
-Findings grouped under **Cardiovascular**, **Metabolic** and **Women's health**, each with its key figures and an **evidence table** showing the readings behind it. **See trend line and projection** opens the chart, and **Explain with local model** rewrites the finding in plainer words.
-
 ### Data quality
 For each signal: the source sheet, the share of days with data, how many readings fall in the earlier and recent windows, the change and the data flag.
 - **Sufficient**: enough data to report.
@@ -72,7 +69,7 @@ For each signal: the source sheet, the share of days with data, how many reading
 The flag describes how much data was available, not how certain the result is.
 
 ### Full findings
-Findings are grouped by disease area, with jump buttons (Cardiovascular, Metabolic, Women's health) and a count for each. Every finding shows a tag for where the recent readings sit against the usual range: **Outside the usual range**, **Within the usual range, worth watching**, or **Personal baseline only** (no single usual range exists). The evidence table has the usual range and where the recent value sits against it.
+Findings are grouped by disease area, with jump buttons (Cardiovascular, Metabolic, Women's health) and a count for each. Every finding shows its key figures, a **Limits** line, and a tag for where the recent readings sit against the usual range: **Outside the usual range**, **Within the usual range, worth watching**, or **Personal baseline only** (no single usual range exists). Open **Why was this flagged? Supporting evidence** for the evidence table: the readings behind the finding, the dates compared, the usual range and where the recent value sits against it. **See trend line and projection** opens the chart, and **Explain with local model** rewrites the finding in plainer words.
 
 ### Activity log (administrator only)
 A list of who did what in the app (sign-ins, failed sign-ins, uploads, patients opened, questions asked, deletions), newest first, showing the last 200 events. Only the administrator sees this tab. The administrator is the first account created on a new installation; nobody can choose this role when signing up.
