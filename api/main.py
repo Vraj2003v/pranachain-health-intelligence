@@ -383,7 +383,14 @@ def record_lists(p):
         return "" if v is None or v != v else str(v)
     meds = [{"name": txt(r.medication), "detail": txt(r.indication), "start": day(r.start), "status": txt(r.status)} for r in p.meds.itertuples()]
     hist = [{"name": txt(r.event), "date": day(r.date), "status": txt(r.status)} for r in p.history.itertuples()]
-    return {"medications": meds, "history": hist}
+    labs = []
+    if len(p.labs):
+        for test, g in p.labs.sort_values("date").groupby("test"):
+            last = g.iloc[-1]
+            labs.append({"test": str(test), "value": float(last.result), "unit": txt(last.unit),
+                         "low": None if last.ref_low != last.ref_low else float(last.ref_low),
+                         "high": None if last.ref_high != last.ref_high else float(last.ref_high)})
+    return {"medications": meds, "history": hist, "labs": labs}
 
 
 def record_context(p):
