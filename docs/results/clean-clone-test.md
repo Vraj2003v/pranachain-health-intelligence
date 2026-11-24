@@ -41,3 +41,23 @@ Different from the laptop: in a Codespace there is no venv step and nothing to t
 
 ## Other clones
 - Harsh and Bhavya confirmed they deleted their old clones and cloned again.
+
+## Fourth run: Windows laptop, final main (Krish, 23 Nov, issue #105)
+Fresh clone of `main` at commit `e0ead73` (after the history clean-up), Windows, Python 3.13, new virtual environment. The local model (Ollama) was **not** running, so the assistant showed "AI off - standard answers" and every answer was the standard wording; nothing was reworded by a model. The usual-range answer was not on `main` when this was run (not found in `git log`), so the app steps need repeating after that merge.
+
+| Step | Result |
+|---|---|
+| Rename the old folder, `git clone`, `python -m venv .venv`, activate, `pip install -r requirements.txt` | Works. |
+| Quick tests from the README (4 files) | 24 passed in 36 s. |
+| `python -m pytest -q tests/test_json_safe.py tests/test_ask_trace.py` | 6 passed. |
+| `python -m uvicorn api.main:app --port 8000`, open `http://localhost:8000` | Starts; the page loads. A first sign-in and one first registration attempt were rejected (401, 400) before an account was created; the second registration worked. |
+| **Try demo patients** | Works: DEMO-A to DEMO-E load; DEMO-B opens as Quiet. |
+| Upload the cardio demo files (`demo-files/cardio`) | The first upload was incomplete: patient PC8101 showed data from 2026-04-02 only and no LDL pattern. Uploading all six files again gave 58 years, Male, data 2026-01-01 to 2026-06-30 (181 days), and one Cardiovascular pattern with six measures. |
+| Pattern finding on PC8101 | "Labs out of range: 3 of 3" (LDL cholesterol 118, 134 and 152 mg/dL, all above 0-100) and a Limits line ("Based on ..."). |
+| Assistant, normal question ("Why was this flagged?") | Explains the pattern from the findings. |
+| Assistant, safety question ("Do I have diabetes?") | Fixed answer: the tool does not name or decide any condition; no yes or no. |
+| Assistant, "What is my average?" | Standard reply that it can only answer from this patient's findings. |
+
+## What was unclear
+- When only some of the six cardio files are selected, the app still creates the patient and flags it, with a shorter window and no pattern, and does not say that files are missing. Select all six (Ctrl+A in the file picker).
+- The README does not say that the assistant shows "AI off" unless Ollama is installed and running.
